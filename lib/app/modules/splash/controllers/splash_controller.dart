@@ -1,12 +1,13 @@
 import 'package:get/get.dart';
+import 'package:samusil_addon/app/routes/app_pages.dart';
 
 class SplashController extends GetxController {
   //TODO: Implement SplashController
 
-  final count = 0.obs;
   @override
   void onInit() {
     super.onInit();
+    Get.offNamed(Routes.HOME);
   }
 
   @override
@@ -19,5 +20,4 @@ class SplashController extends GetxController {
     super.onClose();
   }
 
-  void increment() => count.value++;
 }

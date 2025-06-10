@@ -16,7 +16,7 @@ class HomeView extends GetView<HomeController> {
         final isWide = constraints.maxWidth > constraints.maxHeight;
 
         return Scaffold(
-          appBar: AppBar(title: const Text('사무실 애드온')),
+          // appBar: AppBar(title: const Text('사무실 애드온')),
           body: isWide
               ? Row(
                   children: const [

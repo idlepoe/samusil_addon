@@ -1,23 +1,24 @@
 import 'package:get/get.dart';
 
+import '../../../data/models/upload_item.dart';
+
+
 class UploadPanelController extends GetxController {
-  //TODO: Implement UploadPanelController
+  final uploads = <UploadItem>[].obs;
 
-  final count = 0.obs;
-  @override
-  void onInit() {
-    super.onInit();
+  void addUpload(UploadItem item) {
+    uploads.add(item);
   }
 
-  @override
-  void onReady() {
-    super.onReady();
+  void removeUpload(UploadItem item) {
+    uploads.remove(item);
   }
 
-  @override
-  void onClose() {
-    super.onClose();
+  void shareToChatRoom(String roomId, UploadItem item) {
+    // TODO: ChatPanelController 호출 또는 채팅 메시지 생성
   }
 
-  void increment() => count.value++;
+  void showInstantShareDialog(UploadItem item) {
+    // TODO: 링크/QR 다이얼로그 표시
+  }
 }
