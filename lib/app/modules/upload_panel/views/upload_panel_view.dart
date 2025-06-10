@@ -16,13 +16,10 @@ class UploadPanelView extends GetView<UploadPanelController> {
       autofocus: true,
       onKeyEvent: (node, event) {
         if (event is KeyDownEvent) {
-          print('Key pressed: ${event.logicalKey}');
           if (event.logicalKey == LogicalKeyboardKey.keyV && 
               HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.controlLeft)) {
             // Handle Ctrl+V paste event
-            FlutterClipboard.paste().then((value) {
-              print('Pasted value: $value');
-            });
+            controller.handlePaste();
           }
         }
         return KeyEventResult.handled;
@@ -48,7 +45,7 @@ class UploadPanelView extends GetView<UploadPanelController> {
                       final item = controller.uploads[index];
                       return ListTile(
                         leading: const Icon(Icons.insert_drive_file),
-                        title: Text("item.name"),
+                        title: Text(item.name),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
