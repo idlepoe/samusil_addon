@@ -23,7 +23,7 @@ interface MainComment {
 
 interface Article {
   key: string;
-  board_index: number;
+  board_name: string;
   profile_key: string;
   profile_name: string;
   title: string;
@@ -31,10 +31,13 @@ interface Article {
   count_like: number;
   count_unlike: number;
   count_view: number;
+  count_comments: number;
   is_notice: boolean;
   created_at: string;
   comments: MainComment[];
   thumbnail?: string;
+  last_updated: string;
+  timestamp: string;
 }
 
 export { collectGameNews, fetchAndParseGameNews };
@@ -45,7 +48,7 @@ async function fetchAndParseGameNews(db: admin.firestore.Firestore) {
     console.log('게임메카 뉴스 크롤링 시작');
     // 기존 게임 뉴스 목록 가져오기 (중복 체크용)
     const existingArticles = await db.collection(FIRESTORE_COLLECTION_ARTICLE)
-      .where('board_index', '==', 2)
+      .where('board_name', '==', 'game_news')
       .limit(100)
       .get();
     const existingTitles = existingArticles.docs.map(doc => doc.data().title);
@@ -61,7 +64,10 @@ async function fetchAndParseGameNews(db: admin.firestore.Firestore) {
     const matches = [...html.matchAll(listPattern)];
     console.log(`게임메카 리스트에서 ${matches.length}개 뉴스 추출됨`);
     const newsKey = Date.now().toString();
-    const currentTime = new Date().toISOString();
+    // 한국시간으로 현재 시각 생성
+    const now = new Date();
+    const seoulTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+    const currentTime = seoulTime.toISOString().replace('T', ' ').substring(0, 19);
     let index = 0;
     for (const match of matches.slice(0, 10)) {
       const detailUrl = "https://www.gamemeca.com" + match[1];
@@ -114,7 +120,7 @@ async function fetchAndParseGameNews(db: admin.firestore.Firestore) {
       }
       const article: Article = {
         key: (parseInt(newsKey) + index).toString(),
-        board_index: 2,
+        board_name: 'game_news',
         profile_key: "00000000000000000",
         profile_name: "게임뉴스봇",
         title: title,
@@ -122,9 +128,13 @@ async function fetchAndParseGameNews(db: admin.firestore.Firestore) {
         count_like: 0,
         count_unlike: 0,
         count_view: 0,
+        count_comments: 0,
         is_notice: false,
         created_at: currentTime,
-        comments: []
+        comments: [],
+        last_updated: currentTime,
+        timestamp: currentTime,
+        thumbnail: undefined,
       };
       await db.collection(FIRESTORE_COLLECTION_ARTICLE).doc(article.key).set(article);
       index++;

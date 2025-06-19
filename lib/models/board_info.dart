@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class BoardInfo{
-  int index;
+class BoardInfo {
+  String board_name;
   Icon icon;
   String title;
   String description;
@@ -9,12 +9,18 @@ class BoardInfo{
   bool? isNotice;
   bool isCanWrite;
 
-  BoardInfo(this.index,this.icon, this.title, this.description,this.isCanWrite);
+  BoardInfo(
+    this.board_name,
+    this.icon,
+    this.title,
+    this.description,
+    this.isCanWrite,
+  );
 
-  BoardInfo.init():this(1,const Icon(Icons.icecream), "", "",true);
+  BoardInfo.init() : this("", const Icon(Icons.icecream), "", "", true);
 
   @override
   String toString() {
-    return 'BoardInfo{index: $index, icon: $icon, title: $title, description: $description, isPopular: $isPopular, isNotice: $isNotice, isCanWrite: $isCanWrite}';
+    return 'BoardInfo{board_name: $board_name, icon: $icon, title: $title, description: $description, isPopular: $isPopular, isNotice: $isNotice, isCanWrite: $isCanWrite}';
   }
 }

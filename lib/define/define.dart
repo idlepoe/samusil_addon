@@ -40,6 +40,17 @@ class Define {
 
   static const Widget APP_DIVIDER = Divider(height: 1);
 
+  // Board names (문자열 기반)
+  static const String BOARD_PROFILE = "profile";
+  static const String BOARD_WISH = "wish";
+  static const String BOARD_ALL = "all_board";
+  static const String BOARD_IT = "it_board";
+  static const String BOARD_FREE = "free_board";
+  static const String BOARD_IT_NEWS = "it_news_board";
+  static const String BOARD_GAME_NEWS = "game_news_board";
+  static const String BOARD_REPORT = "report_suggestion_board";
+
+  // Legacy index constants (하위 호환성을 위해 유지)
   static const int INDEX_PROFILE_PAGE = 0;
   static const int INDEX_WISH_PAGE = 1;
   static const int INDEX_BOARD_ALL_PAGE = 2;
@@ -49,8 +60,7 @@ class Define {
   static const int INDEX_BOARD_GAME_NEWS_PAGE = 6;
   static const int INDEX_BOARD_REPORT_PAGE = 7;
 
-  static const String DEV_AD_MOB_BANNER =
-      "ca-app-pub-3940256099942544/6300978111";
-  static const String PRD_AD_MOB_BANNER =
-      "ca-app-pub-3847525926087017/2786411757";
+  // Cloud Functions 설정
+  static const String CLOUD_FUNCTIONS_BASE_URL =
+      'https://asia-northeast3-samusil-addon.cloudfunctions.net';
 }

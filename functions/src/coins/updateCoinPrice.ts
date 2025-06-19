@@ -57,14 +57,19 @@ async function updateCoinPrices(db: admin.firestore.Firestore) {
             last_updated: coinPrice.last_updated,
           });
           
+          // 한국시간으로 현재 시각 생성
+          const now = new Date();
+          const seoulTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+          const currentTime = seoulTime.toISOString().replace('T', ' ').substring(0, 19);
+          
           // 서브컬렉션에 가격 히스토리 추가
           const priceHistory: PriceHistory = {
             price: coinPrice.price,
             volume_24h: coinPrice.volume_24h,
-            timestamp: coinPrice.last_updated,
+            timestamp: currentTime,
           };
           
-          await priceHistoryRef.doc(coinPrice.last_updated).set(priceHistory);
+          await priceHistoryRef.doc(currentTime).set(priceHistory);
           updatedCount++;
           
         } else {
@@ -82,14 +87,19 @@ async function updateCoinPrices(db: admin.firestore.Firestore) {
           
           await coinRef.set(newCoin);
           
+          // 한국시간으로 현재 시각 생성
+          const now = new Date();
+          const seoulTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+          const currentTime = seoulTime.toISOString().replace('T', ' ').substring(0, 19);
+          
           // 서브컬렉션에 가격 히스토리 추가
           const priceHistory: PriceHistory = {
             price: coinPrice.price,
             volume_24h: coinPrice.volume_24h,
-            timestamp: coinPrice.last_updated,
+            timestamp: currentTime,
           };
           
-          await priceHistoryRef.doc(coinPrice.last_updated).set(priceHistory);
+          await priceHistoryRef.doc(currentTime).set(priceHistory);
           createdCount++;
         }
         

@@ -32,8 +32,9 @@ class _ArticleListPageState extends State<ArticleListPage>
 
   Profile _profile = Profile.init();
 
-  final RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
+  final RefreshController _refreshController = RefreshController(
+    initialRefresh: false,
+  );
   int _listMaxLength = Define.DEFAULT_BOARD_PAGE_LENGTH;
 
   BoardInfo _boardInfo = BoardInfo.init();
@@ -52,7 +53,10 @@ class _ArticleListPageState extends State<ArticleListPage>
     _boardInfo = widget.boardInfo;
     _profile = await App.getProfile();
     _list = await App.getArticleList(
-        _boardInfo, "", Define.DEFAULT_BOARD_GET_LENGTH);
+      _boardInfo,
+      "",
+      Define.DEFAULT_BOARD_GET_LENGTH,
+    );
     setState(() {});
   }
 
@@ -119,85 +123,102 @@ class _ArticleListPageState extends State<ArticleListPage>
                     ),
                     maxLines: 3,
                   ),
-                  visualDensity:
-                      const VisualDensity(horizontal: 0, vertical: -4),
+                  visualDensity: const VisualDensity(
+                    horizontal: 0,
+                    vertical: -4,
+                  ),
                 ),
                 Define.APP_DIVIDER,
                 Column(
                   children: List.generate(
-                      _list.length > _listMaxLength
-                          ? _listMaxLength
-                          : _list.length, (index) {
-                    bool hasPicture = false;
-                    for (ArticleContent ac in _list[index].contents) {
-                      if (ac.isPicture) {
-                        hasPicture = true;
+                    _list.length > _listMaxLength
+                        ? _listMaxLength
+                        : _list.length,
+                    (index) {
+                      bool hasPicture = false;
+                      for (ArticleContent ac in _list[index].contents) {
+                        if (ac.isPicture) {
+                          hasPicture = true;
+                        }
                       }
-                    }
-                    bool noContents = _list[index].contents.isEmpty;
-                    return Column(
-                      children: [
-                  
-                        ListTile(
-                          title: RichText(
-                            text: TextSpan(children: [
-                              TextSpan(
-                                  text: (hasPicture
-                                          ? viewType == ViewType.popular
-                                              ? "🌟"
-                                              : "🖼 "
-                                          : "") +
-                                      _list[index].title +
-                                      (noContents
-                                          ? " (${"no_contents".tr})"
-                                          : ""),
-                                  style: const TextStyle(color: Colors.black)),
-                              TextSpan(
-                                  text: (_list[index].comments.isNotEmpty
-                                      ? " [${_list[index].comments.length}]"
-                                      : ""),
-                                  style: const TextStyle(
-                                      color: Colors.indigoAccent))
-                            ]),
-                          ),
-                          subtitle: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                  "${_list[index].profile_name} | ${"count_view".tr} ${_list[index].count_view} | ${"recommend".tr} ${_list[index].count_like}"),
-                              Text(Utils.toConvertFireDateToCommentTimeToday(
-                                  _list[index].created_at)),
-                            ],
-                          ),
-                          onTap: () async {
-                            // bool? isEdit = await Navigator.of(context)
-                            //     .push(SwipeablePageRoute(
-                            //   builder: (BuildContext context) =>
-                            //       ArticleDetailPage(
-                            //     article: _list[index],
-                            //     boardInfo: _boardInfo,
-                            //     isFromDash: false,
-                            //   ),
-                            // ));
-                            // logger.w(isEdit);
-                            _list[index] = _list[index].copyWith(
-                              count_view: await App.articleCountViewUp(_list[index].key),
-                            );
+                      bool noContents = _list[index].contents.isEmpty;
+                      return Column(
+                        children: [
+                          ListTile(
+                            title: RichText(
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text:
+                                        (hasPicture
+                                            ? viewType == ViewType.popular
+                                                ? "🌟"
+                                                : "🖼 "
+                                            : "") +
+                                        _list[index].title +
+                                        (noContents
+                                            ? " (${"no_contents".tr})"
+                                            : ""),
+                                    style: const TextStyle(color: Colors.black),
+                                  ),
+                                  TextSpan(
+                                    text:
+                                        (_list[index].count_comments > 0
+                                            ? " [${_list[index].count_comments}]"
+                                            : ""),
+                                    style: const TextStyle(
+                                      color: Colors.indigoAccent,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            subtitle: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "${_list[index].profile_name} | ${"count_view".tr} ${_list[index].count_view} | ${"recommend".tr} ${_list[index].count_like}",
+                                ),
+                                Text(
+                                  Utils.toConvertFireDateToCommentTimeToday(
+                                    _list[index].created_at,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            onTap: () async {
+                              // bool? isEdit = await Navigator.of(context)
+                              //     .push(SwipeablePageRoute(
+                              //   builder: (BuildContext context) =>
+                              //       ArticleDetailPage(
+                              //     article: _list[index],
+                              //     boardInfo: _boardInfo,
+                              //     isFromDash: false,
+                              //   ),
+                              // ));
+                              // logger.w(isEdit);
+                              _list[index] = _list[index].copyWith(
+                                count_view: await App.articleCountViewUp(
+                                  _list[index].key,
+                                ),
+                              );
 
-                            if (!mounted) return;
-                            await GoRouter.of(context)
-                                .push("/detail/${_list[index].key}");
+                              if (!mounted) return;
+                              await GoRouter.of(
+                                context,
+                              ).push("/detail/${_list[index].key}");
 
-                            // if (Utils.isValidateBool(isEdit)) {
-                            await init();
-                            // }
-                          },
-                          visualDensity: const VisualDensity(vertical: -4),
-                        ),
-                        Define.APP_DIVIDER,
-                      ],
-                    );
-                  }),
+                              // if (Utils.isValidateBool(isEdit)) {
+                              await init();
+                              // }
+                            },
+                            visualDensity: const VisualDensity(vertical: -4),
+                          ),
+                          Define.APP_DIVIDER,
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
@@ -212,14 +233,18 @@ class _ArticleListPageState extends State<ArticleListPage>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                BottomIconButton(LineIcons.home, "dash_board".tr, onTap: () {
-                  // Navigator.pushAndRemoveUntil(
-                  //     context,
-                  //     SwipeablePageRoute(
-                  //         builder: (BuildContext context) => DashBoardPage()),
-                  //     (Route<dynamic> route) => false);
-                  context.go("/");
-                }),
+                BottomIconButton(
+                  LineIcons.home,
+                  "dash_board".tr,
+                  onTap: () {
+                    // Navigator.pushAndRemoveUntil(
+                    //     context,
+                    //     SwipeablePageRoute(
+                    //         builder: (BuildContext context) => DashBoardPage()),
+                    //     (Route<dynamic> route) => false);
+                    context.go("/");
+                  },
+                ),
                 // BottomIconButton(
                 //   viewType == ViewType.notice
                 //       ? Icons.list
@@ -255,25 +280,37 @@ class _ArticleListPageState extends State<ArticleListPage>
                 //     color: viewType == ViewType.popular
                 //         ? Colors.blue
                 //         : Colors.black),
-                BottomIconButton(Icons.search, "search".tr, onTap: () async {
-                  // await Navigator.of(context).push(SwipeablePageRoute(
-                  //   builder: (BuildContext context) => ArticleSearchPage(
-                  //     boardInfo: _boardInfo,
-                  //   ),
-                  // ));
-                  GoRouter.of(context).push("/list/${_boardInfo.index}/search");
-                }),
-                BottomIconButton(LineIcons.pen, "write".tr, onTap: () async {
-                  // await Navigator.of(context).push(SwipeablePageRoute(
-                  //   builder: (BuildContext context) => ArticleEditPage(
-                  //     boardInfo: _boardInfo,
-                  //   ),
-                  // ));
-                  // await init();
-                  await GoRouter.of(context)
-                      .push("/list/${_boardInfo.index}/edit");
-                  await init();
-                }, disabled: !_boardInfo.isCanWrite),
+                BottomIconButton(
+                  Icons.search,
+                  "search".tr,
+                  onTap: () async {
+                    // await Navigator.of(context).push(SwipeablePageRoute(
+                    //   builder: (BuildContext context) => ArticleSearchPage(
+                    //     boardInfo: _boardInfo,
+                    //   ),
+                    // ));
+                    GoRouter.of(
+                      context,
+                    ).push("/list/${_boardInfo.board_name}/search");
+                  },
+                ),
+                BottomIconButton(
+                  LineIcons.pen,
+                  "write".tr,
+                  onTap: () async {
+                    // await Navigator.of(context).push(SwipeablePageRoute(
+                    //   builder: (BuildContext context) => ArticleEditPage(
+                    //     boardInfo: _boardInfo,
+                    //   ),
+                    // ));
+                    // await init();
+                    await GoRouter.of(
+                      context,
+                    ).push("/list/${_boardInfo.board_name}/edit");
+                    await init();
+                  },
+                  disabled: !_boardInfo.isCanWrite,
+                ),
               ],
             ),
           ],

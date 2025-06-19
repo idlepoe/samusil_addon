@@ -26,7 +26,7 @@ class News {
     );
 
     List<Article> duplicateList = await App.getArticleList(
-      Arrays.getBoardInfo(Define.INDEX_BOARD_GAME_NEWS_PAGE),
+      Arrays.getBoardInfoByIndex(Define.INDEX_BOARD_GAME_NEWS_PAGE),
       "",
       Define.DEFAULT_BOARD_GET_LENGTH,
     );
@@ -49,7 +49,20 @@ class News {
         String newsKey = Utils.getDateTimeKey();
         int index = 0;
         for (var row in elementList.reversed.toList()) {
-          Article target = Article.init();
+          Article target = const Article(
+            key: "",
+            board_name: "",
+            profile_key: "",
+            profile_name: "",
+            count_view: 0,
+            count_like: 0,
+            count_unlike: 0,
+            count_comments: 0,
+            title: "",
+            contents: [],
+            created_at: "",
+            is_notice: false,
+          );
           List<dom.Element> contentsList = row.querySelectorAll('div');
           target = target.copyWith(
             title: contentsList[0].text
@@ -116,7 +129,7 @@ class News {
 
           target = target.copyWith(
             key: (int.parse(newsKey) + index).toString(),
-            board_index: Define.INDEX_BOARD_GAME_NEWS_PAGE,
+            board_name: Define.BOARD_GAME_NEWS,
             profile_key: "00000000000000000",
             profile_name: "게임뉴스봇",
             contents: contents,
@@ -217,7 +230,7 @@ class News {
     );
 
     List<Article> duplicateList = await App.getArticleList(
-      Arrays.getBoardInfo(Define.INDEX_BOARD_IT_NEWS_PAGE),
+      Arrays.getBoardInfoByIndex(Define.INDEX_BOARD_IT_NEWS_PAGE),
       "",
       Define.DEFAULT_BOARD_GET_LENGTH,
     );
@@ -242,7 +255,20 @@ class News {
         String newsKey = Utils.getDateTimeKey();
         int index = 0;
         for (dom.Element row1 in elementList.reversed.toList()) {
-          Article target = Article.init();
+          Article target = const Article(
+            key: "",
+            board_name: "",
+            profile_key: "",
+            profile_name: "",
+            count_view: 0,
+            count_like: 0,
+            count_unlike: 0,
+            count_comments: 0,
+            title: "",
+            contents: [],
+            created_at: "",
+            is_notice: false,
+          );
 
           String link = row1.querySelector("a")!.attributes["href"] ?? "";
 
@@ -287,7 +313,7 @@ class News {
 
           target = target.copyWith(
             key: (int.parse(newsKey) + index).toString(),
-            board_index: Define.INDEX_BOARD_IT_NEWS_PAGE,
+            board_name: Define.BOARD_IT_NEWS,
             profile_key: "00000000000000000",
             profile_name: "IT뉴스봇",
             contents: articleContents,
@@ -368,7 +394,7 @@ class News {
     );
 
     List<Article> duplicateList = await App.getArticleList(
-      Arrays.getBoardInfo(Define.INDEX_BOARD_IT_NEWS_PAGE),
+      Arrays.getBoardInfoByIndex(Define.INDEX_BOARD_IT_NEWS_PAGE),
       "",
       Define.DEFAULT_BOARD_GET_LENGTH,
     );
@@ -396,7 +422,20 @@ class News {
         String newsKey = Utils.getDateTimeKey();
         int index = 0;
         for (dom.Element row1 in elementList.reversed.toList()) {
-          Article target = Article.init();
+          Article target = const Article(
+            key: "",
+            board_name: "",
+            profile_key: "",
+            profile_name: "",
+            count_view: 0,
+            count_like: 0,
+            count_unlike: 0,
+            count_comments: 0,
+            title: "",
+            contents: [],
+            created_at: "",
+            is_notice: false,
+          );
 
           String link = row1.querySelector("a")!.attributes["href"] ?? "";
 
@@ -409,7 +448,6 @@ class News {
             logger.w("element == null");
             break;
           }
-
           dom.Document document1 = parse(response1.bodyBytes);
           target = target.copyWith(
             title: document1.querySelector(".node-title")!.text,
@@ -483,7 +521,7 @@ class News {
           //
           target = target.copyWith(
             key: (int.parse(newsKey) + index).toString(),
-            board_index: Define.INDEX_BOARD_IT_NEWS_PAGE,
+            board_name: Define.BOARD_IT_NEWS,
             profile_key: "00000000000000000",
             profile_name: "IT뉴스봇",
             contents: articleContents,

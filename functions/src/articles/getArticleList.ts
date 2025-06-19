@@ -1,7 +1,7 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { Article } from '../utils/types';
-import { FIRESTORE_COLLECTION_ARTICLE, DEFAULT_BOARD_GET_LENGTH } from '../utils/constants';
+import { FIRESTORE_COLLECTION_ARTICLE, DEFAULT_BOARD_GET_LENGTH, BOARD_IT_NEWS, BOARD_GAME_NEWS } from '../utils/constants';
 
 export const getArticleList = onRequest({ 
   cors: true,
@@ -25,7 +25,7 @@ export const getArticleList = onRequest({
       return;
     }
 
-    let boardIndex: number;
+    let boardName: string;
     let search: string;
     let listLength: number;
     let isPopular: boolean | undefined;
@@ -34,7 +34,7 @@ export const getArticleList = onRequest({
 
     if (req.method === 'GET') {
       // GET 요청: query parameters 사용
-      boardIndex = Number(req.query.board_index) || 0;
+      boardName = (req.query.board_name as string) || '';
       search = (req.query.search as string) || '';
       listLength = Number(req.query.list_length) || DEFAULT_BOARD_GET_LENGTH;
       isPopular = req.query.is_popular === 'true';
@@ -42,8 +42,8 @@ export const getArticleList = onRequest({
       excludeNews = req.query.exclude_news === 'true';
     } else {
       // POST 요청: body 사용
-      const { board_index, search: searchParam, list_length, is_popular, is_notice, exclude_news } = req.body;
-      boardIndex = Number(board_index) || 0;
+      const { board_name, search: searchParam, list_length, is_popular, is_notice, exclude_news } = req.body;
+      boardName = board_name || '';
       search = searchParam || '';
       listLength = Number(list_length) || DEFAULT_BOARD_GET_LENGTH;
       isPopular = is_popular;
@@ -55,12 +55,12 @@ export const getArticleList = onRequest({
     let query: admin.firestore.Query = db.collection(FIRESTORE_COLLECTION_ARTICLE);
 
     // 게시판 필터링
-    if (boardIndex !== 0) { // 전체 게시판이 아닌 경우
+    if (boardName && boardName !== 'all_board') { // 전체 게시판이 아닌 경우
       if (excludeNews) {
         // 뉴스 게시판 제외
-        query = query.where('board_index', 'not-in', [1, 2]); // IT_NEWS_PAGE, GAME_NEWS_PAGE 제외
+        query = query.where('board_name', 'not-in', [BOARD_IT_NEWS, BOARD_GAME_NEWS]);
       } else {
-        query = query.where('board_index', '==', boardIndex);
+        query = query.where('board_name', '==', boardName);
       }
     }
 

@@ -415,7 +415,7 @@ class App {
     String search,
     int listLength,
   ) async {
-    if (boardInfo.index == Define.INDEX_BOARD_ALL_PAGE) {
+    if (boardInfo.board_name == Define.BOARD_ALL) {
       return await getAllArticleListWithoutNews(boardInfo, search, listLength);
     }
     return await getIndexArticleList(boardInfo, search, listLength);
@@ -434,7 +434,7 @@ class App {
       final response = await httpService.callCloudFunction(
         'getArticleList',
         data: {
-          'board_index': boardInfo.index,
+          'board_name': boardInfo.board_name,
           'search': search,
           'list_length': listLength,
           'is_popular': boardInfo.isPopular,
@@ -469,7 +469,7 @@ class App {
       final response = await httpService.callCloudFunction(
         'getArticleList',
         data: {
-          'board_index': Define.INDEX_BOARD_ALL_PAGE,
+          'board_name': Define.BOARD_ALL,
           'search': search,
           'list_length': listLength,
           'is_popular': boardInfo.isPopular,
@@ -492,7 +492,20 @@ class App {
   }
 
   static Future<Article> getArticle(String key) async {
-    Article result = Article.init();
+    Article result = const Article(
+      key: "",
+      board_name: "",
+      profile_key: "",
+      profile_name: "",
+      count_view: 0,
+      count_like: 0,
+      count_unlike: 0,
+      count_comments: 0,
+      title: "",
+      contents: [],
+      created_at: "",
+      is_notice: false,
+    );
     logger.i("getArticle");
     try {
       final httpService = HttpService();
@@ -524,7 +537,7 @@ class App {
         data: {
           'article': {
             'key': article.key,
-            'board_index': article.board_index,
+            'board_name': article.board_name,
             'profile_key': article.profile_key,
             'profile_name': article.profile_name,
             'count_view': article.count_view,
@@ -534,8 +547,6 @@ class App {
             'contents':
                 article.contents.map((content) => content.toJson()).toList(),
             'created_at': article.created_at,
-            'comments':
-                article.comments.map((comment) => comment.toJson()).toList(),
             'is_notice': article.is_notice,
             'thumbnail': article.thumbnail,
           },

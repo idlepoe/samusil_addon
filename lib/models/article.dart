@@ -21,6 +21,7 @@ abstract class Article with _$Article {
     @JsonKey(fromJson: _toInt) required int count_view,
     @JsonKey(fromJson: _toInt) required int count_like,
     @JsonKey(fromJson: _toInt) required int count_unlike,
+    @JsonKey(fromJson: _toInt) required int count_comments,
     @JsonKey(fromJson: _toString) required String title,
     required List<ArticleContent> contents,
     @JsonKey(fromJson: _toString) required String created_at,
@@ -30,18 +31,4 @@ abstract class Article with _$Article {
 
   factory Article.fromJson(Map<String, dynamic> json) =>
       _$ArticleFromJson(json);
-
-  factory Article.init() => Article(
-    key: "",
-    board_name: "",
-    profile_key: "",
-    profile_name: "",
-    count_view: 0,
-    count_like: 0,
-    count_unlike: 0,
-    title: "",
-    contents: [],
-    created_at: DateFormat('yyyyMMddHHmmssSSS').format(DateTime.now()),
-    is_notice: false,
-  );
 }

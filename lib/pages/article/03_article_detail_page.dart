@@ -14,8 +14,10 @@ import 'package:samusil_addon/components/appButton.dart';
 import 'package:samusil_addon/define/enum.dart';
 import 'package:samusil_addon/models/article.dart';
 import 'package:samusil_addon/models/main_comment.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
+import '../../define/arrays.dart';
 import '../../define/define.dart';
 import '../../models/alarm.dart';
 import '../../models/board_info.dart';
@@ -24,16 +26,9 @@ import '../../utils/app.dart';
 import '../../utils/util.dart';
 
 class ArticleDetailPage extends StatefulWidget {
-  final BoardInfo boardInfo;
-  final Article article;
-  final bool isFromDash;
+  final String articleKey;
 
-  const ArticleDetailPage({
-    super.key,
-    required this.article,
-    required this.boardInfo,
-    required this.isFromDash,
-  });
+  const ArticleDetailPage({super.key, required this.articleKey});
 
   @override
   State<ArticleDetailPage> createState() => _ArticleDetailPageState();
@@ -42,19 +37,33 @@ class ArticleDetailPage extends StatefulWidget {
 class _ArticleDetailPageState extends State<ArticleDetailPage> {
   var logger = Logger();
 
+  String _articleKey = "";
   BoardInfo _boardInfo = BoardInfo.init();
-  Article _article = Article.init();
+  Article _article = const Article(
+    key: "",
+    board_name: "",
+    profile_key: "",
+    profile_name: "",
+    count_view: 0,
+    count_like: 0,
+    count_unlike: 0,
+    count_comments: 0,
+    title: "",
+    contents: [],
+    created_at: "",
+    is_notice: false,
+  );
   Profile _profile = Profile.init();
   final TextEditingController _commentController = TextEditingController();
   final FocusNode _commentFocusNode = FocusNode();
   bool _isAlreadyVote = false;
   MainComment? _subComment;
+  List<MainComment> _comments = [];
 
   int _imageCount = 1;
-
-  bool _isFromDash = false;
-
+  final bool _isFromDash = true;
   bool _isPressed = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -63,29 +72,55 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
   }
 
   Future<void> init() async {
-    _article = widget.article;
-    _boardInfo = widget.boardInfo;
-    _isFromDash = widget.isFromDash;
+    _articleKey = widget.articleKey;
+    _article = await App.getArticle(_articleKey);
+    _boardInfo = Arrays.getBoardInfo(_article.board_name);
     _profile = await App.getProfile();
     _isAlreadyVote = await Utils.checkAlreadyVote(_article.key);
 
-    // Freezed 모델의 불변성을 유지하기 위해 새로운 정렬된 리스트 생성
-    List<MainComment> sortedComments = List.from(_article.comments);
-    sortedComments.sort(
-      (a, b) => (a.parents_key.isNotEmpty ? a.parents_key : a.key).compareTo(
-        (b.parents_key.isNotEmpty ? b.parents_key : b.key),
-      ),
-    );
-
-    _article = _article.copyWith(comments: sortedComments);
+    // 댓글 로드
+    await loadComments();
 
     if (mounted) {
-      setState(() {});
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> loadComments() async {
+    try {
+      _comments = await App.getComments(_article.key);
+      _comments.sort(
+        (a, b) => (a.parents_key.isNotEmpty ? a.parents_key : a.key).compareTo(
+          (b.parents_key.isNotEmpty ? b.parents_key : b.key),
+        ),
+      );
+    } catch (e) {
+      logger.e('댓글 로드 실패: $e');
+      _comments = [];
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Define.APP_BAR_BACKGROUND_COLOR,
+          iconTheme: const IconThemeData(
+            color: Define.APP_BAR_TITLE_TEXT_COLOR,
+          ),
+          elevation: 0,
+          title: Text(
+            "loading".tr,
+            style: const TextStyle(color: Define.APP_BAR_TITLE_TEXT_COLOR),
+          ),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Define.APP_BAR_BACKGROUND_COLOR,
@@ -95,6 +130,17 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
           _boardInfo.title.tr,
           style: const TextStyle(color: Define.APP_BAR_TITLE_TEXT_COLOR),
         ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Share.share(
+                'https://nippon-life.web.app/#/detail/$_articleKey',
+                subject: _article.title,
+              );
+            },
+            icon: const Icon(Icons.share),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(
@@ -127,7 +173,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       Text(
-                        "${"count_view".tr} ${_article.count_view} | ${"comment".tr} ${_article.comments.length}",
+                        "${"count_view".tr} ${_article.count_view} | ${"comment".tr} ${_article.count_comments}",
                         style: const TextStyle(color: Colors.grey),
                       ),
                     ],
@@ -322,7 +368,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                 children: [
                   TextButton(
                     onPressed: () {
-                      context.go('/list/${_boardInfo.index}');
+                      context.go('/list/${_boardInfo.board_name}');
                     },
                     child: Text(_boardInfo.title.tr + "board_to_move".tr),
                   ),
@@ -336,25 +382,12 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
               alignment: Alignment.centerLeft,
               child: Row(
                 children: [
-                  Text("${"comment".tr} ${_article.comments.length}"),
+                  Text("${"comment".tr} ${_article.count_comments}"),
                   IconButton(
                     onPressed: () async {
-                      List<MainComment> comments = await App.getComments(
-                        _article.key,
-                      );
-                      // 새로운 리스트를 생성하여 정렬
-                      List<MainComment> sortedComments = List.from(comments);
-                      sortedComments.sort(
-                        (a, b) =>
-                            (a.parents_key.isNotEmpty ? a.parents_key : a.key)
-                                .compareTo(
-                                  (b.parents_key.isNotEmpty
-                                      ? b.parents_key
-                                      : b.key),
-                                ),
-                      );
-                      _article = _article.copyWith(comments: sortedComments);
+                      await loadComments();
                       if (mounted) {
+                        setState(() {});
                         Fluttertoast.showToast(msg: "success_get_comment".tr);
                       }
                     },
@@ -364,14 +397,14 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
               ),
             ),
             Column(
-              children: List.generate(_article.comments.length, (index) {
+              children: List.generate(_comments.length, (index) {
                 return Padding(
                   padding: EdgeInsets.only(
-                    left: (_article.comments[index].is_sub ? 15 : 0),
+                    left: (_comments[index].is_sub ? 15 : 0),
                   ),
                   child: ListTile(
                     onTap: () {
-                      _subComment = _article.comments[index];
+                      _subComment = _comments[index];
                       _commentFocusNode.requestFocus();
                       if (mounted) {
                         setState(() {});
@@ -384,31 +417,27 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              "👤${_article.comments[index].profile_name}",
+                              "👤${_comments[index].profile_name}",
                               style: const TextStyle(fontSize: 13),
                             ),
-                            if (_article.comments[index].profile_key ==
-                                _profile.key)
+                            if (_comments[index].profile_key == _profile.key)
                               IconButton(
                                 icon: const Icon(LineIcons.trash),
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(),
                                 onPressed: () {
-                                  _showDeleteDialog(
-                                    context,
-                                    _article.comments[index],
-                                  );
+                                  _showDeleteDialog(context, _comments[index]);
                                 },
                               ),
                           ],
                         ),
-                        Text(_article.comments[index].contents),
+                        Text(_comments[index].contents),
                         const SizedBox(height: 5),
                       ],
                     ),
                     subtitle: Text(
                       Utils.toConvertFireDateToCommentTime(
-                        _article.comments[index].created_at,
+                        _comments[index].created_at,
                         bYear: true,
                       ),
                     ),
@@ -507,9 +536,9 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                               _subComment != null ? _subComment!.key : "",
                         ),
                       );
-                      // 새로운 리스트를 생성하여 정렬
-                      List<MainComment> sortedAfterList = List.from(afterList);
-                      sortedAfterList.sort(
+
+                      _comments = afterList;
+                      _comments.sort(
                         (a, b) =>
                             (a.parents_key.isNotEmpty ? a.parents_key : a.key)
                                 .compareTo(
@@ -518,37 +547,21 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                                       : b.key),
                                 ),
                       );
-                      _article = _article.copyWith(comments: afterList);
 
-                      await App.pointUpdate(_profile.key, 1);
-
-                      if (_subComment == null) {
-                        Alarm alarm = Alarm(
-                          key: commentKey,
-                          my_contents: _commentController.text,
-                          is_read: false,
-                          target_article_key: _article.key,
-                          target_contents: _article.title,
-                          target_info:
-                              "${_boardInfo.title} | ${_article.profile_name} | ${Utils.toConvertFireDateToCommentTime(_article.created_at)}",
-                          target_key_type: AlarmTargetKeyType.article.index,
-                        );
-                        await App.createAlarm(_article.profile_key, alarm);
-                      }
-
-                      _commentController.clear();
-                      _commentFocusNode.unfocus();
-                      _subComment = null;
+                      _article = _article.copyWith(
+                        count_comments: _article.count_comments + 1,
+                      );
 
                       if (mounted) {
                         Fluttertoast.showToast(
                           msg: "success_create_comment".tr,
                         );
+                        setState(() {});
                       }
 
-                      setState(() {
-                        _isPressed = false;
-                      });
+                      _commentController.text = "";
+                      _subComment = null;
+                      _isPressed = false;
                     },
                   ),
                 ),
@@ -560,56 +573,6 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
     );
   }
 
-  Future<dynamic> _showDeleteDialog(
-    BuildContext context,
-    MainComment comment,
-  ) async {
-    return showCupertinoDialog(
-      context: context,
-      builder: (BuildContext ctx) {
-        return CupertinoAlertDialog(
-          title: Text('title_delete_confirm'.tr),
-          content: Text('msg_delete_confirm'.tr),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () async {
-                List<MainComment> afterList = await App.deleteComment(
-                  _article.key,
-                  comment,
-                );
-                // 새로운 리스트를 생성하여 정렬
-                List<MainComment> sortedAfterList = List.from(afterList);
-                sortedAfterList.sort(
-                  (a, b) => (a.parents_key.isNotEmpty ? a.parents_key : a.key)
-                      .compareTo(
-                        (b.parents_key.isNotEmpty ? b.parents_key : b.key),
-                      ),
-                );
-                _article = _article.copyWith(comments: sortedAfterList);
-                if (mounted) {
-                  Fluttertoast.showToast(msg: "success_delete_comment".tr);
-                }
-                setState(() {});
-                Navigator.of(context).pop();
-              },
-              isDefaultAction: true,
-              isDestructiveAction: true,
-              child: Text("yes".tr),
-            ),
-            CupertinoDialogAction(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              isDefaultAction: false,
-              isDestructiveAction: false,
-              child: Text("no".tr),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   Future<bool> _showArticleDeleteDialog(
     BuildContext context,
     Article article,
@@ -617,30 +580,27 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
     bool result = false;
     await showCupertinoDialog(
       context: context,
-      builder: (BuildContext ctx) {
+      builder: (context) {
         return CupertinoAlertDialog(
-          title: Text('title_delete_confirm'.tr),
-          content: Text('msg_delete_confirm'.tr),
+          title: Text("article_delete_confirm".tr),
+          content: Text("article_delete_confirm_description".tr),
           actions: [
             CupertinoDialogAction(
               onPressed: () async {
-                await App.deleteArticle(_article);
+                Navigator.pop(context);
+                await App.deleteArticle(article);
                 result = true;
                 if (mounted) {
                   Fluttertoast.showToast(msg: "success_delete_article".tr);
                 }
-                Navigator.of(context).pop();
               },
-              isDefaultAction: true,
               isDestructiveAction: true,
               child: Text("yes".tr),
             ),
             CupertinoDialogAction(
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.pop(context);
               },
-              isDefaultAction: false,
-              isDestructiveAction: false,
               child: Text("no".tr),
             ),
           ],
@@ -648,5 +608,55 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
       },
     );
     return result;
+  }
+
+  Future<void> _showDeleteDialog(
+    BuildContext context,
+    MainComment comment,
+  ) async {
+    await showCupertinoDialog(
+      context: context,
+      builder: (context) {
+        return CupertinoAlertDialog(
+          title: Text("comment_delete_confirm".tr),
+          content: Text("comment_delete_confirm_description".tr),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () async {
+                Navigator.pop(context);
+                List<MainComment> afterList = await App.deleteComment(
+                  _article.key,
+                  comment,
+                );
+                _comments = afterList;
+                _comments.sort(
+                  (a, b) => (a.parents_key.isNotEmpty ? a.parents_key : a.key)
+                      .compareTo(
+                        (b.parents_key.isNotEmpty ? b.parents_key : b.key),
+                      ),
+                );
+
+                _article = _article.copyWith(
+                  count_comments: _article.count_comments - 1,
+                );
+
+                if (mounted) {
+                  Fluttertoast.showToast(msg: "success_delete_comment".tr);
+                  setState(() {});
+                }
+              },
+              isDestructiveAction: true,
+              child: Text("yes".tr),
+            ),
+            CupertinoDialogAction(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text("no".tr),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

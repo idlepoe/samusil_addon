@@ -61,8 +61,10 @@ class _LeftDrawerState extends State<LeftDrawer> {
                     image: AssetImage("assets/icon.png"),
                   ),
                   const SizedBox(width: 10),
-                  Text("app_name".tr,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(
+                    "app_name".tr,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
             ),
@@ -93,8 +95,12 @@ class _LeftDrawerState extends State<LeftDrawer> {
             // ),
             ListTile(
               title: Text(
-                  Arrays.getBoardInfo(Define.INDEX_BOARD_ALL_PAGE).title.tr),
-              leading: Arrays.getBoardInfo(Define.INDEX_BOARD_ALL_PAGE).icon,
+                Arrays.getBoardInfoByIndex(
+                  Define.INDEX_BOARD_ALL_PAGE,
+                ).title.tr,
+              ),
+              leading:
+                  Arrays.getBoardInfoByIndex(Define.INDEX_BOARD_ALL_PAGE).icon,
               onTap: () {
                 Navigator.pop(context);
                 // Navigator.pushAndRemoveUntil(
@@ -103,16 +109,17 @@ class _LeftDrawerState extends State<LeftDrawer> {
                 //         builder: (BuildContext context) => ArticleListPage(
                 //             Arrays.getBoardInfo(Define.INDEX_BOARD_ALL_PAGE))),
                 //     (route) => false);
-                GoRouter.of(context)
-                    .push("/list/${Define.INDEX_BOARD_ALL_PAGE}");
+                GoRouter.of(context).push("/list/${Define.BOARD_ALL}");
                 // context.go('/list/' + Define.INDEX_BOARD_ALL_PAGE.toString());
               },
             ),
             Define.APP_DIVIDER,
             ListTile(
               title: Text(
-                  Arrays.getBoardInfo(Define.INDEX_BOARD_IT_PAGE).title.tr),
-              leading: Arrays.getBoardInfo(Define.INDEX_BOARD_IT_PAGE).icon,
+                Arrays.getBoardInfoByIndex(Define.INDEX_BOARD_IT_PAGE).title.tr,
+              ),
+              leading:
+                  Arrays.getBoardInfoByIndex(Define.INDEX_BOARD_IT_PAGE).icon,
               onTap: () {
                 Navigator.pop(context);
                 // Navigator.pushAndRemoveUntil(
@@ -122,13 +129,17 @@ class _LeftDrawerState extends State<LeftDrawer> {
                 //           Arrays.getBoardInfo(Define.INDEX_BOARD_IT_PAGE))),
                 //   (route) => false,
                 // );
-                context.go('/list/${Define.INDEX_BOARD_IT_PAGE}');
+                context.go('/list/${Define.BOARD_IT}');
               },
             ),
             ListTile(
               title: Text(
-                  Arrays.getBoardInfo(Define.INDEX_BOARD_FREE_PAGE).title.tr),
-              leading: Arrays.getBoardInfo(Define.INDEX_BOARD_FREE_PAGE).icon,
+                Arrays.getBoardInfoByIndex(
+                  Define.INDEX_BOARD_FREE_PAGE,
+                ).title.tr,
+              ),
+              leading:
+                  Arrays.getBoardInfoByIndex(Define.INDEX_BOARD_FREE_PAGE).icon,
               onTap: () async {
                 Navigator.pop(context);
                 // Navigator.pushAndRemoveUntil(
@@ -139,16 +150,20 @@ class _LeftDrawerState extends State<LeftDrawer> {
                 //   (route) => false,
                 // );
                 // await Future.delayed(Duration.zero);
-                context.go('/list/${Define.INDEX_BOARD_FREE_PAGE}');
+                context.go('/list/${Define.BOARD_FREE}');
               },
             ),
             Define.APP_DIVIDER,
             ListTile(
-              title: Text(Arrays.getBoardInfo(Define.INDEX_BOARD_IT_NEWS_PAGE)
-                  .title
-                  .tr),
+              title: Text(
+                Arrays.getBoardInfoByIndex(
+                  Define.INDEX_BOARD_IT_NEWS_PAGE,
+                ).title.tr,
+              ),
               leading:
-                  Arrays.getBoardInfo(Define.INDEX_BOARD_IT_NEWS_PAGE).icon,
+                  Arrays.getBoardInfoByIndex(
+                    Define.INDEX_BOARD_IT_NEWS_PAGE,
+                  ).icon,
               onTap: () async {
                 Navigator.pop(context);
                 // Navigator.pushAndRemoveUntil(
@@ -160,16 +175,19 @@ class _LeftDrawerState extends State<LeftDrawer> {
                 //   (route) => false,
                 // );
                 await Future.delayed(Duration.zero);
-                context
-                    .go('/list/${Define.INDEX_BOARD_IT_NEWS_PAGE}');
+                context.go('/list/${Define.BOARD_IT_NEWS}');
               },
             ),
             ListTile(
-              title: Text(Arrays.getBoardInfo(Define.INDEX_BOARD_GAME_NEWS_PAGE)
-                  .title
-                  .tr),
+              title: Text(
+                Arrays.getBoardInfoByIndex(
+                  Define.INDEX_BOARD_GAME_NEWS_PAGE,
+                ).title.tr,
+              ),
               leading:
-                  Arrays.getBoardInfo(Define.INDEX_BOARD_GAME_NEWS_PAGE).icon,
+                  Arrays.getBoardInfoByIndex(
+                    Define.INDEX_BOARD_GAME_NEWS_PAGE,
+                  ).icon,
               onTap: () {
                 // Navigator.pop(context);
                 // Navigator.pushAndRemoveUntil(
@@ -180,8 +198,7 @@ class _LeftDrawerState extends State<LeftDrawer> {
                 //               Define.INDEX_BOARD_GAME_NEWS_PAGE))),
                 //   (route) => false,
                 // );
-                context.go(
-                    '/list/${Define.INDEX_BOARD_GAME_NEWS_PAGE}');
+                context.go('/list/${Define.BOARD_GAME_NEWS}');
               },
             ),
             Define.APP_DIVIDER,

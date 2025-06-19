@@ -12,6 +12,16 @@ export const FIRESTORE_FIELD_PRICE_HISTORY = 'price_history';
 // 에러 코드
 export const FIRESTORE_ERROR_CODE_NOT_FOUND = 'not-found';
 
+// 게시판 이름 (문자열 기반)
+export const BOARD_PROFILE = "profile";
+export const BOARD_WISH = "wish";
+export const BOARD_ALL = "all_board";
+export const BOARD_IT = "it_board";
+export const BOARD_FREE = "free_board";
+export const BOARD_IT_NEWS = "it_news_board";
+export const BOARD_GAME_NEWS = "game_news_board";
+export const BOARD_REPORT = "report_suggestion_board";
+
 // 게시판 인덱스
 export const INDEX_BOARD_ALL_PAGE = 0;
 export const INDEX_BOARD_FREE_PAGE = 1;

@@ -287,7 +287,20 @@ class _ArticleEditPageState extends State<ArticleEditPage> {
     setState(() {
       isPressed = true;
     });
-    Article updateTarget = Article.init();
+    Article updateTarget = const Article(
+      key: "",
+      board_name: "",
+      profile_key: "",
+      profile_name: "",
+      count_view: 0,
+      count_like: 0,
+      count_unlike: 0,
+      count_comments: 0,
+      title: "",
+      contents: [],
+      created_at: "",
+      is_notice: false,
+    );
     Profile profile = await App.getProfile();
 
     String thumbnail = "";
@@ -326,10 +339,7 @@ class _ArticleEditPageState extends State<ArticleEditPage> {
     updateTarget = updateTarget.copyWith(
       key: Utils.getDateTimeKey(),
       title: _titleTextEditingController.text,
-      board_index:
-          _boardInfo.index == Define.INDEX_BOARD_ALL_PAGE
-              ? Define.INDEX_BOARD_FREE_PAGE
-              : _boardInfo.index,
+      board_name: _boardInfo.title,
       contents: updateContents,
       profile_key: profile.key,
       profile_name: profile.name,
@@ -349,7 +359,7 @@ class _ArticleEditPageState extends State<ArticleEditPage> {
     });
 
     if (!mounted) return;
-    print("_boardInfo.index${_boardInfo.index}");
+    print("_boardInfo.board_name${_boardInfo.board_name}");
     Navigator.pop(context);
   }
 }

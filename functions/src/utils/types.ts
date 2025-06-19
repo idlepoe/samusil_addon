@@ -18,7 +18,7 @@ export interface MainComment {
 
 export interface Article {
   key: string;
-  board_index: number;
+  board_name: string;
   profile_key: string;
   profile_name: string;
   count_view: number;
@@ -30,6 +30,7 @@ export interface Article {
   comments: MainComment[];
   is_notice: boolean;
   thumbnail?: string;
+  count_comments: number;
 }
 
 // Profile 관련 타입
@@ -93,7 +94,7 @@ export interface Alarm {
 
 // Board 관련 타입
 export interface BoardInfo {
-  index: number;
+  board_name: string;
   title: string;
   isPopular?: boolean;
   isNotice?: boolean;

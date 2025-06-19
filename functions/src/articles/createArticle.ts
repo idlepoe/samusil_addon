@@ -44,16 +44,16 @@ export const createArticle = onRequest({
     // Firestore에 저장
     await articleRef.set({
       key: article.key,
-      board_index: article.board_index,
+      board_name: article.board_name,
       profile_key: article.profile_key,
       profile_name: article.profile_name,
       count_view: article.count_view,
       count_like: article.count_like,
       count_unlike: article.count_unlike,
+      count_comments: 0,
       title: article.title,
       contents: article.contents,
       created_at: article.created_at,
-      comments: article.comments,
       is_notice: article.is_notice,
       thumbnail: article.thumbnail,
     });

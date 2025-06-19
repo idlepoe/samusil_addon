@@ -42,7 +42,11 @@ class _ArticleSearchPageState extends State<ArticleSearchPage> {
   }
 
   Future<void> getArticleList() async {
-    _list = await App.getArticleList(_boardInfo,_searchTextFieldController.text,Define.DEFAULT_BOARD_GET_LENGTH);
+    _list = await App.getArticleList(
+      _boardInfo,
+      _searchTextFieldController.text,
+      Define.DEFAULT_BOARD_GET_LENGTH,
+    );
     if (mounted) {
       // Utils.showSnackBar(context,SnackType.success,"success_get_article_list".tr);
       setState(() {});
@@ -54,24 +58,35 @@ class _ArticleSearchPageState extends State<ArticleSearchPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Define.APP_BAR_BACKGROUND_COLOR,
-        iconTheme: const IconThemeData(
-          color: Define.APP_BAR_TITLE_TEXT_COLOR,
-        ),
+        iconTheme: const IconThemeData(color: Define.APP_BAR_TITLE_TEXT_COLOR),
         elevation: 0,
-        title: Text("search".tr,
-            style: const TextStyle(color: Define.APP_BAR_TITLE_TEXT_COLOR)),
+        title: Text(
+          "search".tr,
+          style: const TextStyle(color: Define.APP_BAR_TITLE_TEXT_COLOR),
+        ),
         bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(70),
-            child: Padding(
-              padding: const EdgeInsets.only(
-                  top: 5, bottom: 10, left: 10, right: 10),
-              child: AppTextField("", _searchTextFieldController,
-                focusNode: _focusNode,
-                radius: 0,
-                suffixIcon: IconButton(onPressed: () async {
+          preferredSize: const Size.fromHeight(70),
+          child: Padding(
+            padding: const EdgeInsets.only(
+              top: 5,
+              bottom: 10,
+              left: 10,
+              right: 10,
+            ),
+            child: AppTextField(
+              "",
+              _searchTextFieldController,
+              focusNode: _focusNode,
+              radius: 0,
+              suffixIcon: IconButton(
+                onPressed: () async {
                   await getArticleList();
-                }, icon: const Icon(Icons.search))),
-            )),
+                },
+                icon: const Icon(Icons.search),
+              ),
+            ),
+          ),
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -80,8 +95,9 @@ class _ArticleSearchPageState extends State<ArticleSearchPage> {
         child: SizedBox(
           height: double.infinity,
           child: SingleChildScrollView(
-            physics:
-                const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
             child: Column(
               children: [
                 Column(
@@ -96,23 +112,29 @@ class _ArticleSearchPageState extends State<ArticleSearchPage> {
                     return Column(
                       children: [
                         ListTile(
-                          title: Text((hasPicture
-                                  ? _boardInfo.isPopular ?? false
-                                      ? "🌟"
-                                      : "🖼 "
-                                  : "") +
-                              _list[index].title +
-                              (noContents ? " (${"no_contents".tr})" : "") +
-                              (_list[index].comments.isNotEmpty
-                                  ? " [${_list[index].comments.length}]"
-                                  : "")),
+                          title: Text(
+                            (hasPicture
+                                    ? _boardInfo.isPopular ?? false
+                                        ? "🌟"
+                                        : "🖼 "
+                                    : "") +
+                                _list[index].title +
+                                (noContents ? " (${"no_contents".tr})" : "") +
+                                (_list[index].count_comments > 0
+                                    ? " [${_list[index].count_comments}]"
+                                    : ""),
+                          ),
                           subtitle: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                  "${_boardInfo.index == 9 ? Arrays.getBoardInfo(_list[index].board_index).title : _list[index].profile_name} | ${"count_view".tr} ${_list[index].count_view} | ${"recommend".tr} ${_list[index].count_like}"),
-                              Text(Utils.toConvertFireDateToCommentTime(
-                                  _list[index].created_at))
+                                "${_boardInfo.board_name == Define.BOARD_ALL ? Arrays.getBoardInfo(_list[index].board_name).title : _list[index].profile_name} | ${"count_view".tr} ${_list[index].count_view} | ${"recommend".tr} ${_list[index].count_like}",
+                              ),
+                              Text(
+                                Utils.toConvertFireDateToCommentTime(
+                                  _list[index].created_at,
+                                ),
+                              ),
                             ],
                           ),
                           onTap: () async {
@@ -123,9 +145,13 @@ class _ArticleSearchPageState extends State<ArticleSearchPage> {
                             //     boardInfo: _boardInfo,isFromDash: false,
                             //   ),
                             // ));
-                            GoRouter.of(context).push("/detail/${_list[index].key}");
+                            GoRouter.of(
+                              context,
+                            ).push("/detail/${_list[index].key}");
                             _list[index] = _list[index].copyWith(
-                              count_view: await App.articleCountViewUp(_list[index].key),
+                              count_view: await App.articleCountViewUp(
+                                _list[index].key,
+                              ),
                             );
                             // await getArticleList();
                             if (mounted) {
