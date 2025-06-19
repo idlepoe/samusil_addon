@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -15,9 +16,12 @@ import 'package:intl/intl.dart';
 import 'package:samusil_addon/models/coin_balance.dart';
 import 'package:samusil_addon/models/main_comment.dart';
 import 'package:samusil_addon/utils/util.dart';
+import 'package:samusil_addon/utils/http_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart';
+import 'package:dio/dio.dart' hide Response;
+import 'package:logger/logger.dart';
 
 import '../define/define.dart';
 import '../define/enum.dart';
@@ -32,6 +36,18 @@ import '../models/wish.dart';
 import '../main.dart';
 
 class App {
+  /// Cloud Functions baseUrl 설정
+  ///
+  /// 사용 예시:
+  /// App.setCloudFunctionsBaseUrl('https://your-region-your-project.cloudfunctions.net');
+  ///
+  /// 배포 후 실제 Cloud Functions URL로 설정해야 합니다.
+  /// 예: https://asia-northeast3-samusil-addon.cloudfunctions.net
+  static void setCloudFunctionsBaseUrl(String baseUrl) {
+    HttpService().setBaseUrl(baseUrl);
+    logger.i('Cloud Functions baseUrl 설정: $baseUrl');
+  }
+
   static Future<Profile> getLocaleProfile() async {
     // logger.i("getLocaleProfile");
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -413,58 +429,23 @@ class App {
     List<Article> result = [];
 
     try {
-      final collectionRef = FirebaseFirestore.instance
-          .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
-          .where("board_index", isEqualTo: boardInfo.index)
-          .orderBy("key", descending: true)
-          .limit(listLength);
+      final httpService = HttpService();
 
-      QuerySnapshot querySnapshot = await collectionRef.get();
+      final response = await httpService.callCloudFunction(
+        'getArticleList',
+        data: {
+          'board_index': boardInfo.index,
+          'search': search,
+          'list_length': listLength,
+          'is_popular': boardInfo.isPopular,
+          'is_notice': boardInfo.isNotice,
+        },
+        method: 'GET',
+      );
 
-      List<Map<String, dynamic>> allData =
-          querySnapshot.docs.map((doc) {
-            return doc.data() as Map<String, dynamic>;
-          }).toList();
-      for (var i = 0; i < allData.length; i++) {
-        Article v = Article.fromJson(allData[i]);
-        if (search.isNotEmpty) {
-          bool isContain = false;
-
-          // 内容チェック
-          for (int j = 0; j < v.contents.length; j++) {
-            if (!v.contents[j].isPicture &&
-                v.contents[j].contents.toLowerCase().contains(
-                  search.toLowerCase(),
-                )) {
-              isContain = true;
-              break;
-            }
-          }
-
-          // タイトルチェック
-          if (v.title.toLowerCase().contains(search.toLowerCase())) {
-            isContain = true;
-            break;
-          }
-
-          // 存在しないとスキップ
-          if (!isContain) {
-            continue;
-          }
-        }
-        if (boardInfo.isPopular == null || !boardInfo.isPopular!) {
-          if (boardInfo.isNotice == null || !boardInfo.isNotice!) {
-            result.add(v);
-            continue;
-          } else if (v.is_notice) {
-            result.add(v);
-            continue;
-          }
-          continue;
-        } else if (v.count_like > 3) {
-          result.add(v);
-          continue;
-        }
+      if (response['success'] && response['data'] != null) {
+        final List<dynamic> articlesData = response['data'];
+        result = articlesData.map((data) => Article.fromJson(data)).toList();
       }
     } catch (e) {
       logger.e(e);
@@ -483,70 +464,24 @@ class App {
     List<Article> result = [];
 
     try {
-      final collectionRef = FirebaseFirestore.instance
-          .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
-          .where(
-            "board_index",
-            whereNotIn: [
-              Define.INDEX_BOARD_IT_NEWS_PAGE,
-              Define.INDEX_BOARD_GAME_NEWS_PAGE,
-            ],
-          )
-          .orderBy("board_index")
-          .orderBy("key", descending: true)
-          .limit(listLength);
+      final httpService = HttpService();
 
-      QuerySnapshot querySnapshot = await collectionRef.get();
+      final response = await httpService.callCloudFunction(
+        'getArticleList',
+        data: {
+          'board_index': Define.INDEX_BOARD_ALL_PAGE,
+          'search': search,
+          'list_length': listLength,
+          'is_popular': boardInfo.isPopular,
+          'is_notice': boardInfo.isNotice,
+          'exclude_news': true,
+        },
+        method: 'GET',
+      );
 
-      List<Map<String, dynamic>> allData =
-          querySnapshot.docs.map((doc) {
-            return doc.data() as Map<String, dynamic>;
-          }).toList();
-      for (var i = 0; i < allData.length; i++) {
-        Article v = Article.fromJson(allData[i]);
-        if (search.isNotEmpty) {
-          bool isContain = false;
-
-          // 内容チェック
-          for (int j = 0; j < v.contents.length; j++) {
-            if (!v.contents[j].isPicture &&
-                v.contents[j].contents.toLowerCase().contains(
-                  search.toLowerCase(),
-                )) {
-              isContain = true;
-              break;
-            }
-          }
-
-          // タイトルチェック
-          if (v.title.toLowerCase().contains(search.toLowerCase())) {
-            isContain = true;
-          }
-
-          // 存在しないとスキップ
-          if (!isContain) {
-            continue;
-          }
-        }
-
-        if (Utils.isValidateBool(boardInfo.isPopular)) {
-          if (v.count_like > 3) {
-            result.add(v);
-          }
-          continue;
-        }
-
-        if (Utils.isValidateBool(boardInfo.isNotice)) {
-          if (v.is_notice) {
-            result.add(v);
-          }
-          continue;
-        }
-
-        if (!Utils.isValidateBool(boardInfo.isPopular) &&
-            !Utils.isValidateBool(boardInfo.isNotice)) {
-          result.add(v);
-        }
+      if (response['success'] && response['data'] != null) {
+        final List<dynamic> articlesData = response['data'];
+        result = articlesData.map((data) => Article.fromJson(data)).toList();
       }
     } catch (e) {
       logger.e(e);
@@ -560,13 +495,16 @@ class App {
     Article result = Article.init();
     logger.i("getArticle");
     try {
-      var collection = FirebaseFirestore.instance.collection(
-        Define.FIRESTORE_COLLECTION_ARTICLE,
+      final httpService = HttpService();
+
+      final response = await httpService.callCloudFunction(
+        'getArticle',
+        data: {'key': key},
+        method: 'GET',
       );
-      var docSnapshot = await collection.doc(key).get();
-      if (docSnapshot.exists) {
-        Map<String, dynamic>? data = docSnapshot.data();
-        result = Article.fromJson(data!);
+
+      if (response['success'] && response['data'] != null) {
+        result = Article.fromJson(response['data']);
       } else {
         logger.w("no article:$key");
       }
@@ -578,51 +516,39 @@ class App {
   }
 
   static Future<void> createArticle(Article article) async {
-    // logger.i("createArticle");
     try {
-      final colRef = FirebaseFirestore.instance.collection(
-        Define.FIRESTORE_COLLECTION_ARTICLE,
+      final httpService = HttpService();
+
+      final result = await httpService.callCloudFunction(
+        'createArticle',
+        data: {
+          'article': {
+            'key': article.key,
+            'board_index': article.board_index,
+            'profile_key': article.profile_key,
+            'profile_name': article.profile_name,
+            'count_view': article.count_view,
+            'count_like': article.count_like,
+            'count_unlike': article.count_unlike,
+            'title': article.title,
+            'contents':
+                article.contents.map((content) => content.toJson()).toList(),
+            'created_at': article.created_at,
+            'comments':
+                article.comments.map((comment) => comment.toJson()).toList(),
+            'is_notice': article.is_notice,
+            'thumbnail': article.thumbnail,
+          },
+        },
       );
 
-      // 디버깅을 위한 로깅 추가
-      logger.d("Article contents length: ${article.contents.length}");
-      for (int i = 0; i < article.contents.length; i++) {
-        logger.d("Content $i: ${article.contents[i]}");
+      if (result['success']) {
+        logger.i("createArticle success");
+      } else {
+        logger.e("createArticle failed: ${result['error']}");
       }
-
-      // 수동으로 JSON 생성하여 List<ArticleContent> 문제 해결
-      Map<String, dynamic> articleJson = {
-        'key': article.key,
-        'board_index': article.board_index,
-        'profile_key': article.profile_key,
-        'profile_name': article.profile_name,
-        'count_view': article.count_view,
-        'count_like': article.count_like,
-        'count_unlike': article.count_unlike,
-        'title': article.title,
-        'contents':
-            article.contents.map((content) => content.toJson()).toList(),
-        'created_at': article.created_at,
-        'comments':
-            article.comments.map((comment) => comment.toJson()).toList(),
-        'is_notice': article.is_notice,
-        'thumbnail': article.thumbnail,
-      };
-
-      await colRef
-          .doc(article.key)
-          .set(articleJson)
-          .then(
-            (value) async {
-              logger.i("createArticle success");
-            },
-            onError: (e) async {
-              logger.e("Firestore error: $e");
-            },
-          );
     } catch (e) {
       logger.e("createArticle exception: $e");
-      logger.e("Stack trace: ${StackTrace.current}");
     }
   }
 
@@ -631,42 +557,24 @@ class App {
 
     Profile result = Profile.init();
 
-    final docRef = FirebaseFirestore.instance
-        .collection(Define.FIRESTORE_COLLECTION_PROFILE)
-        .doc(profileKey);
-    await docRef
-        .update({"point": FieldValue.increment(point)})
-        .then(
-          (value) async {
-            logger.i("pointUp success1");
-            var docSnapshot = await docRef.get();
-            if (docSnapshot.exists) {
-              Map<String, dynamic>? data = docSnapshot.data();
-              result = Profile.fromJson(data!);
-            }
-          },
-          onError: (e) async {
-            if (e.code == Define.FIRESTORE_ERROR_CODE_NOT_FOUND) {
-              await docRef
-                  .set({"point": point})
-                  .then(
-                    (value) async {
-                      logger.i("pointUp success2");
-                      var docSnapshot = await docRef.get();
-                      if (docSnapshot.exists) {
-                        Map<String, dynamic>? data = docSnapshot.data();
-                        result = Profile.fromJson(data!);
-                      }
-                    },
-                    onError: (e) {
-                      print(e);
-                    },
-                  );
-            } else {
-              print(e);
-            }
-          },
-        );
+    try {
+      final httpService = HttpService();
+
+      final response = await httpService.callCloudFunction(
+        'updatePoint',
+        data: {'profile_key': profileKey, 'point': point},
+      );
+
+      if (response['success'] && response['data'] != null) {
+        result = Profile.fromJson(response['data']);
+        logger.i("pointUp success");
+      } else {
+        logger.e("pointUp failed: ${response['error']}");
+      }
+    } catch (e) {
+      logger.e("pointUp exception: $e");
+    }
+
     return result;
   }
 
@@ -677,46 +585,26 @@ class App {
     List<MainComment> result = [];
 
     logger.d("createComment");
-    final docRef = FirebaseFirestore.instance
-        .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
-        .doc(article.key);
-    await docRef
-        .update({
-          Define.FIRESTORE_FIELD_COMMETS: FieldValue.arrayUnion([
-            comment.toJson(),
-          ]),
-        })
-        .then(
-          (value) async {
-            logger.i("createComment success1");
-          },
-          onError: (e) async {
-            if (e.code == Define.FIRESTORE_ERROR_CODE_NOT_FOUND) {
-              await docRef
-                  .set({
-                    Define.FIRESTORE_FIELD_COMMETS: FieldValue.arrayUnion([
-                      comment.toJson(),
-                    ]),
-                  })
-                  .then(
-                    (value) {
-                      logger.i("createComment success2");
-                    },
-                    onError: (e) {
-                      logger.e(e);
-                    },
-                  );
-            } else {
-              logger.e(e);
-            }
-          },
-        );
+    try {
+      final httpService = HttpService();
 
-    final refGet = await docRef.get();
-    for (dynamic s in refGet.get(Define.FIRESTORE_FIELD_COMMETS)) {
-      MainComment row = MainComment.fromJson(s);
-      result.add(row);
+      final response = await httpService.callCloudFunction(
+        'createComment',
+        data: {'article_key': article.key, 'comment': comment.toJson()},
+      );
+
+      if (response['success'] && response['data'] != null) {
+        final List<dynamic> commentsData = response['data'];
+        result =
+            commentsData.map((data) => MainComment.fromJson(data)).toList();
+        logger.i("createComment success");
+      } else {
+        logger.e("createComment failed: ${response['error']}");
+      }
+    } catch (e) {
+      logger.e("createComment exception: $e");
     }
+
     logger.i(result);
     return result;
   }
@@ -1113,81 +1001,39 @@ class App {
       "${"process_start".tr} : ${"point_market".tr}",
     );
 
-    List<CoinPrice> list = [];
+    try {
+      final httpService = HttpService();
 
-    final response = await get(
-      Uri.parse("https://api.coinpaprika.com/v1/exchanges/binance/markets"),
-    );
+      final response = await httpService.callCloudFunction(
+        'updateCoinPrice',
+        data: {},
+      );
 
-    switch (response.statusCode) {
-      case 200:
-        List<dynamic> result = jsonDecode(utf8.decode(response.bodyBytes));
-        for (int i = 0; i < result.length; i++) {
-          CoinPrice target = CoinPrice(
-            price: result[i]["quotes"]["USD"]["price"],
-            volume_24h: result[i]["quotes"]["USD"]["volume_24h"],
-            last_updated: result[i]["last_updated"],
-          );
-          target = target.copyWith(id: result[i]["base_currency_id"]);
-          if (list.firstWhereOrNull((element) => element.id == target.id) ==
-              null) {
-            list.add(target);
-          }
-        }
-        break;
-      default:
-        break;
+      if (response['success']) {
+        logger.i("getCoinPriceFromPaprika success");
+        Utils.showSnackBar(
+          context,
+          SnackType.success,
+          "${"process_end".tr} : ${"point_market".tr}",
+        );
+      } else {
+        logger.e("getCoinPriceFromPaprika failed: ${response['error']}");
+        Utils.showSnackBar(
+          context,
+          SnackType.error,
+          "error_update_coin_price".tr,
+        );
+      }
+    } catch (e) {
+      logger.e("getCoinPriceFromPaprika exception: $e");
+      Utils.showSnackBar(
+        context,
+        SnackType.error,
+        "error_update_coin_price".tr,
+      );
     }
-
-    logger.i(list);
-
-    await updateCoinPrice(context, list);
-
-    Utils.showSnackBar(
-      context,
-      SnackType.info,
-      "${"process_end".tr} : ${"point_market".tr}",
-    );
 
     return [];
-  }
-
-  static Future<void> updateCoinPrice(
-    BuildContext context,
-    List<CoinPrice> coinPriceList,
-  ) async {
-    logger.d("updateCoinPrice");
-
-    List<Coin> coinList = await getCoinList();
-
-    for (CoinPrice coinPrice in coinPriceList) {
-      if (coinList.firstWhereOrNull((element) => element.id == coinPrice.id) ==
-          null) {
-        continue;
-      }
-
-      final docRef = FirebaseFirestore.instance
-          .collection(Define.FIRESTORE_COLLECTION_COIN)
-          .doc(coinPrice.id);
-      await docRef
-          .update({
-            Define.FIRESTORE_FIELD_PRICE_HISTORY: FieldValue.arrayUnion([
-              coinPrice.toJson(),
-            ]),
-          })
-          .then(
-            (value) async {
-              logger.i("updateCoinPrice success1");
-            },
-            onError: (e) async {
-              if (e.code == Define.FIRESTORE_ERROR_CODE_NOT_FOUND) {
-                logger.i("no coin");
-              } else {
-                logger.e(e);
-              }
-            },
-          );
-    }
   }
 
   static Future<List<Coin>> getCoinList({withoutNoTrade = false}) async {

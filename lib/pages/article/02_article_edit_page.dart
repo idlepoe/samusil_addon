@@ -35,8 +35,14 @@ class Contents {
   TextEditingController? textEditingController;
   FocusNode? focusNode;
 
-  Contents(this.isPicture, this.contents, this.picture, this.file,
-      this.textEditingController, this.focusNode);
+  Contents(
+    this.isPicture,
+    this.contents,
+    this.picture,
+    this.file,
+    this.textEditingController,
+    this.focusNode,
+  );
 }
 
 class _ArticleEditPageState extends State<ArticleEditPage> {
@@ -50,7 +56,7 @@ class _ArticleEditPageState extends State<ArticleEditPage> {
   final ImagePicker _picker = ImagePicker();
 
   final TextEditingController _titleTextEditingController =
-  TextEditingController();
+      TextEditingController();
 
   @override
   void initState() {
@@ -61,7 +67,8 @@ class _ArticleEditPageState extends State<ArticleEditPage> {
   void init() {
     _boardInfo = widget.boardInfo;
     _list.add(
-        Contents(false, "", null, null, TextEditingController(), FocusNode()));
+      Contents(false, "", null, null, TextEditingController(), FocusNode()),
+    );
     setState(() {});
   }
 
@@ -92,158 +99,180 @@ class _ArticleEditPageState extends State<ArticleEditPage> {
           color: Define.APP_BAR_TITLE_TEXT_COLOR, //change your color here
         ),
         elevation: 0,
-        title: Text("${"write".tr} (${_boardInfo.title.tr})",
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Define.APP_BAR_TITLE_TEXT_COLOR)),
+        title: Text(
+          "${"write".tr} (${_boardInfo.title.tr})",
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(color: Define.APP_BAR_TITLE_TEXT_COLOR),
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.all(10),
-            child: AppButton(context, "write_article".tr, onTap: () async {
-              await writeArticle();
-            }, pBtnWidth: 0.2),
+            child: AppButton(
+              context,
+              "write_article".tr,
+              onTap: () async {
+                await writeArticle();
+              },
+              pBtnWidth: 0.2,
+            ),
           ),
         ],
       ),
-      body: isPressed
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-        children: [
-          TextField(
-            controller: _titleTextEditingController,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.only(left: 15),
-              hintText: "title".tr,
-              hintStyle: const TextStyle(color: Colors.grey),
-            ),
-            inputFormatters: [
-              LengthLimitingTextInputFormatter(50),
-            ],
-          ),
-          Define.APP_DIVIDER,
-          Expanded(
-            child: InkWell(
-              onTap: () {
-                for (int i = _list.length - 1; i > -1; i--) {
-                  if (!_list[i].isPicture) {
-                    _list[i].focusNode!.requestFocus();
-                    break;
-                  }
-                }
-              },
-              child: ReorderableListView(
-                proxyDecorator: proxyDecorator,
-                children: List.generate(_list.length, (index) {
-                  return ListTile(
-                    key: Key('$index'),
-                    title: !_list[index].isPicture
-                        ? TextField(
-                      controller:
-                      _list[index].textEditingController,
-                      focusNode: _list[index].focusNode,
-                      keyboardType: TextInputType.multiline,
-                      textInputAction: TextInputAction.newline,
-                      maxLines: null,
-                      decoration: InputDecoration(
-                        hintText: "contents".tr,
-                        border: InputBorder.none,
-                        hintStyle:
-                        const TextStyle(color: Colors.grey),
-                      ),
-                    )
-                        : Stack(
-                      alignment: Alignment.topRight,
-                      children: [
-                        Container(
-                            height: 200,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                                color: Colors.green,
-                                image: DecorationImage(
-                                    image: _list[index].picture!,
-                                    fit: BoxFit.fitWidth))),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: CircleAvatar(
-                            radius: 20,
-                            backgroundColor:
-                            Colors.black.withOpacity(0.5),
-                            child: IconButton(
-                                onPressed: () {
-                                  _list.remove(_list[index]);
-                                  setState(() {});
-                                },
-                                icon: const Icon(
-                                  Icons.close,
-                                  color: Colors.white,
-                                )),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-                onReorder: (int oldIndex, int newIndex) {
-                  setState(() {
-                    if (oldIndex < newIndex) {
-                      newIndex -= 1;
-                    }
-                    dynamic item = _list.removeAt(oldIndex);
-                    _list.insert(newIndex, item);
-                  });
-                },
-              ),
-            ),
-          ),
-          SizedBox(
-              height: 50,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
+      body:
+          isPressed
+              ? const Center(child: CircularProgressIndicator())
+              : Column(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.add, color: Colors.grey),
-                    onPressed: () {},
+                  TextField(
+                    controller: _titleTextEditingController,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.only(left: 15),
+                      hintText: "title".tr,
+                      hintStyle: const TextStyle(color: Colors.grey),
+                    ),
+                    inputFormatters: [LengthLimitingTextInputFormatter(50)],
                   ),
-                  IconButton(
-                      onPressed: () async {
-                        _list.add(Contents(false, "", null, null,
-                            TextEditingController(), FocusNode()));
-                        setState(() {});
-                      },
-                      icon: const Icon(LineIcons.font)),
-                  IconButton(
-                      onPressed: () async {
-                        final pickedFileList =
-                        await _picker.pickMultiImage();
-                        int index = 0;
-                        for (XFile pickedFile in pickedFileList) {
-                          if (pickedFileList.isNotEmpty) {
-                            ImageProvider<Object> image =
-                            await Utils.xFileToImage(pickedFile);
-                            logger.i(image);
-                            setState(() {
-                              _list.insert(
-                                  index,
-                                  Contents(
-                                      true,
-                                      "${Utils.getDateTimeKey()}.${pickedFile
-                                          .path
-                                          .split(".")
-                                          .last}",
-                                      image,
-                                      pickedFile,
-                                      null,
-                                      null));
-                            });
-                            index++;
+                  Define.APP_DIVIDER,
+                  Expanded(
+                    child: InkWell(
+                      onTap: () {
+                        for (int i = _list.length - 1; i > -1; i--) {
+                          if (!_list[i].isPicture) {
+                            _list[i].focusNode!.requestFocus();
+                            break;
                           }
                         }
                       },
-                      icon: const Icon(LineIcons.image)),
+                      child: ReorderableListView(
+                        proxyDecorator: proxyDecorator,
+                        children: List.generate(_list.length, (index) {
+                          return ListTile(
+                            key: Key('$index'),
+                            title:
+                                !_list[index].isPicture
+                                    ? TextField(
+                                      controller:
+                                          _list[index].textEditingController,
+                                      focusNode: _list[index].focusNode,
+                                      keyboardType: TextInputType.multiline,
+                                      textInputAction: TextInputAction.newline,
+                                      maxLines: null,
+                                      decoration: InputDecoration(
+                                        hintText: "contents".tr,
+                                        border: InputBorder.none,
+                                        hintStyle: const TextStyle(
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    )
+                                    : Stack(
+                                      alignment: Alignment.topRight,
+                                      children: [
+                                        Container(
+                                          height: 200,
+                                          width: double.infinity,
+                                          decoration: BoxDecoration(
+                                            color: Colors.green,
+                                            image: DecorationImage(
+                                              image: _list[index].picture!,
+                                              fit: BoxFit.fitWidth,
+                                            ),
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: CircleAvatar(
+                                            radius: 20,
+                                            backgroundColor: Colors.black
+                                                .withOpacity(0.5),
+                                            child: IconButton(
+                                              onPressed: () {
+                                                _list.remove(_list[index]);
+                                                setState(() {});
+                                              },
+                                              icon: const Icon(
+                                                Icons.close,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                          );
+                        }),
+                        onReorder: (int oldIndex, int newIndex) {
+                          setState(() {
+                            if (oldIndex < newIndex) {
+                              newIndex -= 1;
+                            }
+                            dynamic item = _list.removeAt(oldIndex);
+                            _list.insert(newIndex, item);
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 50,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.add, color: Colors.grey),
+                          onPressed: () {},
+                        ),
+                        IconButton(
+                          onPressed: () async {
+                            _list.add(
+                              Contents(
+                                false,
+                                "",
+                                null,
+                                null,
+                                TextEditingController(),
+                                FocusNode(),
+                              ),
+                            );
+                            setState(() {});
+                          },
+                          icon: const Icon(LineIcons.font),
+                        ),
+                        IconButton(
+                          onPressed: () async {
+                            final pickedFileList =
+                                await _picker.pickMultiImage();
+                            int index = 0;
+                            for (XFile pickedFile in pickedFileList) {
+                              if (pickedFileList.isNotEmpty) {
+                                ImageProvider<Object> image =
+                                    await Utils.xFileToImage(pickedFile);
+                                logger.i(image);
+                                setState(() {
+                                  _list.insert(
+                                    index,
+                                    Contents(
+                                      true,
+                                      "${Utils.getDateTimeKey()}.${pickedFile.path.split(".").last}",
+                                      image,
+                                      pickedFile,
+                                      null,
+                                      null,
+                                    ),
+                                  );
+                                });
+                                index++;
+                              }
+                            }
+                          },
+                          icon: const Icon(LineIcons.image),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
-              )),
-        ],
-      ),
+              ),
     );
   }
 
@@ -266,13 +295,20 @@ class _ArticleEditPageState extends State<ArticleEditPage> {
     for (int i = 0; i < _list.length; i++) {
       String contents = "";
       if (_list[i].isPicture) {
-        contents = await Utils.uploadFileToStorage(
-            _list[i].file, "_${_list[i].contents}");
+        contents = await Utils.uploadImageToStorage(
+          _list[i].file,
+          folder: 'articles',
+          fileName:
+              '${Utils.getDateTimeKey()}_${i}_${Utils.getRandomString(4)}.jpg',
+        );
         // if (thumbnail.isEmpty) {
         //   File thumbnailFile =
         //       await News.compressImage(File(_list[i].file!.path));
-        //   thumbnail = await Utils.uploadFileToStorage(
-        //       XFile(thumbnailFile.path), "_thumbnail_" + _list[i].contents);
+        //   thumbnail = await Utils.uploadImageToStorage(
+        //       XFile(thumbnailFile.path),
+        //       folder: 'thumbnails',
+        //       fileName: 'thumbnail_${Utils.getDateTimeKey()}_${i}.jpg'
+        //   );
         // }
       } else {
         contents = _list[i].textEditingController!.text;
@@ -290,9 +326,10 @@ class _ArticleEditPageState extends State<ArticleEditPage> {
     updateTarget = updateTarget.copyWith(
       key: Utils.getDateTimeKey(),
       title: _titleTextEditingController.text,
-      board_index: _boardInfo.index == Define.INDEX_BOARD_ALL_PAGE 
-          ? Define.INDEX_BOARD_FREE_PAGE 
-          : _boardInfo.index,
+      board_index:
+          _boardInfo.index == Define.INDEX_BOARD_ALL_PAGE
+              ? Define.INDEX_BOARD_FREE_PAGE
+              : _boardInfo.index,
       contents: updateContents,
       profile_key: profile.key,
       profile_name: profile.name,
@@ -302,22 +339,17 @@ class _ArticleEditPageState extends State<ArticleEditPage> {
     await App.pointUpdate(profile.key, Define.POINT_WRITE_ARTICLE);
 
     if (mounted) {
-    // Utils.showSnackBar(
-    //     context, SnackType.success, "success_create_article".tr);
-    Fluttertoast.showToast(msg: "success_create_article".tr);
+      // Utils.showSnackBar(
+      //     context, SnackType.success, "success_create_article".tr);
+      Fluttertoast.showToast(msg: "success_create_article".tr);
     }
 
     setState(() {
-    isPressed = false;
+      isPressed = false;
     });
 
     if (!mounted) return;
     print("_boardInfo.index${_boardInfo.index}");
-    Navigator
-    .
-    pop
-    (
-    context
-    );
+    Navigator.pop(context);
   }
 }

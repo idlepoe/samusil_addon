@@ -15,7 +15,7 @@ int _toInt(dynamic value) => value is int ? value : 0;
 abstract class Article with _$Article {
   const factory Article({
     @JsonKey(fromJson: _toString) required String key,
-    required int board_index,
+    @JsonKey(fromJson: _toString) required String board_name,
     @JsonKey(fromJson: _toString) required String profile_key,
     @JsonKey(fromJson: _toString) required String profile_name,
     @JsonKey(fromJson: _toInt) required int count_view,
@@ -24,7 +24,6 @@ abstract class Article with _$Article {
     @JsonKey(fromJson: _toString) required String title,
     required List<ArticleContent> contents,
     @JsonKey(fromJson: _toString) required String created_at,
-    required List<MainComment> comments,
     required bool is_notice,
     String? thumbnail,
   }) = _Article;
@@ -33,17 +32,16 @@ abstract class Article with _$Article {
       _$ArticleFromJson(json);
 
   factory Article.init() => Article(
-        key: "",
-        board_index: 0,
-        profile_key: "",
-        profile_name: "",
-        count_view: 0,
-        count_like: 0,
-        count_unlike: 0,
-        title: "",
-        contents: [],
-        created_at: DateFormat('yyyyMMddHHmmssSSS').format(DateTime.now()),
-        comments: [],
-        is_notice: false,
-      );
+    key: "",
+    board_name: "",
+    profile_key: "",
+    profile_name: "",
+    count_view: 0,
+    count_like: 0,
+    count_unlike: 0,
+    title: "",
+    contents: [],
+    created_at: DateFormat('yyyyMMddHHmmssSSS').format(DateTime.now()),
+    is_notice: false,
+  );
 }

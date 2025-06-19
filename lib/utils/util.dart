@@ -19,13 +19,13 @@ import '../define/enum.dart';
 class Utils {
   static Future<ImageProvider<Object>> xFileToImage(XFile xFile) async {
     final Uint8List bytes = await xFile.readAsBytes();
-    return Image
-        .memory(bytes)
-        .image;
+    return Image.memory(bytes).image;
   }
 
-  static Future<String> uploadFileToStorage(XFile? xFile,
-      String fileName) async {
+  static Future<String> uploadFileToStorage(
+    XFile? xFile,
+    String fileName,
+  ) async {
     var logger = Logger();
 
     if (xFile == null) {
@@ -34,9 +34,9 @@ class Utils {
 
     String result = "";
     try {
-      Reference reference = FirebaseStorage.instance
-          .ref()
-          .child('images/${basename(xFile.path)}$fileName');
+      Reference reference = FirebaseStorage.instance.ref().child(
+        'images/${basename(xFile.path)}$fileName',
+      );
       await reference.putData(await xFile.readAsBytes());
       result = await reference.getDownloadURL();
       logger.i(result);
@@ -48,8 +48,100 @@ class Utils {
     return result;
   }
 
-  static String toConvertFireDateToCommentTime(String value,
-      {bool bYear = false}) {
+  /// 이미지를 Firebase Storage에 업로드하고 다운로드 URL을 반환합니다.
+  /// [xFile] 업로드할 이미지 파일
+  /// [folder] 저장할 폴더명 (기본값: 'images')
+  /// [fileName] 파일명 (기본값: 현재 시간 기반 고유명)
+  static Future<String> uploadImageToStorage(
+    XFile? xFile, {
+    String folder = 'images',
+    String? fileName,
+  }) async {
+    var logger = Logger();
+
+    if (xFile == null) {
+      logger.w('업로드할 이미지 파일이 없습니다.');
+      return "";
+    }
+
+    try {
+      // 파일명이 없으면 현재 시간 기반으로 생성
+      final String finalFileName =
+          fileName ??
+          '${Utils.getDateTimeKey()}_${Utils.getRandomString(8)}.jpg';
+
+      Reference reference = FirebaseStorage.instance.ref().child(
+        '$folder/$finalFileName',
+      );
+
+      // 이미지 압축 및 업로드
+      final Uint8List imageBytes = await xFile.readAsBytes();
+      await reference.putData(imageBytes);
+
+      final String downloadUrl = await reference.getDownloadURL();
+      logger.i('이미지 업로드 성공: $downloadUrl');
+
+      return downloadUrl;
+    } catch (e) {
+      logger.e('이미지 업로드 실패: ${e.toString()}');
+      return "";
+    }
+  }
+
+  /// Firebase Storage에서 이미지를 삭제합니다.
+  /// [imageUrl] 삭제할 이미지의 다운로드 URL
+  static Future<bool> deleteImageFromStorage(String imageUrl) async {
+    var logger = Logger();
+
+    if (imageUrl.isEmpty) {
+      logger.w('삭제할 이미지 URL이 없습니다.');
+      return false;
+    }
+
+    try {
+      // URL에서 참조 생성
+      Reference reference = FirebaseStorage.instance.refFromURL(imageUrl);
+      await reference.delete();
+
+      logger.i('이미지 삭제 성공: $imageUrl');
+      return true;
+    } catch (e) {
+      logger.e('이미지 삭제 실패: ${e.toString()}');
+      return false;
+    }
+  }
+
+  /// 여러 이미지를 Firebase Storage에서 삭제합니다.
+  /// [imageUrls] 삭제할 이미지들의 다운로드 URL 리스트
+  static Future<bool> deleteMultipleImagesFromStorage(
+    List<String> imageUrls,
+  ) async {
+    var logger = Logger();
+
+    if (imageUrls.isEmpty) {
+      logger.w('삭제할 이미지 URL이 없습니다.');
+      return true;
+    }
+
+    try {
+      for (String imageUrl in imageUrls) {
+        if (imageUrl.isNotEmpty) {
+          await deleteImageFromStorage(imageUrl);
+        }
+      }
+
+      logger.i('${imageUrls.length}개 이미지 삭제 완료');
+      return true;
+    } catch (e) {
+      logger.e('다중 이미지 삭제 실패: ${e.toString()}');
+      return false;
+    }
+  }
+
+  static String toConvertFireDateToCommentTime(
+    String value, {
+    bool bYear = false,
+  }) {
     if (value.isEmpty) {
       return "";
     }
@@ -82,8 +174,12 @@ class Utils {
     String chars =
         'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
     Random rnd = Random();
-    return String.fromCharCodes(Iterable.generate(
-        length, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))));
+    return String.fromCharCodes(
+      Iterable.generate(
+        length,
+        (_) => chars.codeUnitAt(rnd.nextInt(chars.length)),
+      ),
+    );
   }
 
   static Future<void> setLanguage(int language) async {
@@ -167,8 +263,11 @@ class Utils {
     return result;
   }
 
-  static void showSnackBar(BuildContext context, SnackType type,
-      String content) {
+  static void showSnackBar(
+    BuildContext context,
+    SnackType type,
+    String content,
+  ) {
     Color snackColor = Colors.green.shade800;
     Color textColor = Colors.white;
 
@@ -218,7 +317,10 @@ class Utils {
     bool result = false;
     try {
       for (String row in list) {
-        final response = await Dio().get(row, options: Options(responseType: ResponseType.bytes));
+        final response = await Dio().get(
+          row,
+          options: Options(responseType: ResponseType.bytes),
+        );
         if (response.statusCode == 200) {
           final saveResult = await ImageGallerySaverPlus.saveImage(
             Uint8List.fromList(response.data),
@@ -256,8 +358,7 @@ class Utils {
       Colors.indigo,
       Colors.purple,
     ];
-    return (color.toList()
-      ..shuffle()).first;
+    return (color.toList()..shuffle()).first;
   }
 
   static String numberFormat(int s) {
