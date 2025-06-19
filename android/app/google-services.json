@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "432952540201",
+    "project_id": "samusil-addon",
+    "storage_bucket": "samusil-addon.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:432952540201:android:2b68c6b9d24e1261643038",
+        "android_client_info": {
+          "package_name": "com.jylee.samusil_addon"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJV3z2zkJpXl0B81mW2N9lfXHqjDASK7k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

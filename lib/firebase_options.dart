@@ -30,10 +30,7 @@ class DefaultFirebaseOptions {
           'you can reconfigure this by running the FlutterFire CLI again.',
         );
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -47,21 +44,21 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAASoZc5szVsXll4sEOJidqAQq7nR3mzVw',
-    appId: '1:1087535699794:web:08f29f8006fc722f678c8b',
-    messagingSenderId: '1087535699794',
-    projectId: 'nippon-life',
-    authDomain: 'nippon-life.firebaseapp.com',
-    storageBucket: 'nippon-life.appspot.com',
-    measurementId: 'G-NSDPZ8XVXZ',
+    apiKey: 'AIzaSyBdF--RG_f0YhX08Zbpj10CzbMXRSVDd18',
+    appId: '1:432952540201:web:598ca0a9df57e623643038',
+    messagingSenderId: '432952540201',
+    projectId: 'samusil-addon',
+    authDomain: 'samusil-addon.firebaseapp.com',
+    storageBucket: 'samusil-addon.firebasestorage.app',
+    measurementId: 'G-SDM6HQ9CFK',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAnifq2VT24_8u1UwJ1ChCr2OpdTHz4YlA',
-    appId: '1:1087535699794:android:2728fcba9a1c93f2678c8b',
-    messagingSenderId: '1087535699794',
-    projectId: 'nippon-life',
-    storageBucket: 'nippon-life.appspot.com',
+    apiKey: 'AIzaSyDJV3z2zkJpXl0B81mW2N9lfXHqjDASK7k',
+    appId: '1:432952540201:android:2b68c6b9d24e1261643038',
+    messagingSenderId: '432952540201',
+    projectId: 'samusil-addon',
+    storageBucket: 'samusil-addon.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
@@ -73,4 +70,15 @@ class DefaultFirebaseOptions {
     iosClientId: '1087535699794-t0d8at7782skae9upithhhmusvghb7cv.apps.googleusercontent.com',
     iosBundleId: 'com.lee.nipponlife.nipponLife',
   );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyBdF--RG_f0YhX08Zbpj10CzbMXRSVDd18',
+    appId: '1:432952540201:web:13ba09fa865cdf76643038',
+    messagingSenderId: '432952540201',
+    projectId: 'samusil-addon',
+    authDomain: 'samusil-addon.firebaseapp.com',
+    storageBucket: 'samusil-addon.firebasestorage.app',
+    measurementId: 'G-0KD0HFWB3F',
+  );
+
 }
