@@ -64,9 +64,16 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
     _boardInfo = Arrays.getBoardInfo(_article.board_index);
     _profile = await App.getProfile();
     _isAlreadyVote = await Utils.checkAlreadyVote(_article.key);
-    _article.comments.sort((a, b) =>
-        (a.parents_key.isNotEmpty ? a.parents_key : a.key)
-            .compareTo((b.parents_key.isNotEmpty ? b.parents_key : b.key)));
+
+    // Freezed 모델의 불변성을 유지하기 위해 새로운 정렬된 리스트 생성
+    List<MainComment> sortedComments = List.from(_article.comments);
+    sortedComments.sort(
+      (a, b) => (a.parents_key.isNotEmpty ? a.parents_key : a.key).compareTo(
+        (b.parents_key.isNotEmpty ? b.parents_key : b.key),
+      ),
+    );
+
+    _article = _article.copyWith(comments: sortedComments);
 
     if (mounted) {
       setState(() {});
@@ -77,26 +84,29 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          backgroundColor: Define.APP_BAR_BACKGROUND_COLOR,
-          iconTheme: const IconThemeData(
-            color: Define.APP_BAR_TITLE_TEXT_COLOR,
+        backgroundColor: Define.APP_BAR_BACKGROUND_COLOR,
+        iconTheme: const IconThemeData(color: Define.APP_BAR_TITLE_TEXT_COLOR),
+        elevation: 0,
+        title: Text(
+          _boardInfo.title.tr,
+          style: const TextStyle(color: Define.APP_BAR_TITLE_TEXT_COLOR),
+        ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Share.share(
+                'https://nippon-life.web.app/#/detail/$_articleKey',
+                subject: _article.title,
+              );
+            },
+            icon: const Icon(Icons.share),
           ),
-          elevation: 0,
-          title: Text(
-            _boardInfo.title.tr,
-            style: const TextStyle(color: Define.APP_BAR_TITLE_TEXT_COLOR),
-          ),
-          actions: [
-            IconButton(
-                onPressed: () {
-                  Share.share(
-                      'https://nippon-life.web.app/#/detail/$_articleKey',
-                      subject: _article.title);
-                },
-                icon: const Icon(Icons.share))
-          ]),
+        ],
+      ),
       body: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
         child: Column(
           children: [
             Container(
@@ -113,9 +123,10 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
                       Text("👤${_article.profile_name}"),
                       Text(
                         Utils.toConvertFireDateToCommentTime(
-                            _article.created_at,
-                            bYear: true),
-                      )
+                          _article.created_at,
+                          bYear: true,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 5),
@@ -123,10 +134,11 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       Text(
-                          "${"count_view".tr} ${_article.count_view} | ${"comment".tr} ${_article.comments.length}",
-                          style: const TextStyle(color: Colors.grey)),
+                        "${"count_view".tr} ${_article.count_view} | ${"comment".tr} ${_article.comments.length}",
+                        style: const TextStyle(color: Colors.grey),
+                      ),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),
@@ -136,80 +148,84 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
                   _imageCount++;
                 }
                 return ListTile(
-                  title: _article.contents[index].isPicture
-                      ? InkWell(
-                          onLongPress: () async {
-                            // showDialog(
-                            //     context: context,
-                            //     builder: (context) {
-                            //       return AlertDialog(
-                            //         content: Column(
-                            //           mainAxisSize: MainAxisSize.min,
-                            //           children: [
-                            //             ListTile(
-                            //               title: Text("image_download".tr),
-                            //               onTap: () async {
-                            //                 Navigator.pop(context);
-                            //                 bool result =
-                            //                     await Utils.saveNetworkImage([
-                            //                   _article
-                            //                       .contents[index].contents
-                            //                 ]);
-                            //                 if (mounted && result) {
-                            //                   // Utils.showSnackBar(
-                            //                   //     context,
-                            //                   //     SnackType.success,
-                            //                   //     "success_image_save".tr);
-                            //                   Fluttertoast.showToast(
-                            //                       msg: "success_image_save"
-                            //                           .tr);
-                            //                 }else{
-                            //                   Fluttertoast.showToast(
-                            //                       msg: "error_image_save"
-                            //                           .tr);
-                            //                 }
-                            //               },
-                            //             ),
-                            //             ListTile(
-                            //               title: Text("image_view".tr),
-                            //               onTap: () {
-                            //                 Navigator.pop(context);
-                            //                 List<ArticleContent> imageList =
-                            //                     [];
-                            //                 for (ArticleContent row
-                            //                     in _article.contents) {
-                            //                   if (row.isPicture) {
-                            //                     imageList.add(row);
-                            //                   }
-                            //                 }
-                            //                 Navigator.of(context)
-                            //                     .push(SwipeablePageRoute(
-                            //                   canOnlySwipeFromEdge: true,
-                            //                   builder:
-                            //                       (BuildContext context) =>
-                            //                           DetailPageViewPage(
-                            //                               list: imageList,
-                            //                               index: index),
-                            //                 ));
-                            //               },
-                            //             ),
-                            //           ],
-                            //         ),
-                            //       );
-                            //     });
+                  title:
+                      _article.contents[index].isPicture
+                          ? InkWell(
+                            onLongPress: () async {
+                              // showDialog(
+                              //     context: context,
+                              //     builder: (context) {
+                              //       return AlertDialog(
+                              //         content: Column(
+                              //           mainAxisSize: MainAxisSize.min,
+                              //           children: [
+                              //             ListTile(
+                              //               title: Text("image_download".tr),
+                              //               onTap: () async {
+                              //                 Navigator.pop(context);
+                              //                 bool result =
+                              //                     await Utils.saveNetworkImage([
+                              //                   _article
+                              //                       .contents[index].contents
+                              //                 ]);
+                              //                 if (mounted && result) {
+                              //                   // Utils.showSnackBar(
+                              //                   //     context,
+                              //                   //     SnackType.success,
+                              //                   //     "success_image_save".tr);
+                              //                   Fluttertoast.showToast(
+                              //                       msg: "success_image_save"
+                              //                           .tr);
+                              //                 }else{
+                              //                   Fluttertoast.showToast(
+                              //                       msg: "error_image_save"
+                              //                           .tr);
+                              //                 }
+                              //               },
+                              //             ),
+                              //             ListTile(
+                              //               title: Text("image_view".tr),
+                              //               onTap: () {
+                              //                 Navigator.pop(context);
+                              //                 List<ArticleContent> imageList =
+                              //                     [];
+                              //                 for (ArticleContent row
+                              //                     in _article.contents) {
+                              //                   if (row.isPicture) {
+                              //                     imageList.add(row);
+                              //                   }
+                              //                 }
+                              //                 Navigator.of(context)
+                              //                     .push(SwipeablePageRoute(
+                              //                   canOnlySwipeFromEdge: true,
+                              //                   builder:
+                              //                       (BuildContext context) =>
+                              //                           DetailPageViewPage(
+                              //                               list: imageList,
+                              //                               index: index),
+                              //                 ));
+                              //               },
+                              //             ),
+                              //           ],
+                              //         ),
+                              //       );
+                              //     });
 
-                            bool result = await Utils.saveNetworkImage(
-                                [_article.contents[index].contents]);
-                            if (mounted && result) {
-                              Fluttertoast.showToast(
-                                  msg: "success_image_save".tr);
-                            } else {
-                              Fluttertoast.showToast(
-                                  msg: "error_image_save".tr);
-                            }
-                          },
-                          onTap: () {
-                            showDialog(
+                              bool result = await Utils.saveNetworkImage([
+                                _article.contents[index].contents,
+                              ]);
+                              if (mounted && result) {
+                                Fluttertoast.showToast(
+                                  msg: "success_image_save".tr,
+                                );
+                              } else {
+                                Fluttertoast.showToast(
+                                  msg: "error_image_save".tr,
+                                );
+                              }
+                            },
+                            onTap: () {
+                              showDialog(
                                 context: context,
                                 builder: (context) {
                                   return Stack(
@@ -234,118 +250,147 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
                                                 InitialAlignment.center,
                                           );
                                         },
-                                      )
+                                      ),
                                     ],
                                   );
-                                });
-                          },
-                          child: CachedNetworkImage(
-                            fit: BoxFit.fitWidth,
-                            imageUrl: _article.contents[index].contents,
-                            progressIndicatorBuilder:
-                                (context, url, downloadProgress) => Container(
+                                },
+                              );
+                            },
+                            child: CachedNetworkImage(
+                              fit: BoxFit.fitWidth,
+                              imageUrl: _article.contents[index].contents,
+                              progressIndicatorBuilder:
+                                  (context, url, downloadProgress) => Container(
                                     child: Center(
-                                        child: CircularProgressIndicator(
-                                            value: downloadProgress.progress))),
-                            errorWidget: (context, url, error) {
-                              return const Icon(Icons.error);
+                                      child: CircularProgressIndicator(
+                                        value: downloadProgress.progress,
+                                      ),
+                                    ),
+                                  ),
+                              errorWidget: (context, url, error) {
+                                return const Icon(Icons.error);
+                              },
+                            ),
+                          )
+                          : Html(
+                            data: _article.contents[index].contents,
+                            onLinkTap: (url, __, ___) async {
+                              await canLaunchUrlString(url!)
+                                  ? await launchUrlString(url)
+                                  : Fluttertoast.showToast(
+                                    msg: "error_link".tr,
+                                  );
                             },
                           ),
-                        )
-                      : Html(
-                          data: _article.contents[index].contents,
-                          onLinkTap: (url, __, ___) async {
-                            await canLaunchUrlString(url!)
-                                ? await launchUrlString(url)
-                                : Fluttertoast.showToast(msg: "error_link".tr);
-                          },
-                        ),
                 );
               }),
             ),
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              ElevatedButton.icon(
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton.icon(
                   icon: const Icon(Icons.thumb_up),
-                  label:
-                      Text("${"like".tr} : ${_article.count_like}"),
-                  style:
-                      ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-                  onPressed: _isPressed || _isAlreadyVote
-                      ? null
-                      : () async {
-                          setState(() {
-                            _isPressed = true;
-                          });
-                          _article = _article.copyWith(
-                            count_like: await App.articleCountLikeUp(_article.key),
-                          );
-                          await Utils.setAlreadyVote(_article.key);
-                          _isAlreadyVote = true;
-                          await App.pointUpdate(
-                              _article.profile_key, Define.POINT_RECEIVE_LIKE);
-                          await App.pointUpdate(
-                              _profile.key, Define.POINT_LIKE);
-                          if (mounted) {
-                            // Utils.showSnackBar(
-                            //   context,
-                            //   SnackType.success,
-                            //   "success_article_like".tr,
-                            // );
-                            Fluttertoast.showToast(
-                                msg: "success_article_like".tr);
-                          }
-                          setState(() {
-                            _isPressed = false;
-                          });
-                        }),
-              const SizedBox(width: 20),
-              ElevatedButton.icon(
-                  icon: const Icon(Icons.thumb_down),
-                  label: Text(
-                      "${"unlike".tr} : ${_article.count_unlike}"),
+                  label: Text("${"like".tr} : ${_article.count_like}"),
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade500),
-                  onPressed: _isPressed || _isAlreadyVote
-                      ? null
-                      : () async {
-                          setState(() {
-                            _isPressed = true;
-                          });
-                          _article = _article.copyWith(
-                            count_unlike: await App.articleCountUnLikeUp(_article.key),
-                          );
-                          await Utils.setAlreadyVote(_article.key);
-                          _isAlreadyVote = true;
-                          if (mounted) {
-                            // Utils.showSnackBar(
-                            //   context,
-                            //   SnackType.success,
-                            //   "success_article_unlike".tr,
-                            // );
-                            Fluttertoast.showToast(
-                                msg: "success_article_unlike".tr);
-                          }
-                          setState(() {
-                            _isPressed = false;
-                          });
-                        }),
-            ]),
+                    backgroundColor: Colors.amber,
+                  ),
+                  onPressed:
+                      _isPressed || _isAlreadyVote
+                          ? null
+                          : () async {
+                            setState(() {
+                              _isPressed = true;
+                            });
+                            _article = _article.copyWith(
+                              count_like: await App.articleCountLikeUp(
+                                _article.key,
+                              ),
+                            );
+                            await Utils.setAlreadyVote(_article.key);
+                            _isAlreadyVote = true;
+                            await App.pointUpdate(
+                              _article.profile_key,
+                              Define.POINT_RECEIVE_LIKE,
+                            );
+                            await App.pointUpdate(
+                              _profile.key,
+                              Define.POINT_LIKE,
+                            );
+                            if (mounted) {
+                              // Utils.showSnackBar(
+                              //   context,
+                              //   SnackType.success,
+                              //   "success_article_like".tr,
+                              // );
+                              Fluttertoast.showToast(
+                                msg: "success_article_like".tr,
+                              );
+                            }
+                            setState(() {
+                              _isPressed = false;
+                            });
+                          },
+                ),
+                const SizedBox(width: 20),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.thumb_down),
+                  label: Text("${"unlike".tr} : ${_article.count_unlike}"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey.shade500,
+                  ),
+                  onPressed:
+                      _isPressed || _isAlreadyVote
+                          ? null
+                          : () async {
+                            setState(() {
+                              _isPressed = true;
+                            });
+                            _article = _article.copyWith(
+                              count_unlike: await App.articleCountUnLikeUp(
+                                _article.key,
+                              ),
+                            );
+                            await Utils.setAlreadyVote(_article.key);
+                            _isAlreadyVote = true;
+                            if (mounted) {
+                              // Utils.showSnackBar(
+                              //   context,
+                              //   SnackType.success,
+                              //   "success_article_unlike".tr,
+                              // );
+                              Fluttertoast.showToast(
+                                msg: "success_article_unlike".tr,
+                              );
+                            }
+                            setState(() {
+                              _isPressed = false;
+                            });
+                          },
+                ),
+              ],
+            ),
             const SizedBox(height: 20),
             if (_article.profile_key == _profile.key ||
                 _profile.key == Define.MASTER_USER_KEY)
               Column(
                 children: [
-                  AppButton(context, "article_delete".tr,
-                      textColor: Colors.red,
-                      backgroundColor: Colors.white,
-                      isBold: true,
-                      pBtnWidth: 0.65, onTap: () async {
-                    bool isDeleted =
-                        await _showArticleDeleteDialog(context, _article);
-                    if (mounted && isDeleted) {
-                      Navigator.pop(context, true);
-                    }
-                  }),
+                  AppButton(
+                    context,
+                    "article_delete".tr,
+                    textColor: Colors.red,
+                    backgroundColor: Colors.white,
+                    isBold: true,
+                    pBtnWidth: 0.65,
+                    onTap: () async {
+                      bool isDeleted = await _showArticleDeleteDialog(
+                        context,
+                        _article,
+                      );
+                      if (mounted && isDeleted) {
+                        Navigator.pop(context, true);
+                      }
+                    },
+                  ),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -353,19 +398,20 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
               Row(
                 children: [
                   TextButton(
-                      onPressed: () {
-                        logger.i(Arrays.getBoardInfo(_boardInfo.index));
-                        // Navigator.pushAndRemoveUntil(
-                        //   context,
-                        //   SwipeablePageRoute(
-                        //       builder: (BuildContext context) =>
-                        //           ArticleListPage(
-                        //               Arrays.getBoardInfo(_boardInfo.index))),
-                        //   (route) => false,
-                        // );
-                        context.go('/list/${_boardInfo.index}');
-                      },
-                      child: Text(_boardInfo.title.tr + "board_to_move".tr)),
+                    onPressed: () {
+                      logger.i(Arrays.getBoardInfo(_boardInfo.index));
+                      // Navigator.pushAndRemoveUntil(
+                      //   context,
+                      //   SwipeablePageRoute(
+                      //       builder: (BuildContext context) =>
+                      //           ArticleListPage(
+                      //               Arrays.getBoardInfo(_boardInfo.index))),
+                      //   (route) => false,
+                      // );
+                      context.go('/list/${_boardInfo.index}');
+                    },
+                    child: Text(_boardInfo.title.tr + "board_to_move".tr),
+                  ),
                 ],
               ),
             Container(
@@ -374,18 +420,26 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
               width: double.infinity,
               color: Colors.grey.shade300,
               alignment: Alignment.centerLeft,
-              child: Row(children: [
-                Text("${"comment".tr} ${_article.comments.length}"),
-                IconButton(
+              child: Row(
+                children: [
+                  Text("${"comment".tr} ${_article.comments.length}"),
+                  IconButton(
                     onPressed: () async {
-                      List<MainComment> comments =
-                          await App.getComments(_article.key);
-                      comments.sort((a, b) =>
-                          (a.parents_key.isNotEmpty ? a.parents_key : a.key)
-                              .compareTo((b.parents_key.isNotEmpty
-                                  ? b.parents_key
-                                  : b.key)));
-                      _article = _article.copyWith(comments: comments);
+                      List<MainComment> comments = await App.getComments(
+                        _article.key,
+                      );
+                      // 새로운 리스트를 생성하여 정렬
+                      List<MainComment> sortedComments = List.from(comments);
+                      sortedComments.sort(
+                        (a, b) =>
+                            (a.parents_key.isNotEmpty ? a.parents_key : a.key)
+                                .compareTo(
+                                  (b.parents_key.isNotEmpty
+                                      ? b.parents_key
+                                      : b.key),
+                                ),
+                      );
+                      _article = _article.copyWith(comments: sortedComments);
                       if (mounted) {
                         // Utils.showSnackBar(
                         //   context,
@@ -395,14 +449,17 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
                         Fluttertoast.showToast(msg: "success_get_comment".tr);
                       }
                     },
-                    icon: const Icon(Icons.refresh))
-              ]),
+                    icon: const Icon(Icons.refresh),
+                  ),
+                ],
+              ),
             ),
             Column(
               children: List.generate(_article.comments.length, (index) {
                 return Padding(
                   padding: EdgeInsets.only(
-                      left: (_article.comments[index].is_sub ? 15 : 0)),
+                    left: (_article.comments[index].is_sub ? 15 : 0),
+                  ),
                   child: ListTile(
                     onTap: () {
                       _subComment = _article.comments[index];
@@ -417,8 +474,10 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text("👤${_article.comments[index].profile_name}",
-                                style: const TextStyle(fontSize: 13)),
+                            Text(
+                              "👤${_article.comments[index].profile_name}",
+                              style: const TextStyle(fontSize: 13),
+                            ),
                             if (_article.comments[index].profile_key ==
                                 _profile.key)
                               IconButton(
@@ -427,20 +486,23 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
                                 constraints: const BoxConstraints(),
                                 onPressed: () {
                                   _showDeleteDialog(
-                                      context, _article.comments[index]);
+                                    context,
+                                    _article.comments[index],
+                                  );
                                 },
-                              )
+                              ),
                           ],
                         ),
                         Text(_article.comments[index].contents),
-                        const SizedBox(
-                          height: 5,
-                        )
+                        const SizedBox(height: 5),
                       ],
                     ),
-                    subtitle: Text(Utils.toConvertFireDateToCommentTime(
+                    subtitle: Text(
+                      Utils.toConvertFireDateToCommentTime(
                         _article.comments[index].created_at,
-                        bYear: true)),
+                        bYear: true,
+                      ),
+                    ),
                     shape: RoundedRectangleBorder(
                       side: BorderSide(color: Colors.grey.shade300, width: 0.5),
                     ),
@@ -448,7 +510,7 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
                 );
               }),
             ),
-            const SizedBox(height: Define.BOTTOM_SHEET_HEIGHT - 15)
+            const SizedBox(height: Define.BOTTOM_SHEET_HEIGHT - 15),
           ],
         ),
       ),
@@ -475,20 +537,21 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
                           Text(
                             "to_comment".tr,
                             style: TextStyle(color: Colors.grey.shade500),
-                          )
+                          ),
                         ],
                       ),
                       IconButton(
-                          padding: const EdgeInsets.only(top: 2, bottom: 2),
-                          constraints: const BoxConstraints(),
-                          onPressed: () {
-                            _subComment = null;
-                            setState(() {});
-                          },
-                          icon: Icon(
-                            Icons.cancel_outlined,
-                            color: Colors.grey.shade400,
-                          ))
+                        padding: const EdgeInsets.only(top: 2, bottom: 2),
+                        constraints: const BoxConstraints(),
+                        onPressed: () {
+                          _subComment = null;
+                          setState(() {});
+                        },
+                        icon: Icon(
+                          Icons.cancel_outlined,
+                          color: Colors.grey.shade400,
+                        ),
+                      ),
                     ],
                   ),
                   Define.APP_DIVIDER,
@@ -504,17 +567,18 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
                   setState(() {});
                 }
               },
-              inputFormatters: [
-                LengthLimitingTextInputFormatter(200),
-              ],
+              inputFormatters: [LengthLimitingTextInputFormatter(200)],
               decoration: InputDecoration(
                 border: InputBorder.none,
                 hintText: "comment_input".tr,
                 suffixIcon: Container(
-                    margin: const EdgeInsets.only(top: 5, bottom: 5),
-                    child: AppButton(context, "write_comment".tr,
-                        disable: _commentController.text.isEmpty || _isPressed,
-                        pBtnWidth: 0.2, onTap: () async {
+                  margin: const EdgeInsets.only(top: 5, bottom: 5),
+                  child: AppButton(
+                    context,
+                    "write_comment".tr,
+                    disable: _commentController.text.isEmpty || _isPressed,
+                    pBtnWidth: 0.2,
+                    onTap: () async {
                       setState(() {
                         _isPressed = true;
                       });
@@ -530,15 +594,22 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
                           profile_name: _profile.name,
                           created_at: commentKey,
                           is_sub: _subComment != null,
-                          parents_key: _subComment != null ? _subComment!.key : "",
+                          parents_key:
+                              _subComment != null ? _subComment!.key : "",
                         ),
                       );
-                      afterList.sort((a, b) =>
-                          (a.parents_key.isNotEmpty ? a.parents_key : a.key)
-                              .compareTo((b.parents_key.isNotEmpty
-                                  ? b.parents_key
-                                  : b.key)));
-                      _article = _article.copyWith(comments: afterList);
+                      // 새로운 리스트를 생성하여 정렬
+                      List<MainComment> sortedAfterList = List.from(afterList);
+                      sortedAfterList.sort(
+                        (a, b) =>
+                            (a.parents_key.isNotEmpty ? a.parents_key : a.key)
+                                .compareTo(
+                                  (b.parents_key.isNotEmpty
+                                      ? b.parents_key
+                                      : b.key),
+                                ),
+                      );
+                      _article = _article.copyWith(comments: sortedAfterList);
 
                       await App.pointUpdate(_profile.key, 1);
 
@@ -564,13 +635,16 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
                         // Utils.showSnackBar(context, SnackType.success,
                         //     "success_create_comment".tr);
                         Fluttertoast.showToast(
-                            msg: "success_create_comment".tr);
+                          msg: "success_create_comment".tr,
+                        );
                       }
 
                       setState(() {
                         _isPressed = false;
                       });
-                    })),
+                    },
+                  ),
+                ),
               ),
             ),
           ],
@@ -580,7 +654,9 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
   }
 
   Future<dynamic> _showDeleteDialog(
-      BuildContext context, MainComment comment) async {
+    BuildContext context,
+    MainComment comment,
+  ) async {
     return showCupertinoDialog(
       context: context,
       builder: (BuildContext ctx) {
@@ -590,14 +666,19 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
           actions: [
             CupertinoDialogAction(
               onPressed: () async {
-                List<MainComment> afterList =
-                    await App.deleteComment(_article.key, comment);
-                afterList.sort((a, b) => (a.parents_key.isNotEmpty
-                        ? a.parents_key
-                        : a.key)
-                    .compareTo(
-                        (b.parents_key.isNotEmpty ? b.parents_key : b.key)));
-                _article = _article.copyWith(comments: afterList);
+                List<MainComment> afterList = await App.deleteComment(
+                  _article.key,
+                  comment,
+                );
+                // 새로운 리스트를 생성하여 정렬
+                List<MainComment> sortedAfterList = List.from(afterList);
+                sortedAfterList.sort(
+                  (a, b) => (a.parents_key.isNotEmpty ? a.parents_key : a.key)
+                      .compareTo(
+                        (b.parents_key.isNotEmpty ? b.parents_key : b.key),
+                      ),
+                );
+                _article = _article.copyWith(comments: sortedAfterList);
                 if (mounted) {
                   // Utils.showSnackBar(
                   //     context, SnackType.success, "success_delete_comment".tr);
@@ -618,7 +699,7 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
               isDefaultAction: false,
               isDestructiveAction: false,
               child: Text("no".tr),
-            )
+            ),
           ],
         );
       },
@@ -626,7 +707,9 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
   }
 
   Future<bool> _showArticleDeleteDialog(
-      BuildContext context, Article article) async {
+    BuildContext context,
+    Article article,
+  ) async {
     bool result = false;
     await showCupertinoDialog(
       context: context,
@@ -658,7 +741,7 @@ class _ArticleDetailKeyPageState extends State<ArticleDetailKeyPage> {
               isDefaultAction: false,
               isDestructiveAction: false,
               child: Text("no".tr),
-            )
+            ),
           ],
         );
       },

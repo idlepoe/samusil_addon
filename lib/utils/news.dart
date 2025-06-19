@@ -19,11 +19,17 @@ class News {
   static Future<void> getGameNewsList(BuildContext context) async {
     var logger = Logger();
 
-    Utils.showSnackBar(context, SnackType.info,
-        "${"process_start".tr} : ${"game_news_board".tr}");
+    Utils.showSnackBar(
+      context,
+      SnackType.info,
+      "${"process_start".tr} : ${"game_news_board".tr}",
+    );
 
     List<Article> duplicateList = await App.getArticleList(
-        Arrays.getBoardInfo(Define.INDEX_BOARD_GAME_NEWS_PAGE), "",Define.DEFAULT_BOARD_GET_LENGTH);
+      Arrays.getBoardInfo(Define.INDEX_BOARD_GAME_NEWS_PAGE),
+      "",
+      Define.DEFAULT_BOARD_GET_LENGTH,
+    );
 
     List<Article> addNewsArticleList = [];
 
@@ -46,14 +52,17 @@ class News {
           Article target = Article.init();
           List<dom.Element> contentsList = row.querySelectorAll('div');
           target = target.copyWith(
-            title: contentsList[0].text.replaceAll("	", "").replaceAll("\n", ""),
+            title: contentsList[0].text
+                .replaceAll("	", "")
+                .replaceAll("\n", ""),
           );
 
           String link =
               contentsList[0].querySelector("a")!.attributes["href"] ?? "";
 
-          final response1 =
-              await get(Uri.parse("https://www.gamemeca.com$link"));
+          final response1 = await get(
+            Uri.parse("https://www.gamemeca.com$link"),
+          );
 
           if (response1.statusCode != 200) {
             logger.w("element == null");
@@ -67,15 +76,15 @@ class News {
             break;
           }
 
+          List<ArticleContent> contents = [];
           List<dom.Element> element1List = element.querySelectorAll('div');
           for (dom.Element row1 in element1List) {
             String contents1 =
                 row1.text.replaceAll("	", "").replaceAll("\n", "").trim();
             if (contents1.isNotEmpty && !contents1.contains("영상출처")) {
-              target.contents.add(ArticleContent(
-                isPicture: false,
-                contents: contents1,
-              ));
+              contents.add(
+                ArticleContent(isPicture: false, contents: contents1),
+              );
             }
             List<dom.Element> element2List = row1.querySelectorAll('div');
             for (dom.Element row2 in element2List) {
@@ -84,35 +93,38 @@ class News {
                 String contents2 =
                     row2.text.replaceAll("	", "").replaceAll("\n", "").trim();
                 if (contents2.isNotEmpty && !contents2.contains("영상출처")) {
-                  target.contents.add(ArticleContent(
-                    isPicture: false,
-                    contents: contents2,
-                  ));
+                  contents.add(
+                    ArticleContent(isPicture: false, contents: contents2),
+                  );
                 }
               } else {
                 String imageUrl = image.attributes["src"] ?? "";
                 String imageDescription = image.attributes["alt"] ?? "";
-                target.contents.add(ArticleContent(
-                  isPicture: true,
-                  isOriginal: true,
-                  contents: imageUrl,
-                ));
-                target.contents.add(ArticleContent(
-                  isPicture: false,
-                  contents: imageDescription,
-                ));
+                contents.add(
+                  ArticleContent(
+                    isPicture: true,
+                    isOriginal: true,
+                    contents: imageUrl,
+                  ),
+                );
+                contents.add(
+                  ArticleContent(isPicture: false, contents: imageDescription),
+                );
               }
             }
           }
+
           target = target.copyWith(
             key: (int.parse(newsKey) + index).toString(),
             board_index: Define.INDEX_BOARD_GAME_NEWS_PAGE,
             profile_key: "00000000000000000",
             profile_name: "게임뉴스봇",
+            contents: contents,
           );
 
-          Article? isExist =
-              duplicateList.firstWhereOrNull((i) => i.title == target.title);
+          Article? isExist = duplicateList.firstWhereOrNull(
+            (i) => i.title == target.title,
+          );
           if (isExist != null) {
             continue;
           }
@@ -125,62 +137,96 @@ class News {
       default:
         break;
     }
-    for (Article row in addNewsArticleList) {
-      for (int i = 1; i < row.contents.length; i++) {
-        if (row.contents[i].isPicture) {
-          row.contents.removeAt(i - 1);
-          row.contents.removeAt(i);
+
+    // 이미지 처리 전에 불필요한 내용 제거
+    for (int i = 0; i < addNewsArticleList.length; i++) {
+      Article row = addNewsArticleList[i];
+      List<ArticleContent> filteredContents = [];
+
+      for (int j = 0; j < row.contents.length; j++) {
+        if (j > 0 && row.contents[j].isPicture) {
+          // 이미지인 경우 이전 항목과 현재 항목을 건너뛰기
+          continue;
         }
+        if (j < row.contents.length - 1 && row.contents[j + 1].isPicture) {
+          // 다음 항목이 이미지인 경우 현재 항목을 건너뛰기
+          continue;
+        }
+        filteredContents.add(row.contents[j]);
       }
+
+      addNewsArticleList[i] = row.copyWith(contents: filteredContents);
     }
 
     for (int j = 0; j < addNewsArticleList.length; j++) {
       Utils.showSnackBar(
-          context,
-          SnackType.info,
-          "${"process_end".tr} : ${"game_news_board".tr}${((j / addNewsArticleList.length) * 100).round()}%");
+        context,
+        SnackType.info,
+        "${"process_end".tr} : ${"game_news_board".tr}${((j / addNewsArticleList.length) * 100).round()}%",
+      );
       Article row = addNewsArticleList[j];
+      List<ArticleContent> updatedContents = [];
+
       for (int i = 0; i < row.contents.length; i++) {
         if (row.contents[i].isPicture && row.contents[i].isOriginal != null) {
-          String myImageUrl =
-              await App.uploadImageToStorage(row.contents[i].contents);
+          String myImageUrl = await App.uploadImageToStorage(
+            row.contents[i].contents,
+          );
           if (myImageUrl.isNotEmpty) {
-            row.contents[i] = ArticleContent(
-              isPicture: true,
-              isOriginal: false,
-              contents: myImageUrl,
+            updatedContents.add(
+              ArticleContent(
+                isPicture: true,
+                isOriginal: false,
+                contents: myImageUrl,
+              ),
             );
-            // if (!Utils.isValidNilEmptyStr(row.thumbnail)) {
-            //   File thumbnailFile = await App.compressImageFromURL(myImageUrl);
-            //   row.thumbnail = await Utils.uploadFileToStorage(
-            //       XFile(thumbnailFile.path),
-            //       "_thumbnail_" + row.contents[i].contents);
-            // }
+          } else {
+            updatedContents.add(row.contents[i]);
           }
+          // if (!Utils.isValidNilEmptyStr(row.thumbnail)) {
+          //   File thumbnailFile = await App.compressImageFromURL(myImageUrl);
+          //   row.thumbnail = await Utils.uploadFileToStorage(
+          //       XFile(thumbnailFile.path),
+          //       "_thumbnail_" + row.contents[i].contents);
+          // }
+        } else {
+          updatedContents.add(row.contents[i]);
         }
       }
+
+      row = row.copyWith(contents: updatedContents);
       await App.createArticle(row);
     }
 
     if (context.mounted) {
-      Utils.showSnackBar(context, SnackType.info,
-          "${"process_end".tr} : ${"game_news_board".tr}");
+      Utils.showSnackBar(
+        context,
+        SnackType.info,
+        "${"process_end".tr} : ${"game_news_board".tr}",
+      );
     }
   }
 
   static Future<void> getITNewsList(BuildContext context) async {
     var logger = Logger();
 
-    Utils.showSnackBar(context, SnackType.info,
-        "${"process_start".tr} : ${"it_news_board".tr}");
+    Utils.showSnackBar(
+      context,
+      SnackType.info,
+      "${"process_start".tr} : ${"it_news_board".tr}",
+    );
 
     List<Article> duplicateList = await App.getArticleList(
-        Arrays.getBoardInfo(Define.INDEX_BOARD_IT_NEWS_PAGE), "",Define.DEFAULT_BOARD_GET_LENGTH);
+      Arrays.getBoardInfo(Define.INDEX_BOARD_IT_NEWS_PAGE),
+      "",
+      Define.DEFAULT_BOARD_GET_LENGTH,
+    );
 
     List<Article> addNews = [];
 
     final response = await get(
-        Uri.parse("https://www.cwn.kr/news/articleList.html?view_type=sm"));
+      Uri.parse("https://www.cwn.kr/news/articleList.html?view_type=sm"),
+    );
 
     switch (response.statusCode) {
       case 200:
@@ -211,26 +257,32 @@ class News {
             title: document1.querySelector(".heading")!.text,
           );
 
-          dom.Element? contents =
-              document1.querySelector("#article-view-content-div");
+          dom.Element? contents = document1.querySelector(
+            "#article-view-content-div",
+          );
 
+          List<ArticleContent> articleContents = [];
           dom.Element? imageElement = contents!.querySelector("img");
           if (imageElement != null) {
             String titleImage = imageElement.attributes["src"] ?? "";
-            target.contents.add(ArticleContent(
-              isPicture: true,
-              isOriginal: true,
-              contents: titleImage,
-            ));
+            articleContents.add(
+              ArticleContent(
+                isPicture: true,
+                isOriginal: true,
+                contents: titleImage,
+              ),
+            );
           }
 
           List<dom.Element> elementList1 = contents.querySelectorAll("p");
           for (dom.Element row2 in elementList1) {
-            target.contents.add(ArticleContent(
-              isPicture: false,
-              isOriginal: false,
-              contents: row2.text,
-            ));
+            articleContents.add(
+              ArticleContent(
+                isPicture: false,
+                isOriginal: false,
+                contents: row2.text,
+              ),
+            );
           }
 
           target = target.copyWith(
@@ -238,10 +290,12 @@ class News {
             board_index: Define.INDEX_BOARD_IT_NEWS_PAGE,
             profile_key: "00000000000000000",
             profile_name: "IT뉴스봇",
+            contents: articleContents,
           );
 
-          Article? isExist =
-              duplicateList.firstWhereOrNull((i) => i.title == target.title);
+          Article? isExist = duplicateList.firstWhereOrNull(
+            (i) => i.title == target.title,
+          );
           if (isExist != null) {
             continue;
           }
@@ -257,20 +311,28 @@ class News {
 
     for (int j = 0; j < addNews.length; j++) {
       Utils.showSnackBar(
-          context,
-          SnackType.info,
-          "${"process_end".tr} : ${"it_news_board".tr}${((j / addNews.length) * 100).round()}%");
+        context,
+        SnackType.info,
+        "${"process_end".tr} : ${"it_news_board".tr}${((j / addNews.length) * 100).round()}%",
+      );
       Article row = addNews[j];
+      List<ArticleContent> updatedContents = [];
+
       for (int i = 0; i < row.contents.length; i++) {
         if (row.contents[i].isPicture && row.contents[i].isOriginal != null) {
-          String myImageUrl =
-              await App.uploadImageToStorage(row.contents[i].contents);
+          String myImageUrl = await App.uploadImageToStorage(
+            row.contents[i].contents,
+          );
           if (myImageUrl.isNotEmpty) {
-            row.contents[i] = ArticleContent(
-              isPicture: true,
-              isOriginal: false,
-              contents: myImageUrl,
+            updatedContents.add(
+              ArticleContent(
+                isPicture: true,
+                isOriginal: false,
+                contents: myImageUrl,
+              ),
             );
+          } else {
+            updatedContents.add(row.contents[i]);
           }
           // if (!Utils.isValidNilEmptyStr(row.thumbnail)) {
           //   File thumbnailFile = await App.compressImageFromURL(myImageUrl);
@@ -278,13 +340,20 @@ class News {
           //       XFile(thumbnailFile.path),
           //       "_thumbnail_" + row.contents[i].contents);
           // }
+        } else {
+          updatedContents.add(row.contents[i]);
         }
       }
+
+      row = row.copyWith(contents: updatedContents);
       await App.createArticle(row);
     }
 
     Utils.showSnackBar(
-        context, SnackType.info, "${"process_end".tr} : ${"it_news_board".tr}");
+      context,
+      SnackType.info,
+      "${"process_end".tr} : ${"it_news_board".tr}",
+    );
 
     logger.i("getITNewList success:${addNews.length}");
   }
@@ -292,11 +361,17 @@ class News {
   static Future<void> getITWorldNewsList(BuildContext context) async {
     var logger = Logger();
 
-    Utils.showSnackBar(context, SnackType.info,
-        "${"process_start".tr} : ${"it_news_board".tr}");
+    Utils.showSnackBar(
+      context,
+      SnackType.info,
+      "${"process_start".tr} : ${"it_news_board".tr}",
+    );
 
     List<Article> duplicateList = await App.getArticleList(
-        Arrays.getBoardInfo(Define.INDEX_BOARD_IT_NEWS_PAGE), "",Define.DEFAULT_BOARD_GET_LENGTH);
+      Arrays.getBoardInfo(Define.INDEX_BOARD_IT_NEWS_PAGE),
+      "",
+      Define.DEFAULT_BOARD_GET_LENGTH,
+    );
 
     List<Article> addNews = [];
 
@@ -314,8 +389,9 @@ class News {
         }
         logger.w("111");
 
-        List<dom.Element> elementList =
-            element.querySelectorAll(".card-article");
+        List<dom.Element> elementList = element.querySelectorAll(
+          ".card-article",
+        );
 
         String newsKey = Utils.getDateTimeKey();
         int index = 0;
@@ -324,8 +400,9 @@ class News {
 
           String link = row1.querySelector("a")!.attributes["href"] ?? "";
 
-          final response1 =
-              await get(Uri.parse("https://www.itworld.co.kr/$link"));
+          final response1 = await get(
+            Uri.parse("https://www.itworld.co.kr/$link"),
+          );
           logger.w("https://www.itworld.co.kr/$link");
 
           if (response1.statusCode != 200) {
@@ -341,20 +418,26 @@ class News {
 
           dom.Element? contents = document1.querySelector(".node-body");
 
-          List<String> list = Utils.multiSplit(
-              contents!.innerHtml, ["<br>", "\n", "&nbsp;"]);
+          List<String> list = Utils.multiSplit(contents!.innerHtml, [
+            "<br>",
+            "\n",
+            "&nbsp;",
+          ]);
 
+          List<ArticleContent> articleContents = [];
           for (String row2 in list) {
             if (Utils.containFromArray(row2, ["<figure", "<img"])) {
               var document3 = parse(row2);
               dom.Element? link = document3.querySelector('img');
               String imageLink = link != null ? link.attributes['src']! : '';
               logger.i("https://www.itworld.co.kr$imageLink");
-              target.contents.add(ArticleContent(
-                isPicture: true,
-                isOriginal: true,
-                contents: "https://www.itworld.co.kr$imageLink",
-              ));
+              articleContents.add(
+                ArticleContent(
+                  isPicture: true,
+                  isOriginal: true,
+                  contents: "https://www.itworld.co.kr$imageLink",
+                ),
+              );
               continue;
             }
 
@@ -363,18 +446,19 @@ class News {
               isOriginal: false,
               contents: "",
             );
-            String contents = row2
-                .replaceAll("&nbsp;", "")
+            String contents =
+                row2
+                    .replaceAll("&nbsp;", "")
+                    .replaceAll(""", "")
                 .replaceAll(""", "")
-                .replaceAll(""", "")
-                // .replaceAll("<li>", "")
-                // .replaceAll("</li>", "")
-                // .replaceAll("</h2>", "")
-                // .replaceAll("<strong>", "")
-                // .replaceAll("</strong>", "")
-                // .replaceAll("<ul>", "")
-                // .replaceAll("</ul>", "")
-                .trim();
+                    // .replaceAll("<li>", "")
+                    // .replaceAll("</li>", "")
+                    // .replaceAll("</h2>", "")
+                    // .replaceAll("<strong>", "")
+                    // .replaceAll("</strong>", "")
+                    // .replaceAll("<ul>", "")
+                    // .replaceAll("</ul>", "")
+                    .trim();
             if (contents.isEmpty) {
               continue;
             }
@@ -383,7 +467,7 @@ class News {
               contents: contents,
             );
             logger.i(contents);
-            target.contents.add(articleContent);
+            articleContents.add(articleContent);
           }
 
           // dom.Element? image_element = contents!.querySelector("img");
@@ -402,10 +486,12 @@ class News {
             board_index: Define.INDEX_BOARD_IT_NEWS_PAGE,
             profile_key: "00000000000000000",
             profile_name: "IT뉴스봇",
+            contents: articleContents,
           );
           //
-          Article? isExist =
-              duplicateList.firstWhereOrNull((i) => i.title == target.title);
+          Article? isExist = duplicateList.firstWhereOrNull(
+            (i) => i.title == target.title,
+          );
           if (isExist != null) {
             continue;
           }
@@ -425,20 +511,28 @@ class News {
 
     for (int j = 0; j < addNews.length; j++) {
       Utils.showSnackBar(
-          context,
-          SnackType.info,
-          "${"process_end".tr} : ${"it_news_board".tr}${((j / addNews.length) * 100).round()}%");
+        context,
+        SnackType.info,
+        "${"process_end".tr} : ${"it_news_board".tr}${((j / addNews.length) * 100).round()}%",
+      );
       Article row = addNews[j];
+      List<ArticleContent> updatedContents = [];
+
       for (int i = 0; i < row.contents.length; i++) {
         if (row.contents[i].isPicture && row.contents[i].isOriginal != null) {
-          String myImageUrl =
-              await App.uploadImageToStorage(row.contents[i].contents);
+          String myImageUrl = await App.uploadImageToStorage(
+            row.contents[i].contents,
+          );
           if (myImageUrl.isNotEmpty) {
-            row.contents[i] = ArticleContent(
-              isPicture: true,
-              isOriginal: false,
-              contents: myImageUrl,
+            updatedContents.add(
+              ArticleContent(
+                isPicture: true,
+                isOriginal: false,
+                contents: myImageUrl,
+              ),
             );
+          } else {
+            updatedContents.add(row.contents[i]);
           }
           // if (!Utils.isValidNilEmptyStr(row.thumbnail)) {
           //   File thumbnailFile = await App.compressImageFromURL(myImageUrl);
@@ -446,13 +540,20 @@ class News {
           //       XFile(thumbnailFile.path),
           //       "_thumbnail_" + row.contents[i].contents);
           // }
+        } else {
+          updatedContents.add(row.contents[i]);
         }
       }
+
+      row = row.copyWith(contents: updatedContents);
       await App.createArticle(row);
     }
 
     Utils.showSnackBar(
-        context, SnackType.info, "${"process_end".tr} : ${"it_news_board".tr}");
+      context,
+      SnackType.info,
+      "${"process_end".tr} : ${"it_news_board".tr}",
+    );
 
     logger.i("getITNewList success:${addNews.length}");
   }
