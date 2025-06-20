@@ -8,19 +8,14 @@ export const getCoinList = onRequest({
   region: 'asia-northeast3'
 }, async (req, res) => {
   try {
-    // CORS 헤더 설정
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
-
     // OPTIONS 요청 처리
     if (req.method === 'OPTIONS') {
       res.status(204).send('');
       return;
     }
 
-    // GET, POST 요청 허용
-    if (req.method !== 'GET' && req.method !== 'POST') {
+    // GET 요청만 허용
+    if (req.method !== 'GET') {
       res.status(405).json({ success: false, error: 'Method not allowed' });
       return;
     }

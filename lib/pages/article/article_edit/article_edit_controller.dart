@@ -37,6 +37,7 @@ class ArticleEditController extends GetxController {
 
   // 상태 관리
   final RxBool isPressed = false.obs;
+  final RxBool isReorderMode = false.obs;
   final Rx<BoardInfo> boardInfo = BoardInfo.init().obs;
   final RxList<Contents> contentList = <Contents>[].obs;
 
@@ -74,9 +75,20 @@ class ArticleEditController extends GetxController {
 
   // 텍스트 추가
   void addTextContent() {
-    contentList.add(
-      Contents(false, "", null, null, TextEditingController(), FocusNode()),
+    final newContent = Contents(
+      false,
+      "",
+      null,
+      null,
+      TextEditingController(),
+      FocusNode(),
     );
+    contentList.add(newContent);
+
+    // 새로 추가된 텍스트 컴포넌트에 포커스 이동
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      newContent.focusNode?.requestFocus();
+    });
   }
 
   // 이미지 추가
@@ -119,8 +131,128 @@ class ArticleEditController extends GetxController {
     contentList.insert(newIndex, item);
   }
 
+  // 순서 변경 모드 토글
+  void toggleReorderMode() {
+    isReorderMode.value = !isReorderMode.value;
+  }
+
   // 글쓰기
   Future<void> writeArticle() async {
+    try {
+      isPressed.value = true;
+
+      // 제목과 본문 텍스트 추출
+      String title = titleController.text.trim();
+      String firstTextContent = "";
+
+      // 첫 번째 텍스트 콘텐츠 찾기
+      for (var content in contentList) {
+        if (!content.isPicture && content.textEditingController != null) {
+          String text = content.textEditingController!.text.trim();
+          if (text.isNotEmpty &&
+              text.replaceAll(RegExp(r'\s+'), '').isNotEmpty) {
+            firstTextContent = text;
+            break;
+          }
+        }
+      }
+
+      // 제목이 없고 본문 텍스트도 없는 경우
+      if (title.isEmpty && firstTextContent.isEmpty) {
+        Get.snackbar(
+          '알림',
+          '텍스트를 입력해주세요.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      // 제목이 없으면 본문 텍스트를 제목으로 사용 (최대 15자)
+      if (title.isEmpty && firstTextContent.isNotEmpty) {
+        title =
+            firstTextContent.length > 15
+                ? "${firstTextContent.substring(0, 15)}..."
+                : firstTextContent;
+      }
+
+      // 이미지 업로드 처리
+      List<ArticleContent> processedContents = [];
+      for (var content in contentList) {
+        if (content.isPicture && content.file != null) {
+          // 이미지 파일을 Storage에 업로드
+          String imageUrl = await Utils.uploadImageToStorage(
+            content.file,
+            fileName: content.contents,
+          );
+
+          if (imageUrl.isNotEmpty) {
+            processedContents.add(
+              ArticleContent(isPicture: true, contents: imageUrl),
+            );
+          }
+        } else if (!content.isPicture &&
+            content.textEditingController != null) {
+          String text = content.textEditingController!.text.trim();
+          if (text.isNotEmpty &&
+              text.replaceAll(RegExp(r'\s+'), '').isNotEmpty) {
+            processedContents.add(
+              ArticleContent(isPicture: false, contents: text),
+            );
+          }
+        }
+      }
+
+      // 최소 하나의 콘텐츠가 있는지 확인
+      if (processedContents.isEmpty) {
+        Get.snackbar(
+          '알림',
+          '텍스트를 입력해주세요.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      // 프로필 정보 가져오기
+      Profile profile = await App.getProfile();
+
+      // Article 객체 생성
+      Article article = Article(
+        id: "",
+        board_name: boardInfo.value.board_name,
+        profile_uid: profile.uid,
+        profile_name: profile.name,
+        profile_photo_url: profile.profile_image_url,
+        count_view: 0,
+        count_like: 0,
+        count_unlike: 0,
+        count_comments: 0,
+        title: title,
+        contents: processedContents,
+        created_at: DateTime.now().toUtc(),
+        is_notice: false,
+      );
+
+      // 게시글 작성
+      await App.createArticle(article: article);
+
+      // 성공 시 이전 화면으로 이동
+      Get.back();
+    } catch (e) {
+      logger.e("writeArticle error: $e");
+      Get.snackbar(
+        '오류',
+        '게시글 작성 중 오류가 발생했습니다.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isPressed.value = false;
+    }
   }
 
   @override

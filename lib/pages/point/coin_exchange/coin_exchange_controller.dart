@@ -1,81 +1,133 @@
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 import '../../../models/coin.dart';
 import '../../../models/coin_balance.dart';
-import '../../../models/profile.dart';
 import '../../../utils/app.dart';
 import '../../../define/define.dart';
 import '../../../utils/util.dart';
+import '../../../controllers/profile_controller.dart';
+
+class CoinWithHistory {
+  final Coin coin;
+  final List<double> lastTwoPrices;
+  CoinWithHistory({required this.coin, required this.lastTwoPrices});
+}
 
 class CoinExchangeController extends GetxController {
   var logger = Logger();
 
-  final RxList<Coin> coinList = <Coin>[].obs;
-  final Rx<Profile> profile = Profile.init().obs;
+  final RxList<CoinWithHistory> coinList = <CoinWithHistory>[].obs;
   final RxBool isLoading = false.obs;
+  StreamSubscription? _coinStream;
+  List<StreamSubscription> _priceSubscriptions = [];
 
   @override
   void onInit() {
     super.onInit();
-    loadData();
+    subscribeCoinList();
   }
 
-  Future<void> loadData() async {
-    isLoading.value = true;
-    try {
-      final coins = await App.getCoinList(withoutNoTrade: true);
-      final userProfile = await App.getProfile();
-      
-      // 거래량 기준으로 정렬 (내림차순)
-      coins.sort((a, b) => (b.current_volume_24h ?? 0).compareTo(a.current_volume_24h ?? 0));
-      
-      coinList.value = coins;
-      profile.value = userProfile;
-    } catch (e) {
-      logger.e('Error loading coin exchange data: $e');
-    } finally {
-      isLoading.value = false;
+  @override
+  void onClose() {
+    _coinStream?.cancel();
+    for (var sub in _priceSubscriptions) {
+      sub.cancel();
     }
+    super.onClose();
+  }
+
+  void subscribeCoinList() {
+    isLoading.value = true;
+    _coinStream?.cancel();
+    _coinStream = FirebaseFirestore.instance
+        .collection('coin')
+        .snapshots()
+        .listen((snapshot) async {
+          List<CoinWithHistory> tempList = [];
+          // 기존 priceHistory 구독 해제
+          for (var sub in _priceSubscriptions) {
+            await sub.cancel();
+          }
+          _priceSubscriptions.clear();
+          for (var doc in snapshot.docs) {
+            final coin = Coin.fromJson(doc.data());
+            // 각 코인의 price_history subcollection에서 최신 2개 가격 구독
+            var sub = FirebaseFirestore.instance
+                .collection('coin')
+                .doc(coin.id)
+                .collection('price_history')
+                .orderBy('timestamp', descending: true)
+                .limit(2)
+                .snapshots()
+                .listen((priceSnap) {
+                  List<double> lastTwoPrices =
+                      priceSnap.docs
+                          .map((d) => (d.data()['price'] as num).toDouble())
+                          .toList();
+                  // 기존에 있던 코인 정보 갱신
+                  int idx = tempList.indexWhere((c) => c.coin.id == coin.id);
+                  if (idx >= 0) {
+                    tempList[idx] = CoinWithHistory(
+                      coin: coin,
+                      lastTwoPrices: lastTwoPrices,
+                    );
+                  } else {
+                    tempList.add(
+                      CoinWithHistory(coin: coin, lastTwoPrices: lastTwoPrices),
+                    );
+                  }
+                  coinList.value = List.from(tempList);
+                });
+            _priceSubscriptions.add(sub);
+          }
+          isLoading.value = false;
+        });
   }
 
   Future<void> refreshData() async {
-    await loadData();
+    subscribeCoinList();
+    await ProfileController.to.refreshProfile();
   }
 
   // 보유 코인 수량 계산
   int getCoinQuantity(String coinId) {
-    if (profile.value.coin_balance == null) return 0;
-
-    return profile.value.coin_balance!
+    final profile = ProfileController.to.profile.value;
+    if (profile.coin_balance == null) return 0;
+    return profile.coin_balance!
         .where((balance) => balance.id == coinId)
         .fold(0, (sum, balance) => sum + balance.quantity);
   }
 
+  // 특정 코인의 보유 내역 반환
+  List<CoinBalance> getCoinBalances(String coinId) {
+    final profile = ProfileController.to.profile.value;
+    if (profile.coin_balance == null) return [];
+    return profile.coin_balance!
+        .where((balance) => balance.id == coinId)
+        .toList();
+  }
+
   // 코인 구매
-  Future<void> buyCoin(Coin coin, int quantity) async {
+  Future<void> buyCoin(Coin coin, double quantity, double price) async {
     try {
       isLoading.value = true;
-
-      double? price =
-          coin.price_history != null
-              ? coin.price_history!.last.price +
-                  (coin.price_history!.last.price * Define.COIN_BUY_FEE_PERCENT)
-              : null;
-
-      if (price == null) {
-        Get.snackbar('오류', '거래 불가능한 코인입니다.');
-        return;
-      }
 
       CoinBalance coinBalance = CoinBalance(
         id: coin.id,
         name: coin.name,
         price: price,
-        quantity: quantity,
+        quantity: quantity.toInt(),
         created_at: Utils.getDateTimeKey(),
       );
 
-      profile.value = await App.buyCoin(profile.value.uid, coinBalance);
+      final profile = ProfileController.to.profile.value;
+      final updatedProfile = await App.buyCoin(profile.uid, coinBalance);
+
+      // ProfileController 업데이트
+      ProfileController.to.profile.value = updatedProfile;
+
       Get.snackbar('성공', '코인을 구매했습니다.');
     } catch (e) {
       logger.e('Error buying coin: $e');
@@ -90,11 +142,15 @@ class CoinExchangeController extends GetxController {
     try {
       isLoading.value = true;
 
-      profile.value = await App.sellCoin(
-        profile.value.uid,
+      final profile = ProfileController.to.profile.value;
+      final updatedProfile = await App.sellCoin(
+        profile.uid,
         coinBalance,
         currentPrice,
       );
+
+      // ProfileController 업데이트
+      ProfileController.to.profile.value = updatedProfile;
 
       Get.snackbar('성공', '코인을 판매했습니다.');
     } catch (e) {

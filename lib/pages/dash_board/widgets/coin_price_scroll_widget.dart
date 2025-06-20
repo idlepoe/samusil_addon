@@ -1,5 +1,3 @@
-import 'package:crypto_icons_flutter/crypto_icons_flutter.dart';
-import 'package:crypto_icons_flutter/cyprot_icon_style.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:scroll_loop_auto_scroll/scroll_loop_auto_scroll.dart';
@@ -97,7 +95,7 @@ class CoinPriceScrollWidget extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: ScrollLoopAutoScroll(
-              duration: const Duration(seconds: 1000),
+              duration: const Duration(seconds: 30),
               duplicateChild: 2,
               scrollDirection: Axis.horizontal,
               child: InkWell(
@@ -114,11 +112,7 @@ class CoinPriceScrollWidget extends StatelessWidget {
                       margin: const EdgeInsets.only(right: 16),
                       child: Row(
                         children: [
-                          CryptoIcons.loadAsset(
-                            coin.symbol,
-                            16,
-                            CryptoIconStyle.color,
-                          ),
+                          App.buildCoinIcon(coin.symbol, size: 16),
                           const SizedBox(width: 4),
                           Text(
                             coin.symbol,

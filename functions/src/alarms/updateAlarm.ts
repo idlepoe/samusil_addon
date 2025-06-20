@@ -4,17 +4,16 @@ import { FIRESTORE_COLLECTION_ALARM } from '../utils/constants';
 
 export const updateAlarm = onRequest({ 
   cors: true,
+  region: 'asia-northeast3'
 }, async (req, res) => {
   try {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'PUT, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
-
+    // OPTIONS 요청 처리
     if (req.method === 'OPTIONS') {
       res.status(204).send('');
       return;
     }
 
+    // PUT 요청만 허용
     if (req.method !== 'PUT') {
       res.status(405).json({ success: false, error: 'Method not allowed' });
       return;

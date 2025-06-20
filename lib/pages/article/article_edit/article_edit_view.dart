@@ -25,9 +25,11 @@ class ArticleEditView extends GetView<ArticleEditController> {
     }
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
       appBar: _buildAppBar(context),
-      body: _buildBody(context),
+      body: SafeArea(child: _buildBody(context)),
+      bottomNavigationBar: _buildToolbar(),
     );
   }
 
@@ -96,7 +98,6 @@ class ArticleEditView extends GetView<ArticleEditController> {
           _buildTitleSection(),
           _buildDivider(),
           Expanded(child: _buildContentSection()),
-          _buildToolbar(),
         ],
       );
     });
@@ -113,7 +114,7 @@ class ArticleEditView extends GetView<ArticleEditController> {
           color: Colors.black,
         ),
         decoration: const InputDecoration(
-          hintText: '제목을 입력하세요',
+          hintText: '(선택) 제목을 입력해주세요',
           hintStyle: TextStyle(
             color: Colors.grey,
             fontSize: 20,
@@ -132,26 +133,83 @@ class ArticleEditView extends GetView<ArticleEditController> {
   }
 
   Widget _buildContentSection() {
-    return ReorderableListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      itemCount: controller.contentList.length,
-      onReorder: controller.reorderContent,
-      itemBuilder: (context, index) {
-        final content = controller.contentList[index];
-        return _buildContentItem(content, index);
-      },
+    return Obx(
+      () => ReorderableListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: controller.contentList.length,
+        buildDefaultDragHandles: false,
+        onReorder:
+            controller.isReorderMode.value
+                ? controller.reorderContent
+                : (oldIndex, newIndex) {},
+        itemBuilder: (context, index) {
+          final content = controller.contentList[index];
+          return _buildContentItem(content, index);
+        },
+      ),
     );
   }
 
   Widget _buildContentItem(Contents content, int index) {
-    return Container(
+    Widget contentWidget = Container(
       key: ValueKey(index),
       margin: const EdgeInsets.only(bottom: 16),
-      child:
+      child: Stack(
+        children: [
           content.isPicture
               ? _buildImageContent(content, index)
               : _buildTextContent(content, index),
+          // 삭제 버튼 (순서 변경 모드가 아닐 때만 표시)
+          if (!controller.isReorderMode.value)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: GestureDetector(
+                onTap: () => controller.removeContent(index),
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.6),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Icons.close, color: Colors.white, size: 16),
+                ),
+              ),
+            ),
+          // 드래그 핸들 (순서 변경 모드일 때만 표시)
+          if (controller.isReorderMode.value)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0064FF),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.drag_handle,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
+
+    // 순서 변경 모드일 때만 ReorderableDragStartListener로 감싸기
+    if (controller.isReorderMode.value) {
+      return ReorderableDragStartListener(
+        key: ValueKey(index),
+        index: index,
+        child: contentWidget,
+      );
+    } else {
+      return contentWidget;
+    }
   }
 
   Widget _buildTextContent(Contents content, int index) {
@@ -163,6 +221,7 @@ class ArticleEditView extends GetView<ArticleEditController> {
       child: TextField(
         controller: content.textEditingController,
         focusNode: content.focusNode,
+        enabled: !controller.isReorderMode.value,
         style: const TextStyle(fontSize: 16, color: Colors.black, height: 1.5),
         maxLines: null,
         keyboardType: TextInputType.multiline,
@@ -187,52 +246,37 @@ class ArticleEditView extends GetView<ArticleEditController> {
             image: DecorationImage(image: content.picture!, fit: BoxFit.cover),
           ),
         ),
-        Positioned(
-          top: 8,
-          right: 8,
-          child: GestureDetector(
-            onTap: () => controller.removeContent(index),
-            child: Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.6),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Icon(Icons.close, color: Colors.white, size: 18),
-            ),
-          ),
-        ),
       ],
     );
   }
 
   Widget _buildToolbar() {
-    return Container(
-      height: 80,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(color: const Color(0xFFF0F0F0), width: 1),
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(
+            top: BorderSide(color: const Color(0xFFF0F0F0), width: 1),
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          _buildToolbarButton(
-            icon: LineIcons.font,
-            label: '텍스트',
-            onTap: controller.addTextContent,
-          ),
-          const SizedBox(width: 16),
-          _buildToolbarButton(
-            icon: LineIcons.image,
-            label: '이미지',
-            onTap: controller.addImageContent,
-          ),
-          const Spacer(),
-          _buildReorderButton(),
-        ],
+        child: Row(
+          children: [
+            _buildToolbarButton(
+              icon: LineIcons.font,
+              label: '텍스트',
+              onTap: controller.addTextContent,
+            ),
+            const SizedBox(width: 16),
+            _buildToolbarButton(
+              icon: LineIcons.image,
+              label: '이미지',
+              onTap: controller.addImageContent,
+            ),
+            const Spacer(),
+            _buildReorderButton(),
+          ],
+        ),
       ),
     );
   }
@@ -270,13 +314,25 @@ class ArticleEditView extends GetView<ArticleEditController> {
   }
 
   Widget _buildReorderButton() {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FA),
-        borderRadius: BorderRadius.circular(8),
+    return Obx(
+      () => GestureDetector(
+        onTap: controller.toggleReorderMode,
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color:
+                controller.isReorderMode.value
+                    ? const Color(0xFF0064FF)
+                    : const Color(0xFFF8F9FA),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            Icons.drag_handle,
+            color: controller.isReorderMode.value ? Colors.white : Colors.grey,
+            size: 20,
+          ),
+        ),
       ),
-      child: const Icon(Icons.drag_handle, color: Colors.grey, size: 20),
     );
   }
 }

@@ -20,7 +20,7 @@ class AllArticlesWidget extends StatelessWidget {
   Future<List<Article>> _loadAllArticles() async {
     try {
       return await App.getArticleList(
-        boardInfo: Arrays.getBoardInfo(Define.BOARD_ALL),
+        boardInfo: Arrays.getBoardInfo(Define.BOARD_FREE),
         search: "",
         limit: Define.DEFAULT_DASH_BOARD_GET_LENGTH,
       );
@@ -113,21 +113,32 @@ class AllArticlesWidget extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Text(
-                      "all_board".tr,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF191F28),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          Get.toNamed("/list/${Define.BOARD_FREE}");
+                        },
+                        child: Text(
+                          "자유게시판",
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF191F28),
+                          ),
+                        ),
                       ),
                     ),
-                    const Spacer(),
-                    Text(
-                      "더보기",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
+                    InkWell(
+                      onTap: () {
+                        Get.toNamed("/list/${Define.BOARD_FREE}");
+                      },
+                      child: Text(
+                        "더보기",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],

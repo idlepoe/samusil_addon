@@ -8,15 +8,13 @@ export const createWish = onRequest({
   region: 'asia-northeast3'
 }, async (req, res) => {
   try {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
+    // OPTIONS 요청 처리
     if (req.method === 'OPTIONS') {
       res.status(204).send('');
       return;
     }
 
+    // POST 요청만 허용
     if (req.method !== 'POST') {
       res.status(405).json({ success: false, error: 'Method not allowed' });
       return;

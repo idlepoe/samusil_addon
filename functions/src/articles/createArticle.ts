@@ -8,11 +8,6 @@ export const createArticle = onRequest({
   region: 'asia-northeast3'
 }, async (req, res) => {
   try {
-    // CORS 헤더 설정
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
     // OPTIONS 요청 처리
     if (req.method === 'OPTIONS') {
       res.status(204).send('');
@@ -36,6 +31,18 @@ export const createArticle = onRequest({
       return;
     }
 
+    // 제목 필수 체크
+    if (!articleData.title || articleData.title.trim() === '') {
+      res.status(400).json({ success: false, error: 'Title is required' });
+      return;
+    }
+
+    // 본문 내용 필수 체크
+    if (!articleData.contents || articleData.contents.length === 0) {
+      res.status(400).json({ success: false, error: 'Content is required' });
+      return;
+    }
+
     const db = admin.firestore();
     const articleRef = db.collection(FIRESTORE_COLLECTION_ARTICLE).doc();
 
@@ -52,7 +59,7 @@ export const createArticle = onRequest({
       count_comments: 0,
       title: articleData.title,
       contents: articleData.contents,
-      created_at: articleData.created_at,
+      created_at: admin.firestore.FieldValue.serverTimestamp(),
       is_notice: articleData.is_notice,
       thumbnail: articleData.thumbnail,
     });

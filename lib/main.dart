@@ -14,6 +14,7 @@ import 'package:samusil_addon/pages/wish/wish_view.dart';
 import 'package:samusil_addon/utils/get_routes.dart';
 import 'package:samusil_addon/utils/http_service.dart';
 import 'package:samusil_addon/utils/app.dart';
+import 'package:samusil_addon/controllers/profile_controller.dart';
 
 import 'define/define.dart';
 import 'firebase_options.dart';

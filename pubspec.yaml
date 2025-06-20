@@ -58,9 +58,6 @@ flutter:
     - family: MapoGoldenPier
       fonts:
         - asset: assets/fonts/MapoGoldenPier.ttf
-    - family: CryptocurrencyIcons
-      fonts:
-        - asset: packages/crypto_icons/assets/fonts/cryptocurrency-icons.ttf
     - family: BMHANNAPro
       fonts:
         - asset: assets/fonts/BMHANNAPro.ttf

@@ -10,10 +10,10 @@ import '../../define/enum.dart';
 import '../../models/article.dart';
 import '../../models/coin.dart';
 import '../../models/price.dart';
-import '../../models/profile.dart';
 import '../../utils/app.dart';
 import '../../utils/util.dart';
 import '../wish/wish_controller.dart';
+import '../../controllers/profile_controller.dart';
 import '../../main.dart';
 
 class DashBoardController extends GetxController {
@@ -24,8 +24,6 @@ class DashBoardController extends GetxController {
   final showInput = false.obs;
 
   final listMaxLength = Define.DEFAULT_BOARD_GET_LENGTH.obs;
-
-  final profile = Profile.init().obs;
 
   ViewType viewType = ViewType.normal;
 
@@ -51,7 +49,8 @@ class DashBoardController extends GetxController {
       logger.i(Uri.base.origin);
     }
 
-    profile.value = await App.getProfile();
+    // ProfileController를 통해 프로필 데이터 새로고침
+    await ProfileController.to.refreshProfile();
   }
 
   void onRefreshLite() async {

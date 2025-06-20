@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:line_icons/line_icons.dart';
-import 'package:intl/intl.dart';
+import 'package:samusil_addon/controllers/profile_controller.dart';
+import 'package:samusil_addon/utils/util.dart';
 
 import '../../../components/appBarAction.dart';
 import '../../../components/bottomButton.dart';
@@ -10,6 +11,12 @@ import '../../../models/article.dart';
 import '../../../models/board_info.dart';
 import '../../../utils/util.dart';
 import 'article_list_controller.dart';
+import 'widgets/article_list_widget.dart';
+import 'widgets/description_section_widget.dart';
+import 'widgets/floating_write_button.dart';
+import '../article_edit/article_edit_binding.dart';
+import '../article_edit/article_edit_view.dart';
+import '../article_edit/article_edit_controller.dart';
 
 class ArticleListView extends GetView<ArticleListController> {
   const ArticleListView({super.key});
@@ -20,7 +27,7 @@ class ArticleListView extends GetView<ArticleListController> {
       backgroundColor: Colors.white,
       appBar: _buildAppBar(context),
       body: _buildBody(context),
-      bottomSheet: _buildBottomSheet(context),
+      bottomSheet: _buildWriteCommentSheet(context),
     );
   }
 
@@ -43,237 +50,128 @@ class ArticleListView extends GetView<ArticleListController> {
         ),
       ),
       centerTitle: true,
-      actions: AppBarAction(context, controller.profile.value),
+      actions: [],
     );
   }
 
   Widget _buildBody(BuildContext context) {
-    return Obx(
-      () => RefreshIndicator(
-        onRefresh: controller.onRefresh,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            children: [
-              _buildDescriptionSection(),
-              _buildDivider(),
-              _buildArticleList(),
-            ],
+    return Column(
+      children: [
+        _buildFilterBar(),
+        const Divider(height: 1, color: Color(0xFFF0F0F0)),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: controller.onRefresh,
+            child: Obx(
+              () => ArticleListWidget(
+                articles: controller.displayArticles,
+                hasPicture: controller.hasPicture,
+                hasNoContents: controller.hasNoContents,
+              ),
+            ),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildFilterBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: const [
+              Text('최신순', style: TextStyle(fontWeight: FontWeight.bold)),
+              Icon(Icons.arrow_downward, size: 16),
+            ],
+          ),
+          TextButton(
+            onPressed: () {
+              // TODO: 내 프로필 페이지로 이동
+            },
+            child: const Text('내 프로필', style: TextStyle(color: Colors.grey)),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildDescriptionSection() {
+  Widget _buildWriteCommentSheet(BuildContext context) {
+    final profileController = ProfileController.to;
     return Container(
-      padding: const EdgeInsets.all(20),
-      child: Obx(
-        () => Text(
-          controller.boardInfo.value.description.tr,
-          style: const TextStyle(color: Colors.grey, fontSize: 14, height: 1.4),
-          maxLines: 3,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDivider() {
-    return Container(height: 1, color: const Color(0xFFF0F0F0));
-  }
-
-  Widget _buildArticleList() {
-    return Obx(
-      () => ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: controller.displayArticles.length,
-        itemBuilder: (context, index) {
-          final article = controller.displayArticles[index];
-          return _buildArticleItem(article, index);
-        },
-      ),
-    );
-  }
-
-  Widget _buildArticleItem(Article article, int index) {
-    final hasPicture = controller.hasPicture(article);
-    final hasNoContents = controller.hasNoContents(article);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        border: Border(top: BorderSide(color: Colors.grey[200]!)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
-            offset: const Offset(0, 2),
+            offset: const Offset(0, -2),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () async {
-            Get.toNamed("/detail/${article.id}");
+          onTap: () {
+            // ArticleEditBinding의 의존성을 수동으로 주입
+            final ArticleEditBinding binding = ArticleEditBinding();
+            binding.dependencies();
+
+            Get.bottomSheet(
+              SafeArea(
+                child: Container(
+                  height: Get.height * 0.8,
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16.0),
+                      topRight: Radius.circular(16.0),
+                    ),
+                    child: ArticleEditView(),
+                  ),
+                ),
+              ),
+              backgroundColor: Colors.transparent,
+              isScrollControlled: true,
+              enableDrag: true,
+              isDismissible: true,
+            ).whenComplete(() {
+              // BottomSheet가 닫힐 때 컨트롤러 삭제
+              Get.delete<ArticleEditController>();
+            });
           },
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Row(
               children: [
-                _buildArticleTitle(article, hasPicture, hasNoContents),
-                const SizedBox(height: 8),
-                _buildArticleMeta(article),
+                CircleAvatar(
+                  radius: 16,
+                  backgroundImage:
+                      Utils.isValidNilEmptyStr(
+                            profileController.profileImageUrl,
+                          )
+                          ? NetworkImage(profileController.profileImageUrl)
+                          : const AssetImage('assets/anon_icon.jpg')
+                              as ImageProvider,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '지금 무슨 생각을 하고 있나요?',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildArticleTitle(
-    Article article,
-    bool hasPicture,
-    bool hasNoContents,
-  ) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (hasPicture) ...[
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: const Color(0xFF0064FF).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: const Text('🖼', style: TextStyle(fontSize: 12)),
-          ),
-          const SizedBox(width: 8),
-        ],
-        Expanded(
-          child: Text(
-            article.title + (hasNoContents ? " (${"no_contents".tr})" : ""),
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-              height: 1.4,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        if (article.count_comments > 0) ...[
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: const Color(0xFF0064FF),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              '${article.count_comments}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildArticleMeta(Article article) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            "${article.profile_name} • ${"count_view".tr} ${article.count_view} • ${"recommend".tr} ${article.count_like}",
-            style: const TextStyle(color: Colors.grey, fontSize: 12),
-          ),
-        ),
-        Text(
-          Utils.toConvertFireDateToCommentTimeToday(
-            DateFormat('yyyyMMddHHmm').format(article.created_at),
-          ),
-          style: const TextStyle(color: Colors.grey, fontSize: 12),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBottomSheet(BuildContext context) {
-    return Container(
-      height: Define.BOTTOM_SHEET_HEIGHT,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(color: const Color(0xFFF0F0F0), width: 1),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildBottomButton(
-            icon: LineIcons.home,
-            label: "dash_board".tr,
-            onTap: controller.navigateToDashboard,
-          ),
-          _buildBottomButton(
-            icon: Icons.search,
-            label: "search".tr,
-            onTap: controller.navigateToSearch,
-          ),
-          _buildBottomButton(
-            icon: LineIcons.pen,
-            label: "write".tr,
-            onTap: controller.navigateToEdit,
-            disabled: !controller.canWrite,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    bool disabled = false,
-  }) {
-    return GestureDetector(
-      onTap: disabled ? null : onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: disabled ? Colors.grey.withOpacity(0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: disabled ? Colors.grey : const Color(0xFF0064FF),
-              size: 24,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: disabled ? Colors.grey : const Color(0xFF0064FF),
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
         ),
       ),
     );

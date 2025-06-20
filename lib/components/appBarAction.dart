@@ -13,6 +13,9 @@ import 'package:badges/badges.dart' as badges;
 
 import '../utils/app.dart';
 import '../utils/util.dart';
+import '../controllers/profile_controller.dart';
+
+enum PopupItem { profile, point, option, logout }
 
 List<Widget> AppBarAction(BuildContext context, Profile profile) {
   int noReadLength = 0;
@@ -44,113 +47,90 @@ List<Widget> AppBarAction(BuildContext context, Profile profile) {
     ),
     const SizedBox(width: 10),
     PopupMenuButton<PopupItem>(
-      icon: CircleAvatar(
-        backgroundImage:
-            Utils.isValidNilEmptyStr(profile.profile_image_url)
-                ? NetworkImage(profile.profile_image_url)
-                : null,
-        child:
-            Utils.isValidNilEmptyStr(profile.profile_image_url)
-                ? null
-                : const CircleAvatar(
-                  backgroundImage: AssetImage('assets/anon_icon.jpg'),
-                ),
-      ),
+      icon: Obx(() {
+        final profileController = ProfileController.to;
+        return CircleAvatar(
+          backgroundImage:
+              Utils.isValidNilEmptyStr(profileController.profileImageUrl)
+                  ? NetworkImage(profileController.profileImageUrl)
+                  : null,
+          child:
+              Utils.isValidNilEmptyStr(profileController.profileImageUrl)
+                  ? null
+                  : const CircleAvatar(
+                    backgroundImage: AssetImage('assets/anon_icon.jpg'),
+                  ),
+        );
+      }),
       onSelected: (PopupItem item) {},
       itemBuilder:
           (BuildContext context) => <PopupMenuEntry<PopupItem>>[
             PopupMenuItem<PopupItem>(
               enabled: false,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircleAvatar(
-                    backgroundImage:
-                        Utils.isValidNilEmptyStr(profile.profile_image_url)
-                            ? NetworkImage(profile.profile_image_url)
-                            : null,
-                    child:
-                        Utils.isValidNilEmptyStr(profile.profile_image_url)
-                            ? null
-                            : const CircleAvatar(
-                              backgroundImage: AssetImage(
-                                'assets/anon_icon.jpg',
+              child: Obx(() {
+                final profileController = ProfileController.to;
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircleAvatar(
+                      backgroundImage:
+                          Utils.isValidNilEmptyStr(
+                                profileController.profileImageUrl,
+                              )
+                              ? NetworkImage(profileController.profileImageUrl)
+                              : null,
+                      child:
+                          Utils.isValidNilEmptyStr(
+                                profileController.profileImageUrl,
+                              )
+                              ? null
+                              : const CircleAvatar(
+                                backgroundImage: AssetImage(
+                                  'assets/anon_icon.jpg',
+                                ),
                               ),
-                            ),
-                  ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(profile.name),
-                      Text("${profile.point.round()}P"),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                    const SizedBox(width: 10),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(profileController.userName),
+                        Text("${profileController.currentPointRounded}P"),
+                      ],
+                    ),
+                  ],
+                );
+              }),
             ),
             const PopupMenuDivider(height: 1),
             PopupMenuItem<PopupItem>(
-              onTap: () async {
-                // print("profile");
-                // await Future.delayed(Duration.zero);
-                // await Navigator.of(context).push(SwipeablePageRoute(
-                //   builder: (BuildContext context) => ProfilePage(),
-                // ));
-                Get.toNamed("/profile");
-              },
+              value: PopupItem.point,
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Arrays.getBoardInfo(Define.BOARD_PROFILE).icon,
-                  const SizedBox(width: 10),
-                  Text(Arrays.getBoardInfo(Define.BOARD_PROFILE).title.tr),
+                  const Icon(Icons.monetization_on, color: Colors.orange),
+                  const SizedBox(width: 8),
+                  Text("point_information".tr),
                 ],
               ),
             ),
             PopupMenuItem<PopupItem>(
-              onTap: () {
-                Get.toNamed("/point/rank");
-              },
+              value: PopupItem.option,
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(LineIcons.barChart),
-                  const SizedBox(width: 10),
-                  Text("point_rank".tr),
-                ],
-              ),
-            ),
-            PopupMenuItem<PopupItem>(
-              onTap: () async {
-                FirebaseAuth.instance.signOut();
-                await Utils.sharedPrefClear();
-                profile = await App.checkUser();
-              },
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(LineIcons.alternateSignOut),
-                  const SizedBox(width: 10),
-                  Text("logout".tr),
-                ],
-              ),
-            ),
-            const PopupMenuDivider(height: 1),
-            PopupMenuItem<PopupItem>(
-              onTap: () async {
-                // await Future.delayed(Duration.zero);
-                // await Navigator.of(context).push(SwipeablePageRoute(
-                //   builder: (BuildContext context) => OptionPage(),
-                // ));
-                Get.toNamed("/option");
-              },
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(LineIcons.cog),
-                  const SizedBox(width: 10),
+                  const Icon(Icons.settings, color: Colors.grey),
+                  const SizedBox(width: 8),
                   Text("option".tr),
+                ],
+              ),
+            ),
+            const PopupMenuDivider(height: 1),
+            PopupMenuItem<PopupItem>(
+              value: PopupItem.logout,
+              child: Row(
+                children: [
+                  const Icon(Icons.logout, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Text("logout".tr),
                 ],
               ),
             ),

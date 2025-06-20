@@ -358,21 +358,18 @@ class App {
       final httpService = HttpService();
       final response = await httpService.createArticle(
         articleData: {
-          'article': {
-            'board_name': article.board_name,
-            'profile_uid': article.profile_uid,
-            'profile_name': article.profile_name,
-            'profile_photo_url': article.profile_photo_url,
-            'count_view': article.count_view,
-            'count_like': article.count_like,
-            'count_unlike': article.count_unlike,
-            'title': article.title,
-            'contents':
-                article.contents.map((content) => content.toJson()).toList(),
-            'created_at': article.created_at,
-            'is_notice': article.is_notice,
-            'thumbnail': article.thumbnail,
-          },
+          'board_name': article.board_name,
+          'profile_uid': article.profile_uid,
+          'profile_name': article.profile_name,
+          'profile_photo_url': article.profile_photo_url,
+          'count_view': article.count_view,
+          'count_like': article.count_like,
+          'count_unlike': article.count_unlike,
+          'title': article.title,
+          'contents':
+              article.contents.map((content) => content.toJson()).toList(),
+          'is_notice': article.is_notice,
+          'thumbnail': article.thumbnail,
         },
       );
 
@@ -979,6 +976,95 @@ class App {
     }
 
     return result;
+  }
+
+  /// 코인 심볼의 첫 글자를 대문자로 바꿔서 원형 아이콘으로 표시하는 위젯을 생성합니다.
+  /// [symbol] 코인 심볼 (예: "btc", "eth")
+  /// [size] 아이콘 크기 (기본값: 16)
+  /// [backgroundColor] 배경색 (기본값: 자동 생성)
+  static Widget buildCoinIcon(
+    String symbol, {
+    double size = 16,
+    Color? backgroundColor,
+  }) {
+    final firstLetter = symbol.isNotEmpty ? symbol[0].toUpperCase() : '?';
+    final iconColor = backgroundColor ?? _generateColorFromString(symbol);
+    final textColor = _getContrastColor(iconColor);
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(color: iconColor, shape: BoxShape.circle),
+      child: Center(
+        child: Text(
+          firstLetter,
+          style: TextStyle(
+            color: textColor,
+            fontSize: size * 0.6,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 배경색에 대비되는 텍스트 색깔을 반환합니다.
+  /// [backgroundColor] 배경색
+  static Color _getContrastColor(Color backgroundColor) {
+    // 밝기 계산 (YIQ 공식 사용)
+    double yiq =
+        ((backgroundColor.red * 299) +
+            (backgroundColor.green * 587) +
+            (backgroundColor.blue * 114)) /
+        1000;
+
+    // 밝기가 128보다 크면 검은색, 작으면 흰색 반환
+    return yiq >= 128 ? Colors.black : Colors.white;
+  }
+
+  /// 문자열로부터 유니크한 색깔을 생성합니다.
+  /// [text] 색깔을 생성할 문자열
+  /// [saturation] 채도 (0.0 ~ 1.0, 기본값: 0.7)
+  /// [brightness] 명도 (0.0 ~ 1.0, 기본값: 0.8)
+  static Color _generateColorFromString(
+    String text, {
+    double saturation = 0.7,
+    double brightness = 0.8,
+  }) {
+    // 미리 정의된 보기 좋은 색깔 팔레트
+    final List<Color> colorPalette = [
+      const Color(0xFF0064FF), // 파란색
+      const Color(0xFF00C851), // 초록색
+      const Color(0xFFFF5252), // 빨간색
+      const Color(0xFFFF9800), // 주황색
+      const Color(0xFF9C27B0), // 보라색
+      const Color(0xFFE91E63), // 분홍색
+      const Color(0xFF795548), // 갈색
+      const Color(0xFF607D8B), // 회청색
+      const Color(0xFF4CAF50), // 연두색
+      const Color(0xFF2196F3), // 하늘색
+      const Color(0xFFFF5722), // 주황빨강
+      const Color(0xFF673AB7), // 진보라
+      const Color(0xFF3F51B5), // 인디고
+      const Color(0xFF009688), // 청록색
+      const Color(0xFFFFC107), // 노란색
+      const Color(0xFF8BC34A), // 연한 초록
+      const Color(0xFFFFEB3B), // 밝은 노란색
+      const Color(0xFF00BCD4), // 청록색
+      const Color(0xFF9E9E9E), // 회색
+      const Color(0xFFCDDC39), // 라임색
+    ];
+
+    // 문자열의 해시값 생성
+    int hash = 0;
+    for (int i = 0; i < text.length; i++) {
+      hash = text.codeUnitAt(i) + ((hash << 5) - hash);
+    }
+
+    // 해시값을 팔레트 인덱스로 변환
+    int index = hash.abs() % colorPalette.length;
+
+    return colorPalette[index];
   }
 
   static DateTime coinStringToDateTime(String current) {
