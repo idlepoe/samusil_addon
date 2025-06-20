@@ -21,7 +21,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart';
 import 'package:dio/dio.dart' hide Response;
-import 'package:logger/logger.dart';
 
 import '../define/define.dart';
 import '../define/enum.dart';
@@ -45,11 +44,9 @@ class App {
   /// 예: https://asia-northeast3-samusil-addon.cloudfunctions.net
   static void setCloudFunctionsBaseUrl(String baseUrl) {
     HttpService().setBaseUrl(baseUrl);
-    logger.i('Cloud Functions baseUrl 설정: $baseUrl');
   }
 
   static Future<Profile> getLocaleProfile() async {
-    // logger.i("getLocaleProfile");
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     Profile result = Profile.init();
     String? encodeUser = prefs.getString(Define.SHARED_PROFILE);
@@ -62,45 +59,38 @@ class App {
   }
 
   static Future<void> setLocaleProfile(Profile user) async {
-    logger.i("setLocaleProfile");
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString(Define.SHARED_PROFILE, json.encode(user));
   }
 
   static Profile createCommonProfile() {
-    logger.i("createInitProfile");
-    DateTime now = DateTime.now();
-    DateFormat outputFormat = DateFormat('yyyyMMddHHmmssSSS');
-    String stringNow = outputFormat.format(now);
     Profile user = Profile.init();
     user = user.copyWith(
-      key: stringNow,
+      uid: "", // Firebase Auth UID로 설정될 예정
       name: "anon".tr + Utils.getRandomString(5),
     );
     return user;
   }
 
-  static Profile createMasterProfile() {
-    logger.i("createMasterProfile");
-    Profile user = Profile.init();
-    user = user.copyWith(key: "00000000000000000", name: "master");
-    return user;
-  }
-
   static Future<Profile> createDBProfile() async {
-    logger.i("createDBProfile");
-    // Profile user = createMasterProfile();
     Profile user = createCommonProfile();
     try {
+      // Firebase Auth UID 가져오기
+      final fireUser = FirebaseAuth.instance.currentUser;
+      if (fireUser == null) {
+        throw Exception('Firebase Auth user not found');
+      }
+
+      user = user.copyWith(uid: fireUser.uid);
+
       final colRef = FirebaseFirestore.instance.collection(
         Define.FIRESTORE_COLLECTION_PROFILE,
       );
       await colRef
-          .doc(user.key)
+          .doc(user.uid)
           .set(user.toJson())
           .then(
             (value) async {
-              logger.i("createDBProfile success");
               await setLocaleProfile(user);
             },
             onError: (e) async {
@@ -108,49 +98,23 @@ class App {
             },
           );
     } catch (e) {
-      logger.w(e);
+      logger.e(e);
     }
     return user;
   }
 
-  static Future<Profile> createDBMasterProfile() async {
-    logger.i("createDBMasterProfile");
-    Profile user = createMasterProfile();
-    try {
-      final colRef = FirebaseFirestore.instance.collection(
-        Define.FIRESTORE_COLLECTION_PROFILE,
-      );
-      await colRef
-          .doc(user.key)
-          .set(user.toJson())
-          .then(
-            (value) async {
-              logger.i("createDBMasterProfile success");
-              await setLocaleProfile(user);
-            },
-            onError: (e) async {
-              logger.e(e);
-            },
-          );
-    } catch (e) {
-      logger.w(e);
-    }
-    return user;
-  }
-
-  static Future<bool> checkDBProfile(String key) async {
+  static Future<bool> checkDBProfile(String uid) async {
     bool result = false;
-    logger.i("getProfile");
     try {
       var collection = FirebaseFirestore.instance.collection(
         Define.FIRESTORE_COLLECTION_PROFILE,
       );
-      var docSnapshot = await collection.doc(key).get();
+      var docSnapshot = await collection.doc(uid).get();
       if (docSnapshot.exists) {
         result = true;
       }
     } catch (e) {
-      logger.w(e);
+      logger.e(e);
     }
     return result;
   }
@@ -158,10 +122,18 @@ class App {
   static Future<Profile> getProfile() async {
     Profile result = await getLocaleProfile();
     try {
+      // Firebase Auth UID 가져오기
+      final fireUser = FirebaseAuth.instance.currentUser;
+      if (fireUser == null) {
+        throw Exception('Firebase Auth user not found');
+      }
+
+      result = result.copyWith(uid: fireUser.uid);
+
       var collection = FirebaseFirestore.instance.collection(
         Define.FIRESTORE_COLLECTION_PROFILE,
       );
-      var docSnapshot = await collection.doc(result.key).get();
+      var docSnapshot = await collection.doc(result.uid).get();
       if (docSnapshot.exists) {
         Map<String, dynamic>? data = docSnapshot.data();
         result = Profile.fromJson(data!);
@@ -169,25 +141,22 @@ class App {
         result = await createDBProfile();
       }
     } catch (e) {
-      logger.w(e);
+      logger.e(e);
     }
-    logger.i(result.toString());
     result = result.copyWith(alarms: result.alarms.reversed.toList());
     return result;
   }
 
   static Future<bool> updateProfilePicture(Profile profile) async {
     bool result = true;
-    logger.i("updateProfilePicture");
     final docRef = FirebaseFirestore.instance
         .collection(Define.FIRESTORE_COLLECTION_PROFILE)
-        .doc(profile.key);
+        .doc(profile.uid);
 
     await docRef
         .update({"profile_image_url": profile.profile_image_url})
         .then(
           (value) async {
-            logger.i("updateProfilePicture Success");
             result = true;
           },
           onError: (e) async {
@@ -200,10 +169,9 @@ class App {
 
   static Future<bool> updateProfileName(Profile profile) async {
     bool result = true;
-    logger.i("updateProfileName");
     final docRef = FirebaseFirestore.instance
         .collection(Define.FIRESTORE_COLLECTION_PROFILE)
-        .doc(profile.key);
+        .doc(profile.uid);
 
     await docRef
         .update({"name": profile.name})
@@ -221,10 +189,9 @@ class App {
 
   static Future<bool> updateProfileOneComment(Profile profile) async {
     bool result = true;
-    logger.i("updateProfileOneComment");
     final docRef = FirebaseFirestore.instance
         .collection(Define.FIRESTORE_COLLECTION_PROFILE)
-        .doc(profile.key);
+        .doc(profile.uid);
     await docRef
         .update({"one_comment": profile.one_comment})
         .then(
@@ -284,7 +251,7 @@ class App {
     Profile profile = await App.getProfile();
     bool result = false;
     for (int i = 0; i < wishList.length; i++) {
-      if (wishList[i].key == profile.key) {
+      if (wishList[i].uid == profile.uid) {
         result = true;
         break;
       }
@@ -293,40 +260,32 @@ class App {
   }
 
   static Future<void> countUpWishStreak(Profile profile) async {
-    logger.d("countUpWishStreak");
     final docRef = FirebaseFirestore.instance
         .collection(Define.FIRESTORE_COLLECTION_PROFILE)
-        .doc(profile.key);
+        .doc(profile.uid);
     await docRef
         .update({"wish_streak": FieldValue.increment(1)})
         .then(
-          (value) async {
-            logger.i("countUpWishStreak success1");
-          },
+          (value) async {},
           onError: (e) async {
             if (e.code == Define.FIRESTORE_ERROR_CODE_NOT_FOUND) {
               await docRef
                   .set({"countView": 1})
                   .then(
-                    (value) {
-                      logger.i("countUpWishStreak success2");
-                    },
+                    (value) {},
                     onError: (e) {
-                      print(e);
+                      logger.e(e);
                     },
                   );
             } else {
-              print(e);
+              logger.e(e);
             }
           },
         );
   }
 
   static Future<List<Wish>> updateWish(Profile profile, String comment) async {
-    logger.i("updateWish");
-
     List<Wish> result = [];
-    // Profile profile = await getProfile();
 
     DateTime today = DateTime.now();
     DateFormat df = DateFormat("yyyy-MM-dd");
@@ -335,7 +294,7 @@ class App {
     String sCreatedAt = df1.format(today);
 
     Wish wish = Wish(
-      key: profile.key,
+      uid: profile.uid,
       comments: comment,
       nick_name: profile.name,
       streak: profile.wish_streak,
@@ -353,11 +312,10 @@ class App {
           })
           .then(
             (value) async {
-              logger.i("updateWish success1");
               await countUpWishStreak(profile);
               await pointUpdate(
-                profile.key,
-                Define.POINT_WISH + profile.wish_streak - 1,
+                profileKey: profile.uid,
+                point: Define.POINT_WISH + profile.wish_streak - 1,
               );
               final refGet = await docRef.get();
               int index = 1;
@@ -367,7 +325,6 @@ class App {
                 result.add(row);
                 index++;
               }
-              logger.i(result);
             },
             onError: (e) async {
               if (e.code == Define.FIRESTORE_ERROR_CODE_NOT_FOUND) {
@@ -377,11 +334,10 @@ class App {
                     })
                     .then(
                       (value) async {
-                        logger.i("updateWish success2");
                         await countUpWishStreak(profile);
                         await pointUpdate(
-                          profile.key,
-                          Define.POINT_WISH + profile.wish_streak - 1,
+                          profileKey: profile.uid,
+                          point: Define.POINT_WISH + profile.wish_streak - 1,
                         );
                         final refGet = await docRef.get();
                         int index = 1;
@@ -391,155 +347,102 @@ class App {
                           result.add(row);
                           index++;
                         }
-                        logger.i(result);
                       },
                       onError: (e) {
-                        print(e);
+                        logger.e(e);
                       },
                     );
               } else {
-                print(e);
+                logger.e(e);
               }
             },
           );
     } catch (e) {
-      logger.w(e);
+      logger.e(e);
     }
 
-    logger.i(result);
     return result;
   }
 
-  static Future<List<Article>> getArticleList(
-    BoardInfo boardInfo,
-    String search,
-    int listLength,
-  ) async {
-    if (boardInfo.board_name == Define.BOARD_ALL) {
-      return await getAllArticleListWithoutNews(boardInfo, search, listLength);
-    }
-    return await getIndexArticleList(boardInfo, search, listLength);
-  }
-
-  static Future<List<Article>> getIndexArticleList(
-    BoardInfo boardInfo,
-    String search,
-    int listLength,
-  ) async {
+  static Future<List<Article>> getArticleList({
+    required BoardInfo boardInfo,
+    required String search,
+    required int limit,
+  }) async {
     List<Article> result = [];
 
     try {
       final httpService = HttpService();
+      final params = {
+        'board_name': boardInfo.board_name,
+        'search': search,
+        'limit': limit,
+        'is_popular': boardInfo.isPopular,
+        'is_notice': boardInfo.isNotice,
+        'exclude_news': boardInfo.board_name == Define.BOARD_ALL,
+      };
 
-      final response = await httpService.callCloudFunction(
-        'getArticleList',
-        data: {
-          'board_name': boardInfo.board_name,
-          'search': search,
-          'list_length': listLength,
-          'is_popular': boardInfo.isPopular,
-          'is_notice': boardInfo.isNotice,
-        },
-        method: 'GET',
-      );
+      final response = await httpService.getArticleList(params: params);
 
-      if (response['success'] && response['data'] != null) {
-        final List<dynamic> articlesData = response['data'];
-        result = articlesData.map((data) => Article.fromJson(data)).toList();
+      if (response.isSuccess) {
+        if (response.data != null) {
+          result =
+              response.data!.map((json) => Article.fromJson(json)).toList();
+        } else {
+          result = [];
+        }
+      } else {
+        logger.e("getArticleList failed: ${response.error}");
       }
     } catch (e) {
-      logger.e(e);
+      logger.e("getArticleList exception: $e");
     }
-    logger.i("getArticleList:${result.length}");
+
     result.sort((a, b) => b.key.compareTo(a.key));
     return result;
   }
 
-  static Future<List<Article>> getAllArticleListWithoutNews(
-    BoardInfo boardInfo,
-    String search,
-    int listLength,
-  ) async {
-    logger.i("getAllArticleListWithoutNews");
-    List<Article> result = [];
-
-    try {
-      final httpService = HttpService();
-
-      final response = await httpService.callCloudFunction(
-        'getArticleList',
-        data: {
-          'board_name': Define.BOARD_ALL,
-          'search': search,
-          'list_length': listLength,
-          'is_popular': boardInfo.isPopular,
-          'is_notice': boardInfo.isNotice,
-          'exclude_news': true,
-        },
-        method: 'GET',
-      );
-
-      if (response['success'] && response['data'] != null) {
-        final List<dynamic> articlesData = response['data'];
-        result = articlesData.map((data) => Article.fromJson(data)).toList();
-      }
-    } catch (e) {
-      logger.e(e);
-    }
-    logger.i("getArticleList:${result.length}");
-    logger.i("getArticleList:${result.toString()}");
-    return result;
-  }
-
-  static Future<Article> getArticle(String key) async {
-    Article result = const Article(
-      key: "",
+  static Future<Article> getArticle({required String id}) async {
+    Article result = Article(
+      id: "",
       board_name: "",
-      profile_key: "",
+      profile_uid: "",
       profile_name: "",
+      profile_photo_url: "",
       count_view: 0,
       count_like: 0,
       count_unlike: 0,
       count_comments: 0,
       title: "",
       contents: [],
-      created_at: "",
+      created_at: DateTime.now(),
       is_notice: false,
     );
-    logger.i("getArticle");
     try {
       final httpService = HttpService();
+      final response = await httpService.getArticle(key: id);
 
-      final response = await httpService.callCloudFunction(
-        'getArticle',
-        data: {'key': key},
-        method: 'GET',
-      );
-
-      if (response['success'] && response['data'] != null) {
-        result = Article.fromJson(response['data']);
+      if (response.isSuccess) {
+        result = Article.fromJson(response.data!);
       } else {
-        logger.w("no article:$key");
+        logger.w("no article:$id");
       }
     } catch (e) {
       logger.w(e);
     }
-    logger.i(result.toString());
     return result;
   }
 
-  static Future<void> createArticle(Article article) async {
+  static Future<void> createArticle({required Article article}) async {
     try {
       final httpService = HttpService();
-
-      final result = await httpService.callCloudFunction(
-        'createArticle',
-        data: {
+      final response = await httpService.createArticle(
+        articleData: {
           'article': {
-            'key': article.key,
             'board_name': article.board_name,
-            'profile_key': article.profile_key,
+            'profile_uid': article.profile_uid,
             'profile_name': article.profile_name,
+            'profile_photo_url': article.profile_photo_url,
             'count_view': article.count_view,
             'count_like': article.count_like,
             'count_unlike': article.count_unlike,
@@ -553,34 +456,54 @@ class App {
         },
       );
 
-      if (result['success']) {
-        logger.i("createArticle success");
+      if (response.isSuccess) {
+        // 성공 시 snackbar 표시
+        Get.snackbar(
+          '성공',
+          '게시글이 작성되었습니다.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
       } else {
-        logger.e("createArticle failed: ${result['error']}");
+        Get.snackbar(
+          '오류',
+          '게시글 작성에 실패했습니다.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        logger.e("createArticle failed: ${response.error}");
       }
     } catch (e) {
+      Get.snackbar(
+        '오류',
+        '게시글 작성 중 오류가 발생했습니다.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
       logger.e("createArticle exception: $e");
     }
   }
 
-  static Future<Profile> pointUpdate(String profileKey, double point) async {
-    logger.d("pointUp");
-
+  static Future<Profile> pointUpdate({
+    required String profileKey,
+    required double point,
+  }) async {
     Profile result = Profile.init();
 
     try {
       final httpService = HttpService();
-
-      final response = await httpService.callCloudFunction(
-        'updatePoint',
-        data: {'profile_key': profileKey, 'point': point},
+      final response = await httpService.updatePoint(
+        profileKey: profileKey,
+        point: point,
       );
 
-      if (response['success'] && response['data'] != null) {
-        result = Profile.fromJson(response['data']);
-        logger.i("pointUp success");
+      if (response.isSuccess) {
+        result = Profile.fromJson(response.data!);
       } else {
-        logger.e("pointUp failed: ${response['error']}");
+        logger.e("pointUp failed: ${response.error}");
       }
     } catch (e) {
       logger.e("pointUp exception: $e");
@@ -589,38 +512,104 @@ class App {
     return result;
   }
 
-  static Future<List<MainComment>> createComment(
-    Article article,
-    MainComment comment,
-  ) async {
-    List<MainComment> result = [];
+  static Future<Map<String, dynamic>> createWish({
+    required String comment,
+  }) async {
+    Map<String, dynamic> result = {};
 
-    logger.d("createComment");
     try {
       final httpService = HttpService();
+      final response = await httpService.createWish(comment: comment);
 
-      final response = await httpService.callCloudFunction(
-        'createComment',
-        data: {'article_key': article.key, 'comment': comment.toJson()},
-      );
-
-      if (response['success'] && response['data'] != null) {
-        final List<dynamic> commentsData = response['data'];
-        result =
-            commentsData.map((data) => MainComment.fromJson(data)).toList();
-        logger.i("createComment success");
+      if (response.isSuccess) {
+        result = response.data!;
+        Get.snackbar(
+          '성공',
+          '소원이 생성되었습니다.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
       } else {
-        logger.e("createComment failed: ${response['error']}");
+        Get.snackbar(
+          '오류',
+          '소원 생성에 실패했습니다.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        logger.e("createWish failed: ${response.error}");
       }
     } catch (e) {
-      logger.e("createComment exception: $e");
+      Get.snackbar(
+        '오류',
+        '소원 생성 중 오류가 발생했습니다.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      logger.e("createWish exception: $e");
     }
 
-    logger.i(result);
     return result;
   }
 
-  static Future<List<MainComment>> getComments(String id) async {
+  static Future<List<MainComment>> createComment({
+    required Article article,
+    required MainComment comment,
+  }) async {
+    List<MainComment> result = [];
+
+    try {
+      final httpService = HttpService();
+
+      // comment 객체에 profile_uid와 profile_photo_url 추가
+      final commentData = {
+        ...comment.toJson(),
+        'profile_uid': comment.profile_uid,
+        'profile_photo_url': comment.profile_photo_url,
+      };
+
+      final response = await httpService.createComment(
+        articleKey: article.id,
+        commentData: commentData,
+      );
+
+      if (response.isSuccess) {
+        result =
+            response.data!.map((json) => MainComment.fromJson(json)).toList();
+        Get.snackbar(
+          '성공',
+          '댓글이 작성되었습니다.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      } else {
+        Get.snackbar(
+          '오류',
+          '댓글 작성에 실패했습니다.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        logger.e("createComment failed: ${response.error}");
+      }
+    } catch (e) {
+      Get.snackbar(
+        '오류',
+        '댓글 작성 중 오류가 발생했습니다.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      logger.e("createComment exception: $e");
+    }
+
+    return result;
+  }
+
+  static Future<List<MainComment>> getComments({required String id}) async {
     List<MainComment> result = [];
     try {
       final docRef =
@@ -634,22 +623,18 @@ class App {
     } catch (e) {
       logger.w("no comment");
     }
-    logger.i("getComments");
     return result;
   }
 
-  static Future<int> articleCountViewUp(String key) async {
-    logger.d("countUpArticleView");
+  static Future<int> articleCountViewUp({required String id}) async {
     int result = 0;
     final docRef = FirebaseFirestore.instance
         .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
-        .doc(key);
+        .doc(id);
     await docRef
         .update({"count_view": FieldValue.increment(1)})
         .then(
-          (value) async {
-            logger.i("countUpArticleView success1");
-          },
+          (value) async {},
           onError: (e) async {
             logger.e(e);
           },
@@ -659,26 +644,21 @@ class App {
     return result;
   }
 
-  static Future<int> articleCountLikeUp(String key) async {
-    logger.d("articleCountLikeUp");
+  static Future<int> articleCountLikeUp({required String id}) async {
     int result = 0;
     final docRef = FirebaseFirestore.instance
         .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
-        .doc(key);
+        .doc(id);
     await docRef
         .update({"count_like": FieldValue.increment(1)})
         .then(
-          (value) async {
-            logger.i("articleCountLikeUp success1");
-          },
+          (value) async {},
           onError: (e) async {
             if (e.code == Define.FIRESTORE_ERROR_CODE_NOT_FOUND) {
               await docRef
-                  .set({"count_like": 0})
+                  .set({"count_like": 1})
                   .then(
-                    (value) {
-                      logger.i("articleCountLikeUp success2");
-                    },
+                    (value) {},
                     onError: (e) {
                       logger.e(e);
                     },
@@ -693,26 +673,21 @@ class App {
     return result;
   }
 
-  static Future<int> articleCountUnLikeUp(String key) async {
-    logger.d("articleCountUnLikeUp");
+  static Future<int> articleCountUnLikeUp({required String id}) async {
     int result = 0;
     final docRef = FirebaseFirestore.instance
         .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
-        .doc(key);
+        .doc(id);
     await docRef
         .update({"count_unlike": FieldValue.increment(1)})
         .then(
-          (value) async {
-            logger.i("articleCountUnLikeUp success1");
-          },
+          (value) async {},
           onError: (e) async {
             if (e.code == Define.FIRESTORE_ERROR_CODE_NOT_FOUND) {
               await docRef
-                  .set({"count_view": 0})
+                  .set({"count_unlike": 1})
                   .then(
-                    (value) {
-                      logger.i("articleCountUnLikeUp success2");
-                    },
+                    (value) {},
                     onError: (e) {
                       logger.e(e);
                     },
@@ -727,173 +702,252 @@ class App {
     return result;
   }
 
-  static Future<List<MainComment>> deleteComment(
-    String key,
-    MainComment comment,
-  ) async {
-    logger.i("deleteComment");
-
+  static Future<List<MainComment>> deleteComment({
+    required String articleId,
+    required MainComment comment,
+  }) async {
     List<MainComment> result = [];
-    final docRef = FirebaseFirestore.instance
-        .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
-        .doc(key);
-    await docRef
-        .update({
-          Define.FIRESTORE_FIELD_COMMETS: FieldValue.arrayRemove([
-            comment.toJson(),
-          ]),
-        })
-        .then(
-          (value) async {
-            logger.i("deleteComment Update Success");
-          },
-          onError: (e) async {
-            logger.e(e);
-          },
-        );
 
-    final refGet = await docRef.get();
-    for (dynamic s in refGet.get(Define.FIRESTORE_FIELD_COMMETS)) {
-      MainComment row = MainComment.fromJson(s);
-      result.add(row);
-    }
-    logger.i(result);
-    return result;
-  }
-
-  static Future<List<MainComment>> deleteArticle(Article article) async {
-    logger.i("deleteComment");
-
-    List<MainComment> result = [];
-    final docRef =
-        FirebaseFirestore.instance
-            .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
-            .doc(article.key)
-            .delete();
-    logger.i("deleteComment Update Success");
-    return result;
-  }
-
-  static Future<String> uploadImageToStorage(String strURL) async {
-    String result = "";
-    logger.i(strURL);
-    Random random = Random();
-    int randomNumber = random.nextInt(1000000);
     try {
-      final Response responseData = await get(Uri.parse(strURL));
-      Uint8List uint8list = responseData.bodyBytes;
-      var buffer = uint8list.buffer;
-      ByteData byteData = ByteData.view(buffer);
-      var tempDir = await getTemporaryDirectory();
-      File file = await File(
-        '${tempDir.path}/${randomNumber.toString()}',
-      ).writeAsBytes(
-        buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes),
+      final httpService = HttpService();
+      final response = await httpService.deleteComment(
+        articleKey: articleId,
+        commentKey: comment.key,
       );
 
-      Reference reference = FirebaseStorage.instance.ref().child(
-        'images/${basename(file.path)}',
+      if (response.isSuccess && response.data != null) {
+        result =
+            response.data!.map((json) => MainComment.fromJson(json)).toList();
+        Get.snackbar(
+          '성공',
+          '댓글이 삭제되었습니다.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      } else {
+        logger.e("deleteComment failed: ${response.error}");
+        Get.snackbar(
+          '오류',
+          '댓글 삭제에 실패했습니다.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      logger.e("deleteComment exception: $e");
+      Get.snackbar(
+        '오류',
+        '댓글 삭제 중 오류가 발생했습니다.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
       );
-      TaskSnapshot uploadTask = await reference.putFile(file);
-      result = await reference.getDownloadURL();
-      logger.i(result);
+    }
+
+    return result;
+  }
+
+  static Future<List<MainComment>> deleteCommentByIndex({
+    required String articleId,
+    required int index,
+  }) async {
+    List<MainComment> result = [];
+
+    try {
+      // 먼저 현재 댓글 목록을 가져와서 해당 인덱스의 댓글 키를 찾습니다
+      final docRef = FirebaseFirestore.instance
+          .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
+          .doc(articleId);
+      final docSnapshot = await docRef.get();
+
+      if (docSnapshot.exists) {
+        final comments =
+            docSnapshot.get(Define.FIRESTORE_FIELD_COMMETS) as List<dynamic>;
+        if (index >= 0 && index < comments.length) {
+          final commentToDelete = MainComment.fromJson(comments[index]);
+
+          // Cloud Functions를 사용하여 댓글 삭제
+          final httpService = HttpService();
+          final response = await httpService.deleteComment(
+            articleKey: articleId,
+            commentKey: commentToDelete.key,
+          );
+
+          if (response.isSuccess && response.data != null) {
+            result =
+                response.data!
+                    .map((json) => MainComment.fromJson(json))
+                    .toList();
+            Get.snackbar(
+              '성공',
+              '댓글이 삭제되었습니다.',
+              snackPosition: SnackPosition.TOP,
+              backgroundColor: Colors.green,
+              colorText: Colors.white,
+            );
+          } else {
+            logger.e("deleteCommentByIndex failed: ${response.error}");
+            Get.snackbar(
+              '오류',
+              '댓글 삭제에 실패했습니다.',
+              snackPosition: SnackPosition.TOP,
+              backgroundColor: Colors.red,
+              colorText: Colors.white,
+            );
+          }
+        } else {
+          logger.e("Invalid comment index: $index");
+          Get.snackbar(
+            '오류',
+            '유효하지 않은 댓글 인덱스입니다.',
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+        }
+      } else {
+        logger.e("Article not found: $articleId");
+        Get.snackbar(
+          '오류',
+          '게시글을 찾을 수 없습니다.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      logger.e("deleteCommentByIndex exception: $e");
+      Get.snackbar(
+        '오류',
+        '댓글 삭제 중 오류가 발생했습니다.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+
+    return result;
+  }
+
+  static Future<void> createAlarm({
+    required String profileKey,
+    required Alarm alarm,
+  }) async {
+    try {
+      final docRef = FirebaseFirestore.instance
+          .collection(Define.FIRESTORE_COLLECTION_PROFILE)
+          .doc(profileKey);
+      await docRef
+          .update({
+            Define.FIRESTORE_FIELD_ALARMS: FieldValue.arrayUnion([
+              alarm.toJson(),
+            ]),
+          })
+          .then(
+            (value) async {
+              Get.snackbar(
+                '성공',
+                '알림이 생성되었습니다.',
+                snackPosition: SnackPosition.TOP,
+                backgroundColor: Colors.green,
+                colorText: Colors.white,
+              );
+            },
+            onError: (e) async {
+              if (e.code == Define.FIRESTORE_ERROR_CODE_NOT_FOUND) {
+                await docRef
+                    .set({
+                      Define.FIRESTORE_FIELD_ALARMS: [alarm.toJson()],
+                    })
+                    .then(
+                      (value) async {
+                        Get.snackbar(
+                          '성공',
+                          '알림이 생성되었습니다.',
+                          snackPosition: SnackPosition.TOP,
+                          backgroundColor: Colors.green,
+                          colorText: Colors.white,
+                        );
+                      },
+                      onError: (e) {
+                        logger.e(e);
+                      },
+                    );
+              } else {
+                logger.e(e);
+              }
+            },
+          );
     } catch (e) {
       logger.e(e);
-      return "";
     }
-    return result;
   }
 
-  static Future<void> createAlarm(String profileKey, Alarm alarm) async {
-    List<MainComment> result = [];
-
-    logger.d("createAlarm");
-    final docRef = FirebaseFirestore.instance
-        .collection(Define.FIRESTORE_COLLECTION_PROFILE)
-        .doc(profileKey);
-    await docRef
-        .update({
-          Define.FIRESTORE_FIELD_ALARMS: FieldValue.arrayUnion([
-            alarm.toJson(),
-          ]),
-        })
-        .then(
-          (value) async {
-            logger.i("createAlarm success1");
-          },
-          onError: (e) async {
-            logger.e(e);
-          },
-        );
+  static Future<void> readAlarm({
+    required String profileKey,
+    required Alarm alarm,
+  }) async {
+    try {
+      final docRef = FirebaseFirestore.instance
+          .collection(Define.FIRESTORE_COLLECTION_PROFILE)
+          .doc(profileKey);
+      await docRef
+          .update({
+            Define.FIRESTORE_FIELD_ALARMS: FieldValue.arrayRemove([
+              alarm.toJson(),
+            ]),
+          })
+          .then(
+            (value) async {
+              final updatedAlarm = alarm.copyWith(is_read: true);
+              await docRef.update({
+                Define.FIRESTORE_FIELD_ALARMS: FieldValue.arrayUnion([
+                  updatedAlarm.toJson(),
+                ]),
+              });
+            },
+            onError: (e) async {
+              logger.e(e);
+            },
+          );
+    } catch (e) {
+      logger.e(e);
+    }
   }
 
-  static Future<void> readAlarm(Profile profile) async {
-    for (int i = 0; i < profile.alarms.length; i++) {
-      profile = profile.copyWith(
-        alarms:
-            profile.alarms
-                .asMap()
-                .map((index, alarm) {
-                  if (index == i) {
-                    return MapEntry(index, alarm.copyWith(is_read: true));
-                  }
-                  return MapEntry(index, alarm);
-                })
-                .values
-                .toList(),
-      );
+  static Future<void> deleteAlarm({
+    required String profileKey,
+    required Alarm alarm,
+  }) async {
+    try {
+      final docRef = FirebaseFirestore.instance
+          .collection(Define.FIRESTORE_COLLECTION_PROFILE)
+          .doc(profileKey);
+      await docRef
+          .update({
+            Define.FIRESTORE_FIELD_ALARMS: FieldValue.arrayRemove([
+              alarm.toJson(),
+            ]),
+          })
+          .then(
+            (value) async {
+              Get.snackbar(
+                '성공',
+                '알림이 삭제되었습니다.',
+                snackPosition: SnackPosition.TOP,
+                backgroundColor: Colors.green,
+                colorText: Colors.white,
+              );
+            },
+            onError: (e) async {
+              logger.e(e);
+            },
+          );
+    } catch (e) {
+      logger.e(e);
     }
-
-    logger.d("readAlarm");
-    final docRef = FirebaseFirestore.instance
-        .collection(Define.FIRESTORE_COLLECTION_PROFILE)
-        .doc(profile.key);
-    await docRef
-        .update({
-          Define.FIRESTORE_FIELD_ALARMS:
-              profile.alarms.map((e) => e.toJson()).toList(),
-        })
-        .then(
-          (value) async {
-            logger.i("readAlarm success1");
-          },
-          onError: (e) async {
-            logger.e(e);
-          },
-        );
-  }
-
-  static Future<void> deleteAlarm(Profile profile) async {
-    for (int i = 0; i < profile.alarms.length; i++) {
-      profile = profile.copyWith(
-        alarms:
-            profile.alarms
-                .asMap()
-                .map((index, alarm) {
-                  if (index == i) {
-                    return MapEntry(index, alarm.copyWith(is_read: true));
-                  }
-                  return MapEntry(index, alarm);
-                })
-                .values
-                .toList(),
-      );
-    }
-
-    logger.d("deleteAlarm");
-    final docRef = FirebaseFirestore.instance
-        .collection(Define.FIRESTORE_COLLECTION_PROFILE)
-        .doc(profile.key);
-    await docRef
-        .update({Define.FIRESTORE_FIELD_ALARMS: []})
-        .then(
-          (value) async {
-            logger.i("deleteAlarm success1");
-          },
-          onError: (e) async {
-            logger.e(e);
-          },
-        );
   }
 
   static Future<Profile> checkUser() async {
@@ -901,18 +955,11 @@ class App {
     Profile result = Profile.init();
     if (fireUser == null) {
       await FirebaseAuth.instance.signInAnonymously();
-      print("signInAnonymously");
       result = await App.createDBProfile();
     } else {
-      print(fireUser.toString());
       result = await App.getProfile();
     }
     return result;
-  }
-
-  static Future<bool> isMaster() async {
-    Profile result = await App.getProfile();
-    return result.key == Define.MASTER_USER_KEY;
   }
 
   static Future<List<Profile>> getProfileList() async {
@@ -940,13 +987,10 @@ class App {
     } catch (e) {
       logger.e(e);
     }
-    logger.i("getProfileList:${result.length}");
     return result;
   }
 
   static Future<List<Coin>> getCoinListFromPaprika(BuildContext context) async {
-    logger.i("getCoinListFromPaprika");
-
     List<Coin> list = [];
 
     final response = await get(
@@ -979,7 +1023,6 @@ class App {
     BuildContext context,
     List<Coin> list,
   ) async {
-    logger.i("createCoinList");
     try {
       for (Coin row in list) {
         final docRef = FirebaseFirestore.instance
@@ -988,24 +1031,20 @@ class App {
         await docRef
             .set(row.toJson())
             .then(
-              (value) async {
-                logger.i("createCoinList success1");
-              },
+              (value) async {},
               onError: (e) async {
                 logger.e(e);
               },
             );
       }
     } catch (e) {
-      logger.w(e);
+      logger.e(e);
     }
   }
 
   static Future<List<Coin>> getCoinPriceFromPaprika(
     BuildContext context,
   ) async {
-    logger.i("getCoinPriceFromPaprika");
-
     Utils.showSnackBar(
       context,
       SnackType.info,
@@ -1021,14 +1060,12 @@ class App {
       );
 
       if (response['success']) {
-        logger.i("getCoinPriceFromPaprika success");
         Utils.showSnackBar(
           context,
           SnackType.success,
           "${"process_end".tr} : ${"point_market".tr}",
         );
       } else {
-        logger.e("getCoinPriceFromPaprika failed: ${response['error']}");
         Utils.showSnackBar(
           context,
           SnackType.error,
@@ -1036,7 +1073,6 @@ class App {
         );
       }
     } catch (e) {
-      logger.e("getCoinPriceFromPaprika exception: $e");
       Utils.showSnackBar(
         context,
         SnackType.error,
@@ -1051,63 +1087,20 @@ class App {
     List<Coin> result = [];
 
     try {
-      final collectionRef = FirebaseFirestore.instance.collection(
-        Define.FIRESTORE_COLLECTION_COIN,
+      final httpService = HttpService();
+      final response = await httpService.getCoinList(
+        params: {'withoutNoTrade': withoutNoTrade},
       );
 
-      QuerySnapshot querySnapshot = await collectionRef.get();
-
-      List<Map<String, dynamic>> allData =
-          querySnapshot.docs.map((doc) {
-            return doc.data() as Map<String, dynamic>;
-          }).toList();
-      for (var i = 0; i < allData.length; i++) {
-        Coin v = Coin.fromJson(allData[i]);
-        if (withoutNoTrade &&
-            (v.price_history == null || v.price_history!.isEmpty)) {
-          continue;
-        }
-        result.add(v);
+      if (response.isSuccess) {
+        result = response.data!.map((json) => Coin.fromJson(json)).toList();
+      } else {
+        logger.e("getCoinList failed: ${response.error}");
       }
     } catch (e) {
-      logger.e(e);
-    }
-    for (int i = 0; i < result.length; i++) {
-      result[i] = result[i].copyWith(
-        color: Utils.randomColor().value.toDouble(),
-      );
-      if (result[i].price_history != null) {
-        String current =
-            result[i]
-                .price_history![result[i].price_history!.length - 1]
-                .last_updated;
-        DateTime currentDateTime = coinStringToDateTime(current);
-        DateTime oneDayBefore = currentDateTime.subtract(
-          const Duration(days: 1, seconds: 1),
-        );
-
-        List<Price> validCoinHistory = [];
-        List<double> diffList = [];
-        double firstPrice = result[i].price_history![0].price;
-        double lastPrice =
-            result[i].price_history![result[i].price_history!.length - 1].price;
-        result[i] = result[i].copyWith(
-          diffPercentage: Utils.diffPercentage(firstPrice, lastPrice),
-          diffList: diffList,
-        );
-        for (int j = 0; j < result[i].price_history!.length; j++) {
-          String rowDate = result[i].price_history![j].last_updated;
-          DateTime rowDateTime = coinStringToDateTime(rowDate);
-          if (rowDateTime.isAfter(oneDayBefore)) {
-            validCoinHistory.add(result[i].price_history![j]);
-            diffList.add(firstPrice - result[i].price_history![j].price);
-          }
-        }
-        result[i] = result[i].copyWith(price_history: validCoinHistory);
-      }
+      logger.e("getCoinList exception: $e");
     }
 
-    result.sort((a, b) => a.rank.compareTo(b.rank));
     return result;
   }
 
@@ -1141,8 +1134,8 @@ class App {
           (value) async {
             logger.i("buyCoin success1");
             result = await App.pointUpdate(
-              profileKey,
-              -(coinBalance.price * coinBalance.quantity),
+              profileKey: profileKey,
+              point: -(coinBalance.price * coinBalance.quantity),
             );
           },
           onError: (e) async {
@@ -1155,8 +1148,8 @@ class App {
                     (value) async {
                       logger.i("buyCoin success2");
                       result = await App.pointUpdate(
-                        profileKey,
-                        -(coinBalance.price * coinBalance.quantity),
+                        profileKey: profileKey,
+                        point: -(coinBalance.price * coinBalance.quantity),
                       );
                     },
                     onError: (e) {
@@ -1191,8 +1184,8 @@ class App {
           (value) async {
             logger.i("sellCoin success1");
             result = await App.pointUpdate(
-              profileKey,
-              (currentPrice * coinBalance.quantity),
+              profileKey: profileKey,
+              point: (currentPrice * coinBalance.quantity),
             );
           },
           onError: (e) async {
@@ -1235,4 +1228,44 @@ class App {
   //
   //   return new File(msg);
   // }
+
+  static Future<bool> deleteArticle({required Article article}) async {
+    bool result = false;
+
+    try {
+      final httpService = HttpService();
+      final response = await httpService.deleteArticle(key: article.id);
+
+      if (response.isSuccess) {
+        result = true;
+        Get.snackbar(
+          '성공',
+          '게시글이 삭제되었습니다.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      } else {
+        logger.e("deleteArticle failed: ${response.error}");
+        Get.snackbar(
+          '오류',
+          '게시글 삭제에 실패했습니다.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      logger.e("deleteArticle exception: $e");
+      Get.snackbar(
+        '오류',
+        '게시글 삭제 중 오류가 발생했습니다.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+
+    return result;
+  }
 }

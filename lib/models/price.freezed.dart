@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Price {
 
- double get price; double get volume_24h; String get last_updated;
+ double get price; double get volume_24h;@JsonKey(fromJson: _timestampFromJson, toJson: _timestampToJson) DateTime get last_updated;
 /// Create a copy of Price
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -49,7 +49,7 @@ abstract mixin class $PriceCopyWith<$Res>  {
   factory $PriceCopyWith(Price value, $Res Function(Price) _then) = _$PriceCopyWithImpl;
 @useResult
 $Res call({
- double price, double volume_24h, String last_updated
+ double price, double volume_24h,@JsonKey(fromJson: _timestampFromJson, toJson: _timestampToJson) DateTime last_updated
 });
 
 
@@ -71,7 +71,7 @@ class _$PriceCopyWithImpl<$Res>
 price: null == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
 as double,volume_24h: null == volume_24h ? _self.volume_24h : volume_24h // ignore: cast_nullable_to_non_nullable
 as double,last_updated: null == last_updated ? _self.last_updated : last_updated // ignore: cast_nullable_to_non_nullable
-as String,
+as DateTime,
   ));
 }
 
@@ -82,12 +82,12 @@ as String,
 @JsonSerializable()
 
 class _Price implements Price {
-  const _Price({required this.price, required this.volume_24h, required this.last_updated});
+  const _Price({required this.price, required this.volume_24h, @JsonKey(fromJson: _timestampFromJson, toJson: _timestampToJson) required this.last_updated});
   factory _Price.fromJson(Map<String, dynamic> json) => _$PriceFromJson(json);
 
 @override final  double price;
 @override final  double volume_24h;
-@override final  String last_updated;
+@override@JsonKey(fromJson: _timestampFromJson, toJson: _timestampToJson) final  DateTime last_updated;
 
 /// Create a copy of Price
 /// with the given fields replaced by the non-null parameter values.
@@ -122,7 +122,7 @@ abstract mixin class _$PriceCopyWith<$Res> implements $PriceCopyWith<$Res> {
   factory _$PriceCopyWith(_Price value, $Res Function(_Price) _then) = __$PriceCopyWithImpl;
 @override @useResult
 $Res call({
- double price, double volume_24h, String last_updated
+ double price, double volume_24h,@JsonKey(fromJson: _timestampFromJson, toJson: _timestampToJson) DateTime last_updated
 });
 
 
@@ -144,7 +144,7 @@ class __$PriceCopyWithImpl<$Res>
 price: null == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
 as double,volume_24h: null == volume_24h ? _self.volume_24h : volume_24h // ignore: cast_nullable_to_non_nullable
 as double,last_updated: null == last_updated ? _self.last_updated : last_updated // ignore: cast_nullable_to_non_nullable
-as String,
+as DateTime,
   ));
 }
 

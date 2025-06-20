@@ -7,7 +7,6 @@ import 'package:logger/logger.dart';
 import 'package:samusil_addon/components/appButton.dart';
 import 'package:samusil_addon/define/define.dart';
 import 'package:samusil_addon/models/coin_balance.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:badges/badges.dart' as badges;
 import 'package:sprintf/sprintf.dart';
 import 'package:tiny_charts/tiny_charts.dart';
@@ -31,11 +30,7 @@ class _CoinBuyPageState extends State<CoinBuyPage>
   Profile _profile = Profile.init();
   List<Coin> _list = [];
 
-  final RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
-
   int _listMaxLength = Define.DEFAULT_BOARD_GET_LENGTH;
-
   int _selected = -1;
 
   final List<double> _sliderList = [];
@@ -66,32 +61,17 @@ class _CoinBuyPageState extends State<CoinBuyPage>
     }
   }
 
-  void _onRefresh() async {
+  Future<void> _onRefresh() async {
     logger.i("_onRefresh");
     _listMaxLength = Define.DEFAULT_BOARD_GET_LENGTH;
     await init();
-    _refreshController.refreshCompleted();
-  }
-
-  void _onLoading() async {
-    logger.i("loading");
-    _listMaxLength =
-        _listMaxLength + Define.DEFAULT_BOARD_GET_LENGTH > _list.length
-            ? _list.length
-            : _listMaxLength + Define.DEFAULT_BOARD_GET_LENGTH;
-    await Future.delayed(const Duration(seconds: 1));
-    // loadAd();
-    if (mounted) {
-      setState(() {});
-    }
-    _refreshController.loadComplete();
   }
 
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
 
-  double width60 = width * 0.6;
+    double width60 = width * 0.6;
     int coinQuantity = 0;
 
     for (CoinBalance row in _profile.coin_balance ?? []) {
@@ -99,30 +79,16 @@ class _CoinBuyPageState extends State<CoinBuyPage>
     }
 
     return Scaffold(
-      body: SmartRefresher(
-        controller: _refreshController,
-        header: ClassicHeader(
-          idleText: "header_idle_text".tr,
-          releaseText: "header_release_text".tr,
-          refreshingText: "header_loading_text".tr,
-          completeText: "header_complete_text".tr,
-        ),
-        enablePullDown: true,
+      body: RefreshIndicator(
         onRefresh: _onRefresh,
-        footer: ClassicFooter(
-          idleText: "footer_can_loading_text".tr,
-          canLoadingText: "footer_can_loading_text".tr,
-          loadingText: "footer_loading_text".tr,
-        ),
-        enablePullUp: _list.length > _listMaxLength,
-        onLoading: _onLoading,
         child: SingleChildScrollView(
           child: Column(
             children: [
               ListTile(
                 title: Text(
-                  sprintf("coin_buy_description".tr,
-                      [Define.COIN_BUY_FEE_PERCENT.toInt().toString()]),
+                  sprintf("coin_buy_description".tr, [
+                    Define.COIN_BUY_FEE_PERCENT.toInt().toString(),
+                  ]),
                   style: const TextStyle(
                     overflow: TextOverflow.ellipsis,
                     fontSize: 12,
@@ -133,15 +99,13 @@ class _CoinBuyPageState extends State<CoinBuyPage>
               ),
               Define.APP_DIVIDER,
               Column(
-                children: List.generate(
-                    _list.length > _listMaxLength
-                        ? _listMaxLength
-                        : _list.length, (index) {
-                  double? price = _list[index].price_history != null
-                      ? _list[index].price_history!.last.price +
-                          (_list[index].price_history!.last.price *
-                              Define.COIN_BUY_FEE_PERCENT)
-                      : null;
+                children: List.generate(_list.length, (index) {
+                  double? price =
+                      _list[index].price_history != null
+                          ? _list[index].price_history!.last.price +
+                              (_list[index].price_history!.last.price *
+                                  Define.COIN_BUY_FEE_PERCENT)
+                          : null;
                   //
                   // List<double> diffList = [];
                   // double diffPercentage = 0;
@@ -166,35 +130,50 @@ class _CoinBuyPageState extends State<CoinBuyPage>
                         leading: badges.Badge(
                           badgeStyle: const badges.BadgeStyle(
                             badgeColor: Colors.white,
-                            borderSide:
-                                BorderSide(color: Colors.black, width: 1),
+                            borderSide: BorderSide(
+                              color: Colors.black,
+                              width: 1,
+                            ),
                           ),
                           position: badges.BadgePosition.bottomEnd(),
-                          badgeContent: Text(_list[index].rank.toString(),
-                              style: const TextStyle(fontSize: 8)),
+                          badgeContent: Text(
+                            _list[index].rank.toString(),
+                            style: const TextStyle(fontSize: 8),
+                          ),
                           child: Icon(
-                              _getCryptoIcon(_list[index].id.split("-")[0]),
-                              color: Color(_list[index].color!.toInt()),
+                            _getCryptoIcon(_list[index].id.split("-")[0]),
+                            color: Color(_list[index].color!.toInt()),
                           ),
                         ),
-                        title: Text(_list[index].name,
-                            style: const TextStyle(color: Colors.black)),
-                        subtitle: _list[index].diffList==null?null:TinyColumnChart(
-                          data: _list[index].diffList!,
-                          width: width60,
-                          height: 10,
-                          options: const TinyColumnChartOptions(
-                            positiveColor: Color(0xFF27A083),
-                            negativeColor: Color(0xFFE92F3C),
-                            showAxis: true,
-                          ),
+                        title: Text(
+                          _list[index].name,
+                          style: const TextStyle(color: Colors.black),
                         ),
-                        trailing: _list[index].price_history != null
-                            ? Text("${price!.toStringAsPrecision(7)}(${_list[index].diffPercentage!.toStringAsPrecision(1)}%)")
-                            : Chip(
-                                label: Text("no_trade".tr),
-                                backgroundColor: Colors.red,
-                                labelStyle: const TextStyle(color: Colors.white)),
+                        subtitle:
+                            _list[index].diffList == null
+                                ? null
+                                : TinyColumnChart(
+                                  data: _list[index].diffList!,
+                                  width: width60,
+                                  height: 10,
+                                  options: const TinyColumnChartOptions(
+                                    positiveColor: Color(0xFF27A083),
+                                    negativeColor: Color(0xFFE92F3C),
+                                    showAxis: true,
+                                  ),
+                                ),
+                        trailing:
+                            _list[index].price_history != null
+                                ? Text(
+                                  "${price!.toStringAsPrecision(7)}(${_list[index].diffPercentage!.toStringAsPrecision(1)}%)",
+                                )
+                                : Chip(
+                                  label: Text("no_trade".tr),
+                                  backgroundColor: Colors.red,
+                                  labelStyle: const TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                ),
                         onExpansionChanged: (changed) {
                           if (changed) {
                             setState(() {
@@ -214,9 +193,11 @@ class _CoinBuyPageState extends State<CoinBuyPage>
                               children: [
                                 Slider(
                                   value: _sliderList[index],
-                                  max: !Utils.isValidNilEmptyDouble(price)
-                                      ? 1
-                                      : (_profile.point ~/ price!).toDouble(),
+                                  max:
+                                      !Utils.isValidNilEmptyDouble(price)
+                                          ? 1
+                                          : (_profile.point ~/ price!)
+                                              .toDouble(),
                                   divisions: 5,
                                   label: _sliderList[index].round().toString(),
                                   onChanged: (double value) {
@@ -226,33 +207,36 @@ class _CoinBuyPageState extends State<CoinBuyPage>
                                   },
                                 ),
                                 AppButton(
-                                    context,
-                                    "${_sliderList[index].round()}${_list[index].symbol} ${"buy".tr}",
-                                    pBtnWidth: 0.3,
-                                    disable: _sliderList[index] == 0,
-                                    onTap: () async {
-                                  setState(() {
-                                    _isPressed = true;
-                                  });
-                                  CoinBalance coinBalance = CoinBalance(
-                                    id: _list[index].id,
-                                    name: _list[index].name,
-                                    price: price!,
-                                    quantity: _sliderList[index].round(),
-                                    created_at: Utils.getDateTimeKey(),
-                                  );
-                                  _profile = await App.buyCoin(
-                                      _profile.key, coinBalance);
-                                  logger.i(_profile);
-                                  setState(() {
-                                    _selected = -1;
-                                    _sliderList[index]=0;
-                                    _isPressed = false;
-                                  });
-                                }),
+                                  context,
+                                  "${_sliderList[index].round()}${_list[index].symbol} ${"buy".tr}",
+                                  pBtnWidth: 0.3,
+                                  disable: _sliderList[index] == 0,
+                                  onTap: () async {
+                                    setState(() {
+                                      _isPressed = true;
+                                    });
+                                    CoinBalance coinBalance = CoinBalance(
+                                      id: _list[index].id,
+                                      name: _list[index].name,
+                                      price: price!,
+                                      quantity: _sliderList[index].round(),
+                                      created_at: Utils.getDateTimeKey(),
+                                    );
+                                    _profile = await App.buyCoin(
+                                      _profile.key,
+                                      coinBalance,
+                                    );
+                                    logger.i(_profile);
+                                    setState(() {
+                                      _selected = -1;
+                                      _sliderList[index] = 0;
+                                      _isPressed = false;
+                                    });
+                                  },
+                                ),
                               ],
                             ),
-                          )
+                          ),
                         ],
                       ),
                     ],
@@ -274,17 +258,20 @@ class _CoinBuyPageState extends State<CoinBuyPage>
                 children: [
                   Icon(CryptoFontIcons.BTC, color: Colors.amber),
                   const SizedBox(width: 5),
-                  Text(Utils.numberFormat(coinQuantity),
-                      style: const TextStyle(color: Colors.white)),
+                  Text(
+                    Utils.numberFormat(coinQuantity),
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ],
               ),
               Row(
                 children: [
-                  Icon(Icons.monetization_on,
-                      color: Colors.lightBlueAccent),
+                  Icon(Icons.monetization_on, color: Colors.lightBlueAccent),
                   const SizedBox(width: 5),
-                  Text("${_profile.point.toStringAsFixed(0)}P",
-                      style: const TextStyle(color: Colors.white)),
+                  Text(
+                    "${_profile.point.toStringAsFixed(0)}P",
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ],
               ),
             ],
@@ -296,6 +283,11 @@ class _CoinBuyPageState extends State<CoinBuyPage>
 
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   IconData _getCryptoIcon(String symbol) {
     switch (symbol.toLowerCase()) {

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import 'package:samusil_addon/models/coin_balance.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:crypto_font_icons/crypto_font_icons.dart';
 
 import '../../components/appButton.dart';
@@ -45,22 +44,32 @@ class _CoinSellPageState extends State<CoinSellPage>
   Widget build(BuildContext context) {
     List<CoinBalance> unique = [];
     for (int i = 0; i < _profile.coin_balance.length; i++) {
-      CoinBalance? isExist = unique.firstWhereOrNull((element) =>
-          element.id == _profile.coin_balance[i].id &&
-          element.price == _profile.coin_balance[i].price);
+      CoinBalance? isExist = unique.firstWhereOrNull(
+        (element) =>
+            element.id == _profile.coin_balance[i].id &&
+            element.price == _profile.coin_balance[i].price,
+      );
       if (isExist == null) {
         _profile = _profile.copyWith(
-          coin_balance: _profile.coin_balance.asMap().map((index, balance) {
-            if (index == i) {
-              return MapEntry(index, balance.copyWith(
-                sub_list: [balance],
-                total: balance.quantity,
-              ));
-            }
-            return MapEntry(index, balance);
-          }).values.toList(),
+          coin_balance:
+              _profile.coin_balance
+                  .asMap()
+                  .map((index, balance) {
+                    if (index == i) {
+                      return MapEntry(
+                        index,
+                        balance.copyWith(
+                          sub_list: [balance],
+                          total: balance.quantity,
+                        ),
+                      );
+                    }
+                    return MapEntry(index, balance);
+                  })
+                  .values
+                  .toList(),
         );
-        
+
         CoinBalance value = _profile.coin_balance[i].copyWith(
           sub_list: [_profile.coin_balance[i]],
           total: _profile.coin_balance[i].quantity,
@@ -76,19 +85,22 @@ class _CoinSellPageState extends State<CoinSellPage>
     }
 
     for (int i = 0; i < unique.length; i++) {
-      Coin? currentCoinInfo =
-          _coinList.firstWhereOrNull((element) => element.id == unique[i].id);
+      Coin? currentCoinInfo = _coinList.firstWhereOrNull(
+        (element) => element.id == unique[i].id,
+      );
       if (currentCoinInfo != null) {
         unique[i] = unique[i].copyWith(
           current_price: currentCoinInfo.price_history!.last.price,
-          profit: (currentCoinInfo.price_history!.last.price * unique[i].quantity) -
+          profit:
+              (currentCoinInfo.price_history!.last.price * unique[i].quantity) -
               (unique[i].price * unique[i].quantity),
         );
       }
       for (int j = 0; j < unique[i].sub_list!.length; j++) {
         unique[i].sub_list![j] = unique[i].sub_list![j].copyWith(
-          profit: (currentCoinInfo!.price_history!.last.price *
-              unique[i].sub_list![j].quantity) -
+          profit:
+              (currentCoinInfo!.price_history!.last.price *
+                  unique[i].sub_list![j].quantity) -
               (unique[i].sub_list![j].price * unique[i].sub_list![j].quantity),
         );
       }
@@ -100,25 +112,8 @@ class _CoinSellPageState extends State<CoinSellPage>
       coinQuantity += row.quantity;
     }
 
-    RefreshController refreshController =
-        RefreshController(initialRefresh: false);
-
-    void _onRefresh() async {
-      logger.i("_onRefresh");
-      init();
-      refreshController.refreshCompleted();
-    }
-
     return Scaffold(
-      body: SmartRefresher(
-        controller: refreshController,
-        header: ClassicHeader(
-          idleText: "header_idle_text".tr,
-          releaseText: "header_release_text".tr,
-          refreshingText: "header_loading_text".tr,
-          completeText: "header_complete_text".tr,
-        ),
-        enablePullDown: true,
+      body: RefreshIndicator(
         onRefresh: _onRefresh,
         child: SingleChildScrollView(
           child: Column(
@@ -139,24 +134,31 @@ class _CoinSellPageState extends State<CoinSellPage>
                 children: List.generate(unique.length, (index) {
                   return ExpansionTile(
                     leading: Icon(
-                        _getCryptoIcon(unique[index].id.split("-")[0]),
-                        color: Utils.randomColor()),
+                      _getCryptoIcon(unique[index].id.split("-")[0]),
+                      color: Utils.randomColor(),
+                    ),
                     title: Text(
-                        "${unique[index].name} (${Utils.numberFormat(unique[index].total!)})"),
+                      "${unique[index].name} (${Utils.numberFormat(unique[index].total!)})",
+                    ),
                     subtitle: Text(
-                        unique[index].current_price!.toStringAsPrecision(7),
-                        style: const TextStyle(color: Colors.grey)),
+                      unique[index].current_price!.toStringAsPrecision(7),
+                      style: const TextStyle(color: Colors.grey),
+                    ),
                     trailing: Text(
-                        "${(unique[index].total! * unique[index].current_price!).toStringAsPrecision(2)} (${(unique[index].profit! > 0 || unique[index].profit! == 0) ? "+" : "-"}${(((unique[index].price - unique[index].current_price!) / ((unique[index].price + unique[index].current_price!) / 2)) * 100).abs().toStringAsPrecision(3)}%)",
-                        style: TextStyle(
-                            color: unique[index].profit! > 0
+                      "${(unique[index].total! * unique[index].current_price!).toStringAsPrecision(2)} (${(unique[index].profit! > 0 || unique[index].profit! == 0) ? "+" : "-"}${(((unique[index].price - unique[index].current_price!) / ((unique[index].price + unique[index].current_price!) / 2)) * 100).abs().toStringAsPrecision(3)}%)",
+                      style: TextStyle(
+                        color:
+                            unique[index].profit! > 0
                                 ? Colors.green
                                 : unique[index].profit! == 0
-                                    ? Colors.orange
-                                    : Colors.red,
-                            fontWeight: FontWeight.bold)),
-                    children: List.generate(unique[index].sub_list!.length,
-                        (subIndex) {
+                                ? Colors.orange
+                                : Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    children: List.generate(unique[index].sub_list!.length, (
+                      subIndex,
+                    ) {
                       bool isPlus = false;
                       Color btnColor = Colors.orange;
                       if (unique[index].sub_list![subIndex].profit! > 0) {
@@ -172,35 +174,43 @@ class _CoinSellPageState extends State<CoinSellPage>
                       }
                       return ListTile(
                         leading: Icon(
-                            _getCryptoIcon(unique[index].id.split("-")[0]),
-                            color: Colors.grey),
-                        title: Text(unique[index]
-                            .sub_list![subIndex]
-                            .price
-                            .toStringAsPrecision(7)),
+                          _getCryptoIcon(unique[index].id.split("-")[0]),
+                          color: Colors.grey,
+                        ),
+                        title: Text(
+                          unique[index].sub_list![subIndex].price
+                              .toStringAsPrecision(7),
+                        ),
                         subtitle: Text(
-                            Utils.toConvertFireDateToCommentTime(
-                                unique[index].sub_list![subIndex].created_at,
-                                bYear: true),
-                            style: const TextStyle(color: Colors.grey)),
-                        trailing: AppButton(context,
-                            "${(unique[index].sub_list![subIndex].quantity * unique[index].current_price!).toStringAsPrecision(2)} (${isPlus ? "+" : "-"}${(((unique[index].sub_list![subIndex].price - unique[index].current_price!) / ((unique[index].sub_list![subIndex].price + unique[index].current_price!) / 2)) * 100).toStringAsPrecision(3)}%)",
-                            pBtnWidth: 0.3,
-                            backgroundColor: btnColor, onTap: () async {
-                          setState(() {
-                            _isPressed = true;
-                          });
-                          logger.i(unique[index]);
-                          logger.i(unique[index].sub_list![subIndex]);
-                          logger.i(unique[index].current_price!);
-                          _profile = await App.sellCoin(
+                          Utils.toConvertFireDateToCommentTime(
+                            unique[index].sub_list![subIndex].created_at,
+                            bYear: true,
+                          ),
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                        trailing: AppButton(
+                          context,
+                          "${(unique[index].sub_list![subIndex].quantity * unique[index].current_price!).toStringAsPrecision(2)} (${isPlus ? "+" : "-"}${(((unique[index].sub_list![subIndex].price - unique[index].current_price!) / ((unique[index].sub_list![subIndex].price + unique[index].current_price!) / 2)) * 100).toStringAsPrecision(3)}%)",
+                          pBtnWidth: 0.3,
+                          backgroundColor: btnColor,
+                          onTap: () async {
+                            setState(() {
+                              _isPressed = true;
+                            });
+                            logger.i(unique[index]);
+                            logger.i(unique[index].sub_list![subIndex]);
+                            logger.i(unique[index].current_price!);
+                            _profile = await App.sellCoin(
                               _profile.key,
                               unique[index].sub_list![subIndex],
-                              unique[index].current_price!);
-                          setState(() {
-                            _isPressed = false;
-                          });
-                        }, disable: _isPressed),
+                              unique[index].current_price!,
+                            );
+                            setState(() {
+                              _isPressed = false;
+                            });
+                          },
+                          disable: _isPressed,
+                        ),
                       );
                     }),
                   );
@@ -221,17 +231,20 @@ class _CoinSellPageState extends State<CoinSellPage>
                 children: [
                   Icon(CryptoFontIcons.BTC, color: Colors.amber),
                   const SizedBox(width: 5),
-                  Text(Utils.numberFormat(coinQuantity),
-                      style: const TextStyle(color: Colors.white)),
+                  Text(
+                    Utils.numberFormat(coinQuantity),
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ],
               ),
               Row(
                 children: [
-                  Icon(Icons.monetization_on,
-                      color: Colors.lightBlueAccent),
+                  Icon(Icons.monetization_on, color: Colors.lightBlueAccent),
                   const SizedBox(width: 5),
-                  Text("${_profile.point.toStringAsFixed(0)}P",
-                      style: const TextStyle(color: Colors.white)),
+                  Text(
+                    "${_profile.point.toStringAsFixed(0)}P",
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ],
               ),
             ],
@@ -243,6 +256,11 @@ class _CoinSellPageState extends State<CoinSellPage>
 
   @override
   bool get wantKeepAlive => true;
+
+  Future<void> _onRefresh() async {
+    logger.i("_onRefresh");
+    await init();
+  }
 
   IconData _getCryptoIcon(String symbol) {
     switch (symbol.toLowerCase()) {

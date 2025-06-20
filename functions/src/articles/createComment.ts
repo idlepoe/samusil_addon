@@ -4,7 +4,6 @@ import { FIRESTORE_COLLECTION_ARTICLE, FIRESTORE_FIELD_COMMENTS } from '../utils
 
 export const createComment = onRequest({ 
   cors: true,
-  region: 'us-central1'
 }, async (req, res) => {
   try {
     // CORS 헤더 설정
@@ -31,12 +30,20 @@ export const createComment = onRequest({
       return;
     }
 
+    // comment 객체의 필드명 변경
+    const updatedComment = {
+      ...comment,
+      profile_uid: comment.profile_key || comment.profile_uid,
+      profile_photo_url: comment.profile_photo_url || '',
+    };
+    delete updatedComment.profile_key;
+
     const db = admin.firestore();
     const articleRef = db.collection(FIRESTORE_COLLECTION_ARTICLE).doc(articleKey);
 
     // 댓글 추가
     await articleRef.update({
-      [FIRESTORE_FIELD_COMMENTS]: admin.firestore.FieldValue.arrayUnion([comment])
+      [FIRESTORE_FIELD_COMMENTS]: admin.firestore.FieldValue.arrayUnion([updatedComment])
     });
 
     // 업데이트된 댓글 목록 조회

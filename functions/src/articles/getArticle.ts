@@ -1,6 +1,5 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
-import { Article } from '../utils/types';
 import { FIRESTORE_COLLECTION_ARTICLE } from '../utils/constants';
 
 export const getArticle = onRequest({ 
@@ -8,41 +7,24 @@ export const getArticle = onRequest({
   region: 'asia-northeast3'
 }, async (req, res) => {
   try {
-    // CORS 헤더 설정
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
-
-    // OPTIONS 요청 처리
-    if (req.method === 'OPTIONS') {
-      res.status(204).send('');
-      return;
-    }
-
-    // GET 요청만 허용
-    if (req.method !== 'GET') {
-      res.status(405).json({ success: false, error: 'Method not allowed' });
-      return;
-    }
-
     const { key } = req.query;
     
-    if (!key) {
+    if (!key || typeof key !== 'string') {
       res.status(400).json({ success: false, error: 'Article key is required' });
       return;
     }
 
     const db = admin.firestore();
-    const articleRef = db.collection(FIRESTORE_COLLECTION_ARTICLE).doc(key as string);
-    const doc = await articleRef.get();
+    const articleRef = db.collection(FIRESTORE_COLLECTION_ARTICLE).doc(key);
+    const articleDoc = await articleRef.get();
 
-    if (!doc.exists) {
+    if (!articleDoc.exists) {
       res.status(404).json({ success: false, error: 'Article not found' });
       return;
     }
 
-    const articleData = doc.data() as Article;
-
+    const articleData = articleDoc.data();
+    
     res.status(200).json({
       success: true,
       data: articleData

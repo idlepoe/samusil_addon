@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:go_router/go_router.dart';
 import 'package:line_icons/line_icons.dart';
+import 'package:samusil_addon/main.dart';
 
 import '../define/arrays.dart';
 import '../define/define.dart';
@@ -35,11 +35,7 @@ List<Widget> AppBarAction(BuildContext context, Profile profile) {
           showBadge: noReadLength > 0,
           child: IconButton(
             onPressed: () async {
-              // await Navigator.of(context).push(SwipeablePageRoute(
-              //   builder: (BuildContext context) => AlarmListPage(),
-              // ));
-
-              GoRouter.of(context).push("/alarm");
+              Get.toNamed("/alarm");
             },
             icon: const Icon(Icons.notifications_none_outlined),
           ),
@@ -101,18 +97,14 @@ List<Widget> AppBarAction(BuildContext context, Profile profile) {
                 // await Navigator.of(context).push(SwipeablePageRoute(
                 //   builder: (BuildContext context) => ProfilePage(),
                 // ));
-                GoRouter.of(context).push("/profile");
+                Get.toNamed("/profile");
               },
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Arrays.getBoardInfoByIndex(Define.INDEX_PROFILE_PAGE).icon,
+                  Arrays.getBoardInfo(Define.BOARD_PROFILE).icon,
                   const SizedBox(width: 10),
-                  Text(
-                    Arrays.getBoardInfoByIndex(
-                      Define.INDEX_PROFILE_PAGE,
-                    ).title.tr,
-                  ),
+                  Text(Arrays.getBoardInfo(Define.BOARD_PROFILE).title.tr),
                 ],
               ),
             ),
@@ -141,7 +133,7 @@ List<Widget> AppBarAction(BuildContext context, Profile profile) {
                 // await Navigator.of(context).push(SwipeablePageRoute(
                 //   builder: (BuildContext context) => PointRankPage(),
                 // ));
-                GoRouter.of(context).push("/point_rank");
+                Get.toNamed("/point_rank");
               },
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -174,7 +166,7 @@ List<Widget> AppBarAction(BuildContext context, Profile profile) {
                 // await Navigator.of(context).push(SwipeablePageRoute(
                 //   builder: (BuildContext context) => OptionPage(),
                 // ));
-                GoRouter.of(context).push("/option");
+                Get.toNamed("/option");
               },
               child: Row(
                 mainAxisSize: MainAxisSize.min,

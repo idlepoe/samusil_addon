@@ -21,9 +21,6 @@ class Define {
   static const double POINT_LIKE = 1;
   static const double COIN_BUY_FEE_PERCENT = 0;
 
-  static const String MASTER_USER_KEY = "00000000000000000";
-  static const String APP_VERSION = "1.0.0";
-
   static const String FIRESTORE_COLLECTION_PROFILE = "profile";
   static const String FIRESTORE_COLLECTION_WISH = "wish";
   static const String FIRESTORE_COLLECTION_ARTICLE = "article";
@@ -43,22 +40,10 @@ class Define {
   // Board names (문자열 기반)
   static const String BOARD_PROFILE = "profile";
   static const String BOARD_WISH = "wish";
-  static const String BOARD_ALL = "all_board";
-  static const String BOARD_IT = "it_board";
-  static const String BOARD_FREE = "free_board";
-  static const String BOARD_IT_NEWS = "it_news_board";
-  static const String BOARD_GAME_NEWS = "game_news_board";
-  static const String BOARD_REPORT = "report_suggestion_board";
-
-  // Legacy index constants (하위 호환성을 위해 유지)
-  static const int INDEX_PROFILE_PAGE = 0;
-  static const int INDEX_WISH_PAGE = 1;
-  static const int INDEX_BOARD_ALL_PAGE = 2;
-  static const int INDEX_BOARD_IT_PAGE = 3;
-  static const int INDEX_BOARD_FREE_PAGE = 4;
-  static const int INDEX_BOARD_IT_NEWS_PAGE = 5;
-  static const int INDEX_BOARD_GAME_NEWS_PAGE = 6;
-  static const int INDEX_BOARD_REPORT_PAGE = 7;
+  static const String BOARD_ALL = "all";
+  static const String BOARD_FREE = "free";
+  static const String BOARD_GAME_NEWS = "game_news";
+  static const String BOARD_REPORT = "report_suggestion";
 
   // Cloud Functions 설정
   static const String CLOUD_FUNCTIONS_BASE_URL =

@@ -7,9 +7,10 @@ part of 'profile.dart';
 // **************************************************************************
 
 _Profile _$ProfileFromJson(Map<String, dynamic> json) => _Profile(
-  key: _toString(json['key']),
+  uid: _toString(json['uid']),
   name: _toString(json['name']),
   profile_image_url: _toString(json['profile_image_url']),
+  photo_url: _toString(json['photo_url']),
   wish_last_date: _toString(json['wish_last_date']),
   wish_streak: _toInt(json['wish_streak']),
   point: (json['point'] as num).toDouble(),
@@ -25,9 +26,10 @@ _Profile _$ProfileFromJson(Map<String, dynamic> json) => _Profile(
 );
 
 Map<String, dynamic> _$ProfileToJson(_Profile instance) => <String, dynamic>{
-  'key': instance.key,
+  'uid': instance.uid,
   'name': instance.name,
   'profile_image_url': instance.profile_image_url,
+  'photo_url': instance.photo_url,
   'wish_last_date': instance.wish_last_date,
   'wish_streak': instance.wish_streak,
   'point': instance.point,

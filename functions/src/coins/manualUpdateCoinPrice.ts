@@ -12,7 +12,7 @@ export const manualUpdateCoinPrice = onRequest({
 
     res.status(200).json({
       success: true,
-      message: `Manual update completed: Updated ${result.updatedCount} coins, Created ${result.createdCount} new coins`,
+      message: `Manual update completed: Updated ${result.updatedCount} coins, Created ${result.createdCount} new coins, Deleted ${result.deletedCount} old documents`,
       data: result
     });
 

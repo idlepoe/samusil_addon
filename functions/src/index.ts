@@ -9,29 +9,27 @@ if (!admin.apps.length) {
 }
 
 // // Articles
-// export { createArticle } from './articles/createArticle';
-// export { getArticle } from './articles/getArticle';
-// export { getArticleList } from './articles/getArticleList';
-// export { updateArticle } from './articles/updateArticle';
-// export { deleteArticle } from './articles/deleteArticle';
-// export { createComment } from './articles/createComment';
-// export { deleteComment } from './articles/deleteComment';
-// export { updateArticleCount } from './articles/updateArticleCount';
-// export { searchArticles } from './articles/searchArticles';
+export { createArticle } from './articles/createArticle';
+export { getArticle } from './articles/getArticle';
+export { getArticleList } from './articles/getArticleList';
+export { updateArticle } from './articles/updateArticle';
+export { deleteArticle } from './articles/deleteArticle';
+export { createComment } from './articles/createComment';
+export { deleteComment } from './articles/deleteComment';
+export { updateArticleCount } from './articles/updateArticleCount';
+export { searchArticles } from './articles/searchArticles';
 
-// // Profiles
-// export { getProfile } from './profiles/getProfile';
-// export { updateProfile } from './profiles/updateProfile';
-// export { updatePoint } from './profiles/updatePoint';
-// export { createProfile } from './profiles/createProfile';
-
-// // Coins
-// export { getCoinList } from './coins/getCoinList';
-// export { buyCoin } from './coins/buyCoin';
-// export { sellCoin } from './coins/sellCoin';
-// export { updateCoinPrice } from './coins/updateCoinPrice';
+// Coins
+export { getCoinList } from './coins/getCoinList';
+export { buyCoin } from './coins/buyCoin';
+export { sellCoin } from './coins/sellCoin';
+export { updateCoinPrice } from './coins/updateCoinPrice';
 export { manualUpdateCoinPrice } from './coins/manualUpdateCoinPrice';
 export { scheduledUpdateCoinPrice } from './coins/scheduledUpdateCoinPrice';
+
+// Profiles
+export { updatePoint } from './profiles/updatePoint';
+export { createWish } from './profiles/createWish';
 
 // // Alarms
 // export { createAlarm } from './alarms/createAlarm';

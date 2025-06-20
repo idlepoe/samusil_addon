@@ -12,7 +12,7 @@ int _toInt(dynamic value) => value is int ? value : 1;
 abstract class Wish with _$Wish {
   const factory Wish({
     @JsonKey(fromJson: _toInt) required int index,
-    @JsonKey(fromJson: _toString) required String key,
+    @JsonKey(fromJson: _toString) required String uid,
     @JsonKey(fromJson: _toString) required String comments,
     @JsonKey(fromJson: _toString) required String nick_name,
     @JsonKey(fromJson: _toInt) required int streak,
@@ -22,11 +22,11 @@ abstract class Wish with _$Wish {
   factory Wish.fromJson(Map<String, dynamic> json) => _$WishFromJson(json);
 
   factory Wish.init() => Wish(
-        index: 0,
-        key: "",
-        comments: "",
-        nick_name: "",
-        streak: 1,
-        created_at: DateFormat("yyyy-MM-dd").format(DateTime.now()),
-      );
+    index: 0,
+    uid: "",
+    comments: "",
+    nick_name: "",
+    streak: 1,
+    created_at: DateFormat("yyyy-MM-dd").format(DateTime.now()),
+  );
 }

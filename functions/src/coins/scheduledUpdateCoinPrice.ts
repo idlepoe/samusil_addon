@@ -23,7 +23,7 @@ export const scheduledUpdateCoinPrice = onSchedule({
     const db = admin.firestore();
     const result = await updateCoinPrices(db);
 
-    console.log(`Scheduled update completed: Updated ${result.updatedCount} coins, Created ${result.createdCount} new coins out of ${result.totalProcessed} total`);
+    console.log(`Scheduled update completed: Updated ${result.updatedCount} coins, Created ${result.createdCount} new coins, Deleted ${result.deletedCount} old documents out of ${result.totalProcessed} total`);
 
   } catch (error) {
     console.error('Error in scheduled coin price update:', error);

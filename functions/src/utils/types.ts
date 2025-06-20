@@ -1,3 +1,5 @@
+import * as admin from 'firebase-admin';
+
 // Article 관련 타입
 export interface ArticleContent {
   isPicture: boolean;
@@ -11,7 +13,7 @@ export interface MainComment {
   contents: string;
   profile_key: string;
   profile_name: string;
-  created_at: string;
+  created_at: admin.firestore.Timestamp;
   is_sub: boolean;
   parents_key: string;
 }
@@ -26,7 +28,7 @@ export interface Article {
   count_unlike: number;
   title: string;
   contents: ArticleContent[];
-  created_at: string;
+  created_at: admin.firestore.Timestamp;
   comments: MainComment[];
   is_notice: boolean;
   thumbnail?: string;
@@ -69,7 +71,7 @@ export interface Coin {
   is_active: boolean;
   current_price: number;
   current_volume_24h: number;
-  last_updated: string;
+  last_updated: admin.firestore.Timestamp;
   diffPercentage?: number;
   diffList?: number[];
   color?: number;
@@ -78,7 +80,7 @@ export interface Coin {
 export interface PriceHistory {
   price: number;
   volume_24h: number;
-  timestamp: string;
+  timestamp: admin.firestore.Timestamp;
 }
 
 // Alarm 관련 타입

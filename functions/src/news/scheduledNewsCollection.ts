@@ -16,7 +16,7 @@ interface MainComment {
   contents: string;
   profile_key: string;
   profile_name: string;
-  created_at: string;
+  created_at: admin.firestore.Timestamp;
   is_sub: boolean;
   parents_key: string;
 }
@@ -33,11 +33,17 @@ interface Article {
   count_view: number;
   count_comments: number;
   is_notice: boolean;
-  created_at: string;
+  created_at: admin.firestore.Timestamp;
   comments: MainComment[];
   thumbnail?: string;
-  last_updated: string;
-  timestamp: string;
+  last_updated: admin.firestore.Timestamp;
+  timestamp: admin.firestore.Timestamp;
+}
+
+// 한국시간을 Firebase Timestamp로 변환하는 함수
+function getKoreanTimestamp(): admin.firestore.Timestamp {
+  // asia-northeast3 리전에서 실행되므로 이미 한국시간이 적용되어 있음
+  return admin.firestore.Timestamp.now();
 }
 
 export { collectGameNews, fetchAndParseGameNews };
@@ -64,10 +70,8 @@ async function fetchAndParseGameNews(db: admin.firestore.Firestore) {
     const matches = [...html.matchAll(listPattern)];
     console.log(`게임메카 리스트에서 ${matches.length}개 뉴스 추출됨`);
     const newsKey = Date.now().toString();
-    // 한국시간으로 현재 시각 생성
-    const now = new Date();
-    const seoulTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
-    const currentTime = seoulTime.toISOString().replace('T', ' ').substring(0, 19);
+    // 한국시간으로 Firebase Timestamp 생성
+    const currentTimestamp = getKoreanTimestamp();
     let index = 0;
     for (const match of matches.slice(0, 10)) {
       const detailUrl = "https://www.gamemeca.com" + match[1];
@@ -130,11 +134,10 @@ async function fetchAndParseGameNews(db: admin.firestore.Firestore) {
         count_view: 0,
         count_comments: 0,
         is_notice: false,
-        created_at: currentTime,
+        created_at: currentTimestamp,
         comments: [],
-        last_updated: currentTime,
-        timestamp: currentTime,
-        thumbnail: undefined,
+        last_updated: currentTimestamp,
+        timestamp: currentTimestamp,
       };
       await db.collection(FIRESTORE_COLLECTION_ARTICLE).doc(article.key).set(article);
       index++;
@@ -163,6 +166,7 @@ export const scheduledGameNewsCollection = onSchedule(
         admin.initializeApp();
       }
       const db = admin.firestore();
+      db.settings({ ignoreUndefinedProperties: true });
       await collectGameNews(db);
       console.log('Scheduled game news collection completed successfully');
     } catch (error) {

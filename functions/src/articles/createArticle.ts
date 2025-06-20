@@ -7,17 +7,6 @@ export const createArticle = onRequest({
   region: 'asia-northeast3'
 }, async (req, res) => {
   try {
-    // CORS 헤더 설정
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
-
-    // OPTIONS 요청 처리
-    if (req.method === 'OPTIONS') {
-      res.status(204).send('');
-      return;
-    }
-
     // POST 요청만 허용
     if (req.method !== 'POST') {
       res.status(405).json({ success: false, error: 'Method not allowed' });
@@ -32,21 +21,15 @@ export const createArticle = onRequest({
     }
 
     const db = admin.firestore();
-    const articleRef = db.collection(FIRESTORE_COLLECTION_ARTICLE).doc(article.key);
+    const articleRef = db.collection(FIRESTORE_COLLECTION_ARTICLE).doc();
 
-    // 중복 확인
-    const existingDoc = await articleRef.get();
-    if (existingDoc.exists) {
-      res.status(409).json({ success: false, error: 'Article with this key already exists' });
-      return;
-    }
-
-    // Firestore에 저장
+    // Firestore에 저장 (docId는 자동 생성됨)
     await articleRef.set({
-      key: article.key,
+      id: articleRef.id,
       board_name: article.board_name,
-      profile_key: article.profile_key,
+      profile_uid: article.profile_uid,
       profile_name: article.profile_name,
+      profile_photo_url: article.profile_photo_url,
       count_view: article.count_view,
       count_like: article.count_like,
       count_unlike: article.count_unlike,
@@ -61,7 +44,7 @@ export const createArticle = onRequest({
     res.status(200).json({
       success: true,
       message: 'Article created successfully',
-      data: { key: article.key }
+      data: { id: articleRef.id }
     });
 
   } catch (error) {

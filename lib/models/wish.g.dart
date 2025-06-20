@@ -8,7 +8,7 @@ part of 'wish.dart';
 
 _Wish _$WishFromJson(Map<String, dynamic> json) => _Wish(
   index: _toInt(json['index']),
-  key: _toString(json['key']),
+  uid: _toString(json['uid']),
   comments: _toString(json['comments']),
   nick_name: _toString(json['nick_name']),
   streak: _toInt(json['streak']),
@@ -17,7 +17,7 @@ _Wish _$WishFromJson(Map<String, dynamic> json) => _Wish(
 
 Map<String, dynamic> _$WishToJson(_Wish instance) => <String, dynamic>{
   'index': instance.index,
-  'key': instance.key,
+  'uid': instance.uid,
   'comments': instance.comments,
   'nick_name': instance.nick_name,
   'streak': instance.streak,

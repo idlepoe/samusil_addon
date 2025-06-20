@@ -171,15 +171,13 @@ class Utils {
   }
 
   static String getRandomString(int length) {
-    String chars =
-        'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
-    Random rnd = Random();
-    return String.fromCharCodes(
-      Iterable.generate(
-        length,
-        (_) => chars.codeUnitAt(rnd.nextInt(chars.length)),
-      ),
-    );
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    Random random = Random();
+    String result = '';
+    for (int i = 0; i < length; i++) {
+      result += chars[random.nextInt(chars.length)];
+    }
+    return result;
   }
 
   static Future<void> setLanguage(int language) async {
@@ -232,8 +230,6 @@ class Utils {
   }
 
   static Future<void> sharedPrefClear() async {
-    var logger = Logger();
-    logger.i("sharedPrefClear");
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.clear();
   }

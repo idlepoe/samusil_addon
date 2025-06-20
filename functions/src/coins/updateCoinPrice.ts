@@ -3,6 +3,29 @@ import * as admin from 'firebase-admin';
 import { CoinPrice, PriceHistory } from '../utils/types';
 import { FIRESTORE_COLLECTION_COIN } from '../utils/constants';
 
+// 한국시간을 Firebase Timestamp로 변환하는 함수
+function getKoreanTimestamp(): admin.firestore.Timestamp {
+  // asia-northeast3 리전에서 실행되므로 이미 한국시간이 적용되어 있음
+  return admin.firestore.Timestamp.now();
+}
+
+// 24시간 이전 가격 히스토리 데이터 삭제 함수
+async function cleanupOldPriceHistory(priceHistoryRef: admin.firestore.CollectionReference, seoulTime: Date): Promise<number> {
+  const oneDayAgo = new Date(seoulTime.getTime() - 24 * 60 * 60 * 1000);
+  const oneDayAgoTimestamp = admin.firestore.Timestamp.fromDate(oneDayAgo);
+  
+  const oldDataQuery = priceHistoryRef.where('timestamp', '<', oneDayAgoTimestamp);
+  const oldDataSnapshot = await oldDataQuery.get();
+  
+  if (!oldDataSnapshot.empty) {
+    const deletePromises = oldDataSnapshot.docs.map(doc => doc.ref.delete());
+    await Promise.all(deletePromises);
+    return oldDataSnapshot.docs.length;
+  }
+  
+  return 0;
+}
+
 // 공통 코인 가격 업데이트 함수
 async function updateCoinPrices(db: admin.firestore.Firestore) {
   try {
@@ -43,6 +66,7 @@ async function updateCoinPrices(db: admin.firestore.Firestore) {
     // 가격 업데이트
     let updatedCount = 0;
     let createdCount = 0;
+    let deletedCount = 0;
     
     for (const coinPrice of coinPriceList) {
       const coinRef = db.collection(FIRESTORE_COLLECTION_COIN).doc(coinPrice.id);
@@ -51,29 +75,36 @@ async function updateCoinPrices(db: admin.firestore.Firestore) {
       try {
         if (existingCoins.has(coinPrice.id)) {
           
+          // 한국시간으로 Firebase Timestamp 생성
+          const currentTimestamp = getKoreanTimestamp();
+          
           await coinRef.update({
             current_price: coinPrice.price,
             current_volume_24h: coinPrice.volume_24h,
-            last_updated: coinPrice.last_updated,
+            last_updated: currentTimestamp,
           });
           
-          // 한국시간으로 현재 시각 생성
-          const now = new Date();
-          const seoulTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
-          const currentTime = seoulTime.toISOString().replace('T', ' ').substring(0, 19);
+          // 한국시간으로 Firebase Timestamp 생성
+          const currentTimeStr = currentTimestamp.toDate().toISOString().replace('T', ' ').substring(0, 19);
           
           // 서브컬렉션에 가격 히스토리 추가
           const priceHistory: PriceHistory = {
             price: coinPrice.price,
             volume_24h: coinPrice.volume_24h,
-            timestamp: currentTime,
+            timestamp: currentTimestamp,
           };
           
-          await priceHistoryRef.doc(currentTime).set(priceHistory);
+          await priceHistoryRef.doc(currentTimeStr).set(priceHistory);
+          
+          // 24시간 이전 데이터 삭제
+          deletedCount += await cleanupOldPriceHistory(priceHistoryRef, currentTimestamp.toDate());
+          
           updatedCount++;
           
         } else {
           // 새로운 코인인 경우: 메인 문서 생성 + 서브컬렉션 추가
+          const currentTimestamp = getKoreanTimestamp();
+          
           const newCoin = {
             id: coinPrice.id,
             name: coinPrice.id, // API에서 name 정보가 없으므로 id 사용
@@ -82,24 +113,22 @@ async function updateCoinPrices(db: admin.firestore.Firestore) {
             is_active: true,
             current_price: coinPrice.price,
             current_volume_24h: coinPrice.volume_24h,
-            last_updated: coinPrice.last_updated,
+            last_updated: currentTimestamp,
           };
           
           await coinRef.set(newCoin);
           
-          // 한국시간으로 현재 시각 생성
-          const now = new Date();
-          const seoulTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
-          const currentTime = seoulTime.toISOString().replace('T', ' ').substring(0, 19);
+          // 한국시간으로 Firebase Timestamp 생성
+          const currentTimeStr = currentTimestamp.toDate().toISOString().replace('T', ' ').substring(0, 19);
           
           // 서브컬렉션에 가격 히스토리 추가
           const priceHistory: PriceHistory = {
             price: coinPrice.price,
             volume_24h: coinPrice.volume_24h,
-            timestamp: currentTime,
+            timestamp: currentTimestamp,
           };
           
-          await priceHistoryRef.doc(currentTime).set(priceHistory);
+          await priceHistoryRef.doc(currentTimeStr).set(priceHistory);
           createdCount++;
         }
         
@@ -112,6 +141,7 @@ async function updateCoinPrices(db: admin.firestore.Firestore) {
       success: true,
       updatedCount,
       createdCount,
+      deletedCount,
       totalProcessed: coinPriceList.length
     };
 
@@ -126,15 +156,6 @@ export const updateCoinPrice = onRequest({
   region: 'asia-northeast3'
 }, async (req, res) => {
   try {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
-
-    if (req.method === 'OPTIONS') {
-      res.status(204).send('');
-      return;
-    }
-
     if (req.method !== 'POST') {
       res.status(405).json({ success: false, error: 'Method not allowed' });
       return;
@@ -145,7 +166,7 @@ export const updateCoinPrice = onRequest({
 
     res.status(200).json({
       success: true,
-      message: `Updated ${result.updatedCount} coins, Created ${result.createdCount} new coins`,
+      message: `Updated ${result.updatedCount} coins, Created ${result.createdCount} new coins, Deleted ${result.deletedCount} old coins`,
       data: result
     });
 

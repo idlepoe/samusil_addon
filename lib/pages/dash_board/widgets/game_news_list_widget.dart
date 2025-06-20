@@ -1,86 +1,310 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:logger/logger.dart';
 
+import '../../../define/arrays.dart';
 import '../../../define/define.dart';
 import '../../../models/article.dart';
+import '../../../utils/app.dart';
+import '../../../utils/util.dart';
 import '../dash_board_controller.dart';
 
 class GameNewsListWidget extends StatelessWidget {
   final DashBoardController controller;
-  final List<Article> gameList;
+  final logger = Logger();
 
-  const GameNewsListWidget({
-    super.key,
-    required this.controller,
-    required this.gameList,
-  });
+  GameNewsListWidget({super.key, required this.controller});
+
+  Future<List<Article>> _loadGameNews() async {
+    try {
+      return await App.getArticleList(
+        boardInfo: Arrays.getBoardInfo(Define.BOARD_GAME_NEWS),
+        search: "",
+        limit: Define.DEFAULT_DASH_BOARD_GET_LENGTH,
+      );
+    } catch (e) {
+      logger.e("Error loading game news: $e");
+      return [];
+    }
+  }
+
+  String _getThumbnailUrl(Article article) {
+    for (int i = 0; i < article.contents.length; i++) {
+      if (article.contents[i].isPicture) {
+        return article.contents[i].contents;
+      }
+    }
+    return "";
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (gameList.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
-      child: Card(
-        elevation: 2,
-        child: Column(
-          children: [
-            Column(
-              children: List.generate(
-                gameList.length > 2 ? 3 : gameList.length,
-                (index) {
-                  return Column(
-                    children: [
-                      ListTile(
-                        onTap: () async {
-                          GoRouter.of(
-                            context,
-                          ).push("/detail/${gameList[index].key}");
-
-                          await controller.articleCountViewUp(
-                            gameList[index].key,
-                          );
-                        },
-                        visualDensity: const VisualDensity(
-                          horizontal: 0,
-                          vertical: -4,
-                        ),
-                        title: Text(
-                          gameList[index].title,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      ),
-                      Define.APP_DIVIDER,
-                    ],
-                  );
-                },
+    return FutureBuilder<List<Article>>(
+      future: _loadGameNews(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.only(left: 10, right: 10, top: 10),
+            child: Card(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(child: CircularProgressIndicator()),
               ),
             ),
-            InkWell(
-              onTap: () async {
-                GoRouter.of(
-                  context,
-                ).push("/list/${Define.INDEX_BOARD_GAME_NEWS_PAGE}");
-              },
-              child: ListTile(
-                visualDensity: const VisualDensity(horizontal: 0, vertical: -4),
-                title: Text(
-                  "${"game_news_board".tr} >",
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Padding(
+            padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        color: Colors.grey[600],
+                        size: 32,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '게임 뉴스를 불러올 수 없습니다',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      ),
+                    ],
                   ),
-                  textAlign: TextAlign.center,
                 ),
               ),
             ),
-          ],
-        ),
-      ),
+          );
+        }
+
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.article_outlined,
+                        color: Colors.grey[600],
+                        size: 32,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '게임 뉴스가 없습니다',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final gameList = snapshot.data!;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 섹션 헤더
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0064FF),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      "game_news_board".tr,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF191F28),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      "더보기",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+                child: Column(
+                  children: [
+                    // 첫 번째 게시글 (섬네일 포함)
+                    if (gameList.isNotEmpty)
+                      InkWell(
+                        onTap: () async {
+                          Get.toNamed("/detail/${gameList[0].key}");
+                          await controller.articleCountViewUp(gameList[0].key);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8F9FA),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // 섬네일
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: CachedNetworkImage(
+                                  imageUrl: _getThumbnailUrl(gameList[0]),
+                                  width: 80,
+                                  height: 60,
+                                  fit: BoxFit.cover,
+                                  placeholder:
+                                      (context, url) => Container(
+                                        width: 80,
+                                        height: 60,
+                                        color: Colors.grey[200],
+                                        child: const Center(
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
+                                      ),
+                                  errorWidget:
+                                      (context, url, error) => Container(
+                                        width: 80,
+                                        height: 60,
+                                        color: Colors.grey[200],
+                                        child: Icon(
+                                          Icons.image,
+                                          color: Colors.grey[400],
+                                          size: 24,
+                                        ),
+                                      ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              // 제목과 날짜
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      gameList[0].title,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF191F28),
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Align(
+                                      alignment: Alignment.bottomRight,
+                                      child: Text(
+                                        DateFormat(
+                                          'MM-dd',
+                                        ).format(gameList[0].created_at),
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    // 나머지 게시글들
+                    ...List.generate(
+                      gameList.length > 1 ? gameList.length - 1 : 0,
+                      (index) {
+                        final actualIndex = index + 1;
+                        return InkWell(
+                          onTap: () async {
+                            Get.toNamed("/detail/${gameList[actualIndex].key}");
+                            await controller.articleCountViewUp(
+                              gameList[actualIndex].key,
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 16,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    gameList[actualIndex].title,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      color: Color(0xFF191F28),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  DateFormat(
+                                    'MM-dd',
+                                  ).format(gameList[actualIndex].created_at),
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

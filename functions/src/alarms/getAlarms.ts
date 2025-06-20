@@ -5,7 +5,6 @@ import { FIRESTORE_COLLECTION_ALARM } from '../utils/constants';
 
 export const getAlarms = onRequest({ 
   cors: true,
-  region: 'us-central1'
 }, async (req, res) => {
   try {
     res.set('Access-Control-Allow-Origin', '*');
