@@ -230,6 +230,22 @@ class ArticleDetailController extends GetxController {
     subComment.value = null;
   }
 
+  // 이모티콘 추가
+  void addEmojiToComment(String emoji) {
+    final currentText = commentController.text;
+    final selection = commentController.selection;
+    final newText = currentText.replaceRange(
+      selection.start,
+      selection.end,
+      emoji,
+    );
+    commentController.text = newText;
+    commentController.selection = TextSelection.collapsed(
+      offset: selection.start + emoji.length,
+    );
+    commentFocusNode.requestFocus();
+  }
+
   // 게시글 작성자 여부
   bool get isAuthor => article.value.profile_uid == profile.value.uid;
 

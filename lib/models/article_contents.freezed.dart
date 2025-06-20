@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ArticleContent {
 
- bool get isPicture; bool? get isOriginal; String get contents;@JsonKey(fromJson: _toBool) bool? get isBold;
+ bool get isPicture; String get contents;
 /// Create a copy of ArticleContent
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +29,16 @@ $ArticleContentCopyWith<ArticleContent> get copyWith => _$ArticleContentCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ArticleContent&&(identical(other.isPicture, isPicture) || other.isPicture == isPicture)&&(identical(other.isOriginal, isOriginal) || other.isOriginal == isOriginal)&&(identical(other.contents, contents) || other.contents == contents)&&(identical(other.isBold, isBold) || other.isBold == isBold));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ArticleContent&&(identical(other.isPicture, isPicture) || other.isPicture == isPicture)&&(identical(other.contents, contents) || other.contents == contents));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,isPicture,isOriginal,contents,isBold);
+int get hashCode => Object.hash(runtimeType,isPicture,contents);
 
 @override
 String toString() {
-  return 'ArticleContent(isPicture: $isPicture, isOriginal: $isOriginal, contents: $contents, isBold: $isBold)';
+  return 'ArticleContent(isPicture: $isPicture, contents: $contents)';
 }
 
 
@@ -49,7 +49,7 @@ abstract mixin class $ArticleContentCopyWith<$Res>  {
   factory $ArticleContentCopyWith(ArticleContent value, $Res Function(ArticleContent) _then) = _$ArticleContentCopyWithImpl;
 @useResult
 $Res call({
- bool isPicture, bool? isOriginal, String contents,@JsonKey(fromJson: _toBool) bool? isBold
+ bool isPicture, String contents
 });
 
 
@@ -66,13 +66,11 @@ class _$ArticleContentCopyWithImpl<$Res>
 
 /// Create a copy of ArticleContent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? isPicture = null,Object? isOriginal = freezed,Object? contents = null,Object? isBold = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? isPicture = null,Object? contents = null,}) {
   return _then(_self.copyWith(
 isPicture: null == isPicture ? _self.isPicture : isPicture // ignore: cast_nullable_to_non_nullable
-as bool,isOriginal: freezed == isOriginal ? _self.isOriginal : isOriginal // ignore: cast_nullable_to_non_nullable
-as bool?,contents: null == contents ? _self.contents : contents // ignore: cast_nullable_to_non_nullable
-as String,isBold: freezed == isBold ? _self.isBold : isBold // ignore: cast_nullable_to_non_nullable
-as bool?,
+as bool,contents: null == contents ? _self.contents : contents // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 
@@ -83,13 +81,11 @@ as bool?,
 @JsonSerializable()
 
 class _ArticleContent implements ArticleContent {
-  const _ArticleContent({required this.isPicture, this.isOriginal, required this.contents, @JsonKey(fromJson: _toBool) this.isBold});
+  const _ArticleContent({required this.isPicture, required this.contents});
   factory _ArticleContent.fromJson(Map<String, dynamic> json) => _$ArticleContentFromJson(json);
 
 @override final  bool isPicture;
-@override final  bool? isOriginal;
 @override final  String contents;
-@override@JsonKey(fromJson: _toBool) final  bool? isBold;
 
 /// Create a copy of ArticleContent
 /// with the given fields replaced by the non-null parameter values.
@@ -104,16 +100,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ArticleContent&&(identical(other.isPicture, isPicture) || other.isPicture == isPicture)&&(identical(other.isOriginal, isOriginal) || other.isOriginal == isOriginal)&&(identical(other.contents, contents) || other.contents == contents)&&(identical(other.isBold, isBold) || other.isBold == isBold));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ArticleContent&&(identical(other.isPicture, isPicture) || other.isPicture == isPicture)&&(identical(other.contents, contents) || other.contents == contents));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,isPicture,isOriginal,contents,isBold);
+int get hashCode => Object.hash(runtimeType,isPicture,contents);
 
 @override
 String toString() {
-  return 'ArticleContent(isPicture: $isPicture, isOriginal: $isOriginal, contents: $contents, isBold: $isBold)';
+  return 'ArticleContent(isPicture: $isPicture, contents: $contents)';
 }
 
 
@@ -124,7 +120,7 @@ abstract mixin class _$ArticleContentCopyWith<$Res> implements $ArticleContentCo
   factory _$ArticleContentCopyWith(_ArticleContent value, $Res Function(_ArticleContent) _then) = __$ArticleContentCopyWithImpl;
 @override @useResult
 $Res call({
- bool isPicture, bool? isOriginal, String contents,@JsonKey(fromJson: _toBool) bool? isBold
+ bool isPicture, String contents
 });
 
 
@@ -141,13 +137,11 @@ class __$ArticleContentCopyWithImpl<$Res>
 
 /// Create a copy of ArticleContent
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? isPicture = null,Object? isOriginal = freezed,Object? contents = null,Object? isBold = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? isPicture = null,Object? contents = null,}) {
   return _then(_ArticleContent(
 isPicture: null == isPicture ? _self.isPicture : isPicture // ignore: cast_nullable_to_non_nullable
-as bool,isOriginal: freezed == isOriginal ? _self.isOriginal : isOriginal // ignore: cast_nullable_to_non_nullable
-as bool?,contents: null == contents ? _self.contents : contents // ignore: cast_nullable_to_non_nullable
-as String,isBold: freezed == isBold ? _self.isBold : isBold // ignore: cast_nullable_to_non_nullable
-as bool?,
+as bool,contents: null == contents ? _self.contents : contents // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

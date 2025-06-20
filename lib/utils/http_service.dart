@@ -292,8 +292,8 @@ class HttpService {
   Future<CloudFunctionResponse> getArticle({required String id}) async {
     try {
       final response = await _dio.get(
-        '/getArticle',
-        queryParameters: {'id': id},
+        '/getArticleDetail',
+        queryParameters: {'key': id},
       );
       return CloudFunctionResponse(success: true, data: response.data);
     } catch (e) {
@@ -302,16 +302,31 @@ class HttpService {
   }
 
   /// 게시글 작성
-  Future<CloudFunctionResponse<void>> createArticle({
+  Future<CloudFunctionResponse<Map<String, dynamic>>> createArticle({
     required Map<String, dynamic> articleData,
   }) async {
     final response = await callCloudFunction(
       'createArticle',
-      data: articleData,
+      data: {'articleData': articleData},
     );
-    return CloudFunctionResponse<void>(
+    return CloudFunctionResponse<Map<String, dynamic>>(
       success: response['success'] ?? false,
-      data: null,
+      data: response['data'] as Map<String, dynamic>?,
+      error: response['error'],
+    );
+  }
+
+  /// 게시글 수정
+  Future<CloudFunctionResponse<Map<String, dynamic>>> updateArticle({
+    required Map<String, dynamic> articleData,
+  }) async {
+    final response = await callCloudFunction(
+      'updateArticle',
+      data: {'articleData': articleData},
+    );
+    return CloudFunctionResponse<Map<String, dynamic>>(
+      success: response['success'] ?? false,
+      data: response['data'] as Map<String, dynamic>?,
       error: response['error'],
     );
   }

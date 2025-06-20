@@ -8,18 +8,18 @@ import '../../../models/board_info.dart';
 import 'article_edit_controller.dart';
 
 class ArticleEditView extends GetView<ArticleEditController> {
-  final String? articleKey;
-  final BoardInfo? boardInfo;
+  final String? id;
+  final BoardInfo boardInfo;
 
-  const ArticleEditView({super.key, this.articleKey, this.boardInfo});
+  const ArticleEditView(this.boardInfo, {super.key, this.id});
 
   @override
   Widget build(BuildContext context) {
     // 컨트롤러에 파라미터 전달
-    final controller = ArticleEditController(articleKey: articleKey);
+    final controller = ArticleEditController(articleKey: id);
     Get.lazyPut(() => controller);
 
-    // boardInfo를 컨트롤러에 직접 설정
+    // boardInfo를 컨트롤러에 직접 설정 (있는 경우에만)
     if (boardInfo != null) {
       controller.init(boardInfo!);
     }
@@ -42,7 +42,7 @@ class ArticleEditView extends GetView<ArticleEditController> {
         onPressed: () => Get.back(),
       ),
       title: Text(
-        '글쓰기',
+        id != null ? '글 수정' : '글쓰기',
         style: TextStyle(
           color: Colors.black,
           fontSize: 18,
@@ -54,9 +54,18 @@ class ArticleEditView extends GetView<ArticleEditController> {
         Obx(
           () => TextButton(
             onPressed:
-                controller.isPressed.value ? null : controller.writeArticle,
+                controller.isPressed.value
+                    ? null
+                    : () => controller.writeArticle(
+                      onSuccess: () {
+                        // bottom sheet 닫기
+                        Get.back();
+                        // 자유게시판 데이터 새로고침
+                        _refreshFreeBoard();
+                      },
+                    ),
             child: Text(
-              '완료',
+              id != null ? '수정' : '완료',
               style: TextStyle(
                 color:
                     controller.isPressed.value
@@ -334,5 +343,11 @@ class ArticleEditView extends GetView<ArticleEditController> {
         ),
       ),
     );
+  }
+
+  // 자유게시판 데이터 새로고침
+  void _refreshFreeBoard() {
+    // 대시보드로 이동하여 데이터 새로고침
+    Get.offAllNamed('/');
   }
 }

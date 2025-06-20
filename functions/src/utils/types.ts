@@ -3,9 +3,7 @@ import * as admin from 'firebase-admin';
 // Article 관련 타입
 export interface ArticleContent {
   isPicture: boolean;
-  isOriginal?: boolean;
   contents: string;
-  isBold?: boolean;
 }
 
 export interface MainComment {

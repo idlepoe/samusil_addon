@@ -12,12 +12,14 @@ class CommentListWidget extends GetView<ArticleDetailController> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() => Column(
-      children: List.generate(controller.comments.length, (index) {
-        final comment = controller.comments[index];
-        return _buildCommentItem(comment, index);
-      }),
-    ));
+    return Obx(
+      () => Column(
+        children: List.generate(controller.comments.length, (index) {
+          final comment = controller.comments[index];
+          return _buildCommentItem(comment, index);
+        }),
+      ),
+    );
   }
 
   Widget _buildCommentItem(comment, int index) {
@@ -37,7 +39,11 @@ class CommentListWidget extends GetView<ArticleDetailController> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.person_outline, size: 16, color: Colors.grey),
+                  const Icon(
+                    Icons.person_outline,
+                    size: 16,
+                    color: Colors.grey,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     comment.profile_name,
@@ -51,7 +57,11 @@ class CommentListWidget extends GetView<ArticleDetailController> {
               ),
               if (controller.canDeleteComment(comment))
                 IconButton(
-                  icon: const Icon(LineIcons.trash, size: 16, color: Colors.red),
+                  icon: const Icon(
+                    LineIcons.trash,
+                    size: 16,
+                    color: Colors.red,
+                  ),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   onPressed: () => _showCommentDeleteDialog(comment),
@@ -76,10 +86,7 @@ class CommentListWidget extends GetView<ArticleDetailController> {
                   DateFormat('yyyyMMddHHmm').format(comment.created_at),
                   bYear: true,
                 ),
-                style: const TextStyle(
-                  color: Colors.grey,
-                  fontSize: 12,
-                ),
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
               TextButton(
                 onPressed: () => controller.setSubComment(comment),
@@ -120,4 +127,4 @@ class CommentListWidget extends GetView<ArticleDetailController> {
       ),
     );
   }
-} 
+}

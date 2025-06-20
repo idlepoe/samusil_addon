@@ -76,7 +76,10 @@ class ArticleListController extends GetxController {
 
   // 글쓰기 페이지로 이동
   void navigateToEdit() {
-    Get.toNamed("/list/${boardInfo.value.board_name}/edit");
+    Get.toNamed(
+      "/list/${boardInfo.value.board_name}/edit",
+      arguments: boardInfo.value,
+    );
   }
 
   // 대시보드로 이동

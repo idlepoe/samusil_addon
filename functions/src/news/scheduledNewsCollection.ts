@@ -7,8 +7,6 @@ const FIRESTORE_COLLECTION_ARTICLE = 'article';
 interface ArticleContent {
   isPicture: boolean;
   contents: string;
-  isOriginal?: boolean;
-  isBold?: boolean;
 }
 
 interface MainComment {

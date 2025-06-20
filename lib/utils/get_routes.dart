@@ -44,16 +44,6 @@ class GetRoutes {
       binding: ArticleListBinding(),
     ),
     GetPage(
-      name: '/edit',
-      page: () => const ArticleEditView(),
-      binding: ArticleEditBinding(),
-    ),
-    GetPage(
-      name: '/edit/:articleId',
-      page: () => const ArticleEditView(),
-      binding: ArticleEditBinding(),
-    ),
-    GetPage(
       name: '/detail/:articleId',
       page: () => const ArticleDetailView(),
       binding: ArticleDetailBinding(),

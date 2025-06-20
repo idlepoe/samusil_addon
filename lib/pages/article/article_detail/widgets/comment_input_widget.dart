@@ -10,11 +10,11 @@ class CommentInputWidget extends GetView<ArticleDetailController> {
   Widget build(BuildContext context) {
     return Obx(
       () => Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border(
-            top: BorderSide(color: Colors.grey.shade300, width: 1),
+            top: BorderSide(color: Colors.grey.shade200, width: 1),
           ),
         ),
         child: Column(
@@ -24,8 +24,8 @@ class CommentInputWidget extends GetView<ArticleDetailController> {
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8F9FA),
-                  borderRadius: BorderRadius.circular(8),
+                  color: const Color(0xFFF0F8FF),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFF0064FF), width: 1),
                 ),
                 child: Row(
@@ -42,15 +42,20 @@ class CommentInputWidget extends GetView<ArticleDetailController> {
                         ),
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.close,
-                        color: Color(0xFF0064FF),
-                        size: 16,
+                    GestureDetector(
+                      onTap: () => controller.clearSubComment(),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0064FF).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.close,
+                          color: Color(0xFF0064FF),
+                          size: 16,
+                        ),
                       ),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      onPressed: () => controller.clearSubComment(),
                     ),
                   ],
                 ),
@@ -58,50 +63,55 @@ class CommentInputWidget extends GetView<ArticleDetailController> {
             Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: controller.commentController,
-                    decoration: InputDecoration(
-                      hintText: "comment_input_hint".tr,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFF0064FF)),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.grey.shade200),
                     ),
-                    maxLines: null,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => controller.createComment(),
+                    child: TextField(
+                      controller: controller.commentController,
+                      focusNode: controller.commentFocusNode,
+                      decoration: InputDecoration(
+                        hintText: "comment_input_hint".tr,
+                        hintStyle: TextStyle(
+                          color: Colors.grey.shade500,
+                          fontSize: 16,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
+                      ),
+                      maxLines: null,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => controller.createComment(),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
-                ElevatedButton(
-                  onPressed:
+                GestureDetector(
+                  onTap:
                       controller.commentController.text.trim().isEmpty
                           ? null
                           : controller.createComment,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0064FF),
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color:
+                          controller.commentController.text.trim().isEmpty
+                              ? Colors.grey.shade300
+                              : const Color(0xFF0064FF),
+                      borderRadius: BorderRadius.circular(24),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Text(
-                    "comment_send".tr,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
+                    child: Icon(
+                      Icons.send_rounded,
+                      color:
+                          controller.commentController.text.trim().isEmpty
+                              ? Colors.grey.shade500
+                              : Colors.white,
+                      size: 20,
                     ),
                   ),
                 ),

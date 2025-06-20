@@ -130,7 +130,7 @@ class ArticleListView extends GetView<ArticleListController> {
                       topLeft: Radius.circular(16.0),
                       topRight: Radius.circular(16.0),
                     ),
-                    child: ArticleEditView(),
+                    child: ArticleEditView(controller.boardInfo.value),
                   ),
                 ),
               ),

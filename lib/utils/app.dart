@@ -353,25 +353,31 @@ class App {
     return result;
   }
 
-  static Future<void> createArticle({required Article article}) async {
+  static Future<String?> createArticle({required Article article}) async {
     try {
+      final articleData = {
+        'board_name': article.board_name,
+        'profile_uid': article.profile_uid,
+        'profile_name': article.profile_name,
+        'profile_photo_url': article.profile_photo_url,
+        'count_view': article.count_view,
+        'count_like': article.count_like,
+        'count_unlike': article.count_unlike,
+        'title': article.title,
+        'contents':
+            article.contents.map((content) => content.toJson()).toList(),
+        'is_notice': article.is_notice,
+        'thumbnail': article.thumbnail,
+      };
+
+      logger.d("createArticle articleData: $articleData");
+
       final httpService = HttpService();
       final response = await httpService.createArticle(
-        articleData: {
-          'board_name': article.board_name,
-          'profile_uid': article.profile_uid,
-          'profile_name': article.profile_name,
-          'profile_photo_url': article.profile_photo_url,
-          'count_view': article.count_view,
-          'count_like': article.count_like,
-          'count_unlike': article.count_unlike,
-          'title': article.title,
-          'contents':
-              article.contents.map((content) => content.toJson()).toList(),
-          'is_notice': article.is_notice,
-          'thumbnail': article.thumbnail,
-        },
+        articleData: articleData,
       );
+
+      logger.d("createArticle response: ${response.data}");
 
       if (response.isSuccess) {
         // 성공 시 snackbar 표시
@@ -382,6 +388,9 @@ class App {
           backgroundColor: Colors.green,
           colorText: Colors.white,
         );
+
+        // 생성된 게시글의 ID 반환
+        return response.data?['id'] as String?;
       } else {
         Get.snackbar(
           '오류',
@@ -402,6 +411,8 @@ class App {
       );
       logger.e("createArticle exception: $e");
     }
+
+    return null;
   }
 
   static Future<Map<String, dynamic>> createWish({
@@ -1226,5 +1237,67 @@ class App {
     }
 
     return result;
+  }
+
+  static Future<String?> updateArticle({required Article article}) async {
+    try {
+      final articleData = {
+        'board_name': article.board_name,
+        'profile_uid': article.profile_uid,
+        'profile_name': article.profile_name,
+        'profile_photo_url': article.profile_photo_url,
+        'count_view': article.count_view,
+        'count_like': article.count_like,
+        'count_unlike': article.count_unlike,
+        'title': article.title,
+        'contents':
+            article.contents.map((content) => content.toJson()).toList(),
+        'is_notice': article.is_notice,
+        'thumbnail': article.thumbnail,
+      };
+
+      logger.d("updateArticle articleData: $articleData");
+
+      final httpService = HttpService();
+      final response = await httpService.updateArticle(
+        articleData: articleData,
+      );
+
+      logger.d("updateArticle response: ${response.data}");
+
+      if (response.isSuccess) {
+        // 성공 시 snackbar 표시
+        Get.snackbar(
+          '성공',
+          '게시글이 수정되었습니다.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+
+        // 수정된 게시글의 ID 반환
+        return response.data?['id'] as String?;
+      } else {
+        Get.snackbar(
+          '오류',
+          '게시글 수정에 실패했습니다.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        logger.e("updateArticle failed: ${response.error}");
+      }
+    } catch (e) {
+      Get.snackbar(
+        '오류',
+        '게시글 수정 중 오류가 발생했습니다.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      logger.e("updateArticle exception: $e");
+    }
+
+    return null;
   }
 }

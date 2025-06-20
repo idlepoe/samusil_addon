@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:line_icons/line_icons.dart';
 
 import '../article_detail_controller.dart';
 
@@ -8,61 +9,38 @@ class ActionButtonsWidget extends GetView<ArticleDetailController> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildActionButton(
-            icon: Icons.thumb_up,
-            label: "${"like".tr} ${controller.article.value.count_like}",
-            onPressed: controller.isPressed.value || controller.isAlreadyVote.value
-                ? null
-                : controller.likeArticle,
-            color: const Color(0xFF0064FF),
-          ),
-          _buildActionButton(
-            icon: Icons.thumb_down,
-            label: "${"unlike".tr} ${controller.article.value.count_unlike}",
-            onPressed: controller.isPressed.value || controller.isAlreadyVote.value
-                ? null
-                : controller.unlikeArticle,
-            color: Colors.grey,
-          ),
-        ],
-      ),
-    ));
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback? onPressed,
-    required Color color,
-  }) {
-    return Expanded(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8),
-        child: ElevatedButton.icon(
-          icon: Icon(icon, color: onPressed == null ? Colors.grey : Colors.white),
-          label: Text(
-            label,
-            style: TextStyle(
-              color: onPressed == null ? Colors.grey : Colors.white,
-              fontWeight: FontWeight.w600,
+    return Obx(
+      () => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        child: Row(
+          children: [
+            _buildActionIcon(
+              LineIcons.heart,
+              controller.article.value.count_like.toString(),
             ),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: onPressed == null ? Colors.grey.shade200 : color,
-            elevation: 0,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+            const SizedBox(width: 16),
+            _buildActionIcon(
+              LineIcons.comment,
+              controller.article.value.count_comments.toString(),
             ),
-          ),
-          onPressed: onPressed,
+            const Spacer(),
+            Text(
+              "조회 ${controller.article.value.count_view}",
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+            ),
+          ],
         ),
       ),
     );
   }
-} 
+
+  Widget _buildActionIcon(IconData icon, String count) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: Colors.grey[600]),
+        const SizedBox(width: 6),
+        Text(count, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+      ],
+    );
+  }
+}

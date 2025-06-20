@@ -7,6 +7,7 @@ import 'package:logger/logger.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 import '../../../define/define.dart';
+import '../../../define/arrays.dart';
 import '../../../models/article.dart';
 import '../../../models/article_contents.dart';
 import '../../../models/board_info.dart';
@@ -49,14 +50,31 @@ class ArticleEditController extends GetxController {
 
   ArticleEditController({this.articleKey});
 
+  // 라우트 파라미터에서 boardName 받기
+  String get boardNameFromRoute => Get.parameters['boardName'] ?? '';
+
   @override
   void onInit() {
     super.onInit();
 
+    // arguments로 전달된 boardInfo가 있으면 우선 사용
     final boardInfoArg = Get.arguments as BoardInfo?;
-
     if (boardInfoArg != null) {
       init(boardInfoArg);
+      logger.d(
+        "ArticleEditController boardInfoArg: ${boardInfoArg.board_name}",
+      );
+      return; // arguments가 있으면 라우트 파라미터는 무시
+    }
+
+    // 라우트 파라미터에서 boardName으로 boardInfo 설정
+    final boardName = boardNameFromRoute;
+    if (boardName.isNotEmpty) {
+      final board = Arrays.getBoardInfo(boardName);
+      init(board);
+      logger.d(
+        "ArticleEditController boardName: $boardName, boardInfo: ${board.board_name}",
+      );
     }
 
     if (articleKey != null) {
@@ -136,64 +154,41 @@ class ArticleEditController extends GetxController {
     isReorderMode.value = !isReorderMode.value;
   }
 
-  // 글쓰기
-  Future<void> writeArticle() async {
+  // 게시글 작성/수정
+  Future<void> writeArticle({Function()? onSuccess}) async {
+    if (isPressed.value) return;
+
     try {
       isPressed.value = true;
 
-      // 제목과 본문 텍스트 추출
+      // 제목 처리
       String title = titleController.text.trim();
-      String firstTextContent = "";
-
-      // 첫 번째 텍스트 콘텐츠 찾기
-      for (var content in contentList) {
-        if (!content.isPicture && content.textEditingController != null) {
-          String text = content.textEditingController!.text.trim();
-          if (text.isNotEmpty &&
-              text.replaceAll(RegExp(r'\s+'), '').isNotEmpty) {
-            firstTextContent = text;
-            break;
-          }
-        }
+      if (title.isEmpty) {
+        title = "제목 없음";
       }
 
-      // 제목이 없고 본문 텍스트도 없는 경우
-      if (title.isEmpty && firstTextContent.isEmpty) {
-        Get.snackbar(
-          '알림',
-          '텍스트를 입력해주세요.',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-        );
-        return;
-      }
-
-      // 제목이 없으면 본문 텍스트를 제목으로 사용 (최대 15자)
-      if (title.isEmpty && firstTextContent.isNotEmpty) {
-        title =
-            firstTextContent.length > 15
-                ? "${firstTextContent.substring(0, 15)}..."
-                : firstTextContent;
-      }
-
-      // 이미지 업로드 처리
+      // 콘텐츠 처리
       List<ArticleContent> processedContents = [];
       for (var content in contentList) {
-        if (content.isPicture && content.file != null) {
-          // 이미지 파일을 Storage에 업로드
-          String imageUrl = await Utils.uploadImageToStorage(
-            content.file,
-            fileName: content.contents,
-          );
-
-          if (imageUrl.isNotEmpty) {
+        if (content.isPicture) {
+          if (content.file != null) {
+            // 이미지 파일 업로드
+            String imageUrl = await Utils.uploadImageToStorage(
+              content.file,
+              fileName: content.contents,
+            );
+            if (imageUrl.isNotEmpty) {
+              processedContents.add(
+                ArticleContent(isPicture: true, contents: imageUrl),
+              );
+            }
+          } else if (content.contents.isNotEmpty) {
+            // 이미 업로드된 이미지 URL
             processedContents.add(
-              ArticleContent(isPicture: true, contents: imageUrl),
+              ArticleContent(isPicture: true, contents: content.contents),
             );
           }
-        } else if (!content.isPicture &&
-            content.textEditingController != null) {
+        } else {
           String text = content.textEditingController!.text.trim();
           if (text.isNotEmpty &&
               text.replaceAll(RegExp(r'\s+'), '').isNotEmpty) {
@@ -219,25 +214,56 @@ class ArticleEditController extends GetxController {
       // 프로필 정보 가져오기
       Profile profile = await App.getProfile();
 
-      // Article 객체 생성
-      Article article = Article(
-        id: "",
-        board_name: boardInfo.value.board_name,
-        profile_uid: profile.uid,
-        profile_name: profile.name,
-        profile_photo_url: profile.profile_image_url,
-        count_view: 0,
-        count_like: 0,
-        count_unlike: 0,
-        count_comments: 0,
-        title: title,
-        contents: processedContents,
-        created_at: DateTime.now().toUtc(),
-        is_notice: false,
-      );
+      if (articleKey != null) {
+        // 게시글 수정
+        Article article = Article(
+          id: articleKey!,
+          board_name: boardInfo.value.board_name,
+          profile_uid: profile.uid,
+          profile_name: profile.name,
+          profile_photo_url: profile.profile_image_url,
+          count_view: 0,
+          count_like: 0,
+          count_unlike: 0,
+          count_comments: 0,
+          title: title,
+          contents: processedContents,
+          created_at: DateTime.now().toUtc(),
+          is_notice: false,
+        );
 
-      // 게시글 작성
-      await App.createArticle(article: article);
+        logger.d("updateArticle board_name: ${boardInfo.value.board_name}");
+        logger.d("updateArticle article: ${article.toJson()}");
+
+        await App.updateArticle(article: article);
+      } else {
+        // 새 게시글 작성
+        Article article = Article(
+          id: "",
+          board_name: boardInfo.value.board_name,
+          profile_uid: profile.uid,
+          profile_name: profile.name,
+          profile_photo_url: profile.profile_image_url,
+          count_view: 0,
+          count_like: 0,
+          count_unlike: 0,
+          count_comments: 0,
+          title: title,
+          contents: processedContents,
+          created_at: DateTime.now().toUtc(),
+          is_notice: false,
+        );
+
+        logger.d("writeArticle board_name: ${boardInfo.value.board_name}");
+        logger.d("writeArticle article: ${article.toJson()}");
+
+        await App.createArticle(article: article);
+      }
+
+      // 성공 시 콜백 호출
+      if (onSuccess != null) {
+        onSuccess();
+      }
 
       // 성공 시 이전 화면으로 이동
       Get.back();
@@ -245,7 +271,7 @@ class ArticleEditController extends GetxController {
       logger.e("writeArticle error: $e");
       Get.snackbar(
         '오류',
-        '게시글 작성 중 오류가 발생했습니다.',
+        articleKey != null ? '게시글 수정 중 오류가 발생했습니다.' : '게시글 작성 중 오류가 발생했습니다.',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,

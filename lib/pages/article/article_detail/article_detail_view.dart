@@ -6,7 +6,6 @@ import 'article_detail_controller.dart';
 import 'widgets/article_header_widget.dart';
 import 'widgets/article_content_widget.dart';
 import 'widgets/action_buttons_widget.dart';
-import 'widgets/delete_button_widget.dart';
 import 'widgets/comment_section_widget.dart';
 import 'widgets/comment_input_widget.dart';
 
@@ -16,76 +15,101 @@ class ArticleDetailView extends GetView<ArticleDetailController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: _buildAppBar(context),
-      body: _buildBody(context),
-      bottomSheet: const CommentInputWidget(),
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return Column(
+          children: [
+            Expanded(
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Container(
+                      margin: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const ArticleHeaderWidget(),
+                          const ArticleContentWidget(),
+                          const ActionButtonsWidget(),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const CommentSectionWidget(),
+                ],
+              ),
+            ),
+            _buildEmojiBar(),
+            const CommentInputWidget(),
+          ],
+        );
+      }),
     );
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8F9FA),
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+        icon: const Icon(Icons.arrow_back_ios, color: Colors.black87),
         onPressed: () => Get.back(),
       ),
-      title: Obx(
-        () => Text(
-          controller.boardInfo.value.title.tr,
-          style: const TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
+      title: Text(
+        controller.boardInfo.value.title.tr,
+        style: const TextStyle(
+          color: Colors.black87,
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
         ),
+        overflow: TextOverflow.ellipsis,
       ),
       centerTitle: true,
-      actions: [
-        IconButton(
-          onPressed: controller.shareArticle,
-          icon: const Icon(Icons.share, color: Colors.black),
-        ),
-      ],
+      actions: [],
     );
   }
 
-  Widget _buildBody(BuildContext context) {
-    return Obx(() {
-      if (controller.isLoading.value) {
-        return const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0064FF)),
-              ),
-              SizedBox(height: 16),
-              Text(
-                '게시글을 불러오는 중...',
-                style: TextStyle(color: Colors.grey, fontSize: 14),
-              ),
-            ],
-          ),
-        );
-      }
+  Widget _buildEmojiBar() {
+    final emojis = ['😊', '👍', '❤️', '😂', '😮', '😢', '😡', '🎉'];
 
-      return SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(
-          parent: ClampingScrollPhysics(),
-        ),
-        child: Column(
-          children: [
-            const ArticleHeaderWidget(),
-            const ArticleContentWidget(),
-            const ActionButtonsWidget(),
-            if (controller.canDelete) const DeleteButtonWidget(),
-            const CommentSectionWidget(),
-            const SizedBox(height: Define.BOTTOM_SHEET_HEIGHT - 15),
-          ],
-        ),
-      );
-    });
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey.shade200, width: 1)),
+      ),
+      child: Row(
+        children:
+            emojis.map((emoji) {
+              return GestureDetector(
+                onTap: () => controller.addEmojiToComment(emoji),
+                child: Container(
+                  margin: const EdgeInsets.only(right: 12),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(emoji, style: const TextStyle(fontSize: 20)),
+                ),
+              );
+            }).toList(),
+      ),
+    );
   }
 }

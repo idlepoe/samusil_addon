@@ -80,18 +80,98 @@ class ArticleItemWidget extends StatelessWidget {
             ],
           ),
         ),
-        // Follow Button
-        TextButton(
-          onPressed: () {},
-          child: const Text(
-            '팔로우',
-            style: TextStyle(
-              color: Color(0xFF0064FF),
-              fontWeight: FontWeight.bold,
-            ),
+        // More Options Button
+        SizedBox(
+          width: 40,
+          height: 40,
+          child: PopupMenuButton<String>(
+            icon: Icon(Icons.more_horiz, color: Colors.grey[600]),
+            onSelected: (value) {
+              _handleMenuAction(value);
+            },
+            itemBuilder:
+                (BuildContext context) => [
+                  const PopupMenuItem<String>(
+                    value: 'share',
+                    child: Row(
+                      children: [
+                        Icon(Icons.share, size: 18),
+                        SizedBox(width: 8),
+                        Text('공유'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'block',
+                    child: Row(
+                      children: [
+                        Icon(Icons.block, size: 18),
+                        SizedBox(width: 8),
+                        Text('차단'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'report',
+                    child: Row(
+                      children: [
+                        Icon(Icons.report, size: 18),
+                        SizedBox(width: 8),
+                        Text('신고'),
+                      ],
+                    ),
+                  ),
+                ],
           ),
         ),
       ],
+    );
+  }
+
+  void _handleMenuAction(String value) {
+    switch (value) {
+      case 'share':
+        _shareArticle();
+        break;
+      case 'block':
+        _blockUser();
+        break;
+      case 'report':
+        _reportArticle();
+        break;
+    }
+  }
+
+  void _shareArticle() {
+    // 공유 기능 구현
+    Get.snackbar(
+      '공유',
+      '게시글을 공유합니다.',
+      snackPosition: SnackPosition.TOP,
+      backgroundColor: Colors.blue,
+      colorText: Colors.white,
+    );
+  }
+
+  void _blockUser() {
+    // 차단 기능 구현
+    Get.snackbar(
+      '차단',
+      '사용자를 차단합니다.',
+      snackPosition: SnackPosition.TOP,
+      backgroundColor: Colors.orange,
+      colorText: Colors.white,
+    );
+  }
+
+  void _reportArticle() {
+    // 신고 기능 구현
+    Get.snackbar(
+      '신고',
+      '게시글을 신고합니다.',
+      snackPosition: SnackPosition.TOP,
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
     );
   }
 
@@ -120,10 +200,6 @@ class ArticleItemWidget extends StatelessWidget {
         _buildActionIcon(LineIcons.heart, article.count_like.toString()),
         const SizedBox(width: 16),
         _buildActionIcon(LineIcons.comment, article.count_comments.toString()),
-        const SizedBox(width: 16),
-        _buildActionIcon(LineIcons.retweet, '0'), // Assuming no retweet count
-        const Spacer(),
-        Icon(Icons.more_horiz, color: Colors.grey[600]),
       ],
     );
   }
