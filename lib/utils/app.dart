@@ -284,86 +284,6 @@ class App {
         );
   }
 
-  static Future<List<Wish>> updateWish(Profile profile, String comment) async {
-    List<Wish> result = [];
-
-    DateTime today = DateTime.now();
-    DateFormat df = DateFormat("yyyy-MM-dd");
-    DateFormat df1 = DateFormat('yyyyMMddHHmmssSSS');
-    String sToday = df.format(today);
-    String sCreatedAt = df1.format(today);
-
-    Wish wish = Wish(
-      uid: profile.uid,
-      comments: comment,
-      nick_name: profile.name,
-      streak: profile.wish_streak,
-      created_at: sCreatedAt,
-      index: 0,
-    );
-
-    try {
-      final docRef = FirebaseFirestore.instance
-          .collection(Define.FIRESTORE_COLLECTION_WISH)
-          .doc(sToday);
-      await docRef
-          .update({
-            "list": FieldValue.arrayUnion([wish.toJson()]),
-          })
-          .then(
-            (value) async {
-              await countUpWishStreak(profile);
-              await pointUpdate(
-                profileKey: profile.uid,
-                point: Define.POINT_WISH + profile.wish_streak - 1,
-              );
-              final refGet = await docRef.get();
-              int index = 1;
-              for (dynamic s in refGet.get("list")) {
-                Wish row = Wish.fromJson(s);
-                row = row.copyWith(index: index);
-                result.add(row);
-                index++;
-              }
-            },
-            onError: (e) async {
-              if (e.code == Define.FIRESTORE_ERROR_CODE_NOT_FOUND) {
-                await docRef
-                    .set({
-                      "list": FieldValue.arrayUnion([wish.toJson()]),
-                    })
-                    .then(
-                      (value) async {
-                        await countUpWishStreak(profile);
-                        await pointUpdate(
-                          profileKey: profile.uid,
-                          point: Define.POINT_WISH + profile.wish_streak - 1,
-                        );
-                        final refGet = await docRef.get();
-                        int index = 1;
-                        for (dynamic s in refGet.get("list")) {
-                          Wish row = Wish.fromJson(s);
-                          row = row.copyWith(index: index);
-                          result.add(row);
-                          index++;
-                        }
-                      },
-                      onError: (e) {
-                        logger.e(e);
-                      },
-                    );
-              } else {
-                logger.e(e);
-              }
-            },
-          );
-    } catch (e) {
-      logger.e(e);
-    }
-
-    return result;
-  }
-
   static Future<List<Article>> getArticleList({
     required BoardInfo boardInfo,
     required String search,
@@ -398,7 +318,7 @@ class App {
       logger.e("getArticleList exception: $e");
     }
 
-    result.sort((a, b) => b.key.compareTo(a.key));
+    result.sort((a, b) => b.id.compareTo(a.id));
     return result;
   }
 
@@ -420,7 +340,7 @@ class App {
     );
     try {
       final httpService = HttpService();
-      final response = await httpService.getArticle(key: id);
+      final response = await httpService.getArticle(id: id);
 
       if (response.isSuccess) {
         result = Article.fromJson(response.data!);
@@ -487,31 +407,6 @@ class App {
     }
   }
 
-  static Future<Profile> pointUpdate({
-    required String profileKey,
-    required double point,
-  }) async {
-    Profile result = Profile.init();
-
-    try {
-      final httpService = HttpService();
-      final response = await httpService.updatePoint(
-        profileKey: profileKey,
-        point: point,
-      );
-
-      if (response.isSuccess) {
-        result = Profile.fromJson(response.data!);
-      } else {
-        logger.e("pointUp failed: ${response.error}");
-      }
-    } catch (e) {
-      logger.e("pointUp exception: $e");
-    }
-
-    return result;
-  }
-
   static Future<Map<String, dynamic>> createWish({
     required String comment,
   }) async {
@@ -571,7 +466,7 @@ class App {
       };
 
       final response = await httpService.createComment(
-        articleKey: article.id,
+        articleId: article.id,
         commentData: commentData,
       );
 
@@ -623,24 +518,6 @@ class App {
     } catch (e) {
       logger.w("no comment");
     }
-    return result;
-  }
-
-  static Future<int> articleCountViewUp({required String id}) async {
-    int result = 0;
-    final docRef = FirebaseFirestore.instance
-        .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
-        .doc(id);
-    await docRef
-        .update({"count_view": FieldValue.increment(1)})
-        .then(
-          (value) async {},
-          onError: (e) async {
-            logger.e(e);
-          },
-        );
-    final refGet = await docRef.get();
-    result = refGet.get("count_view");
     return result;
   }
 
@@ -711,8 +588,8 @@ class App {
     try {
       final httpService = HttpService();
       final response = await httpService.deleteComment(
-        articleKey: articleId,
-        commentKey: comment.key,
+        articleId: articleId,
+        commentId: comment.id,
       );
 
       if (response.isSuccess && response.data != null) {
@@ -771,8 +648,8 @@ class App {
           // Cloud Functions를 사용하여 댓글 삭제
           final httpService = HttpService();
           final response = await httpService.deleteComment(
-            articleKey: articleId,
-            commentKey: commentToDelete.key,
+            articleId: articleId,
+            commentId: commentToDelete.id,
           );
 
           if (response.isSuccess && response.data != null) {
@@ -1129,28 +1006,26 @@ class App {
           Define.FIRESTORE_FIELD_COIN_BALANCE: FieldValue.arrayUnion([
             coinBalance.toJson(),
           ]),
+          "point": FieldValue.increment(
+            -(coinBalance.price * coinBalance.quantity),
+          ),
         })
         .then(
           (value) async {
             logger.i("buyCoin success1");
-            result = await App.pointUpdate(
-              profileKey: profileKey,
-              point: -(coinBalance.price * coinBalance.quantity),
-            );
+            result = await App.getProfile();
           },
           onError: (e) async {
             if (e.code == Define.FIRESTORE_ERROR_CODE_NOT_FOUND) {
               await docRef
                   .set({
                     Define.FIRESTORE_FIELD_COIN_BALANCE: [coinBalance.toJson()],
+                    "point": -(coinBalance.price * coinBalance.quantity),
                   })
                   .then(
                     (value) async {
                       logger.i("buyCoin success2");
-                      result = await App.pointUpdate(
-                        profileKey: profileKey,
-                        point: -(coinBalance.price * coinBalance.quantity),
-                      );
+                      result = await App.getProfile();
                     },
                     onError: (e) {
                       logger.e(e);
@@ -1179,14 +1054,12 @@ class App {
           Define.FIRESTORE_FIELD_COIN_BALANCE: FieldValue.arrayRemove([
             coinBalance.toJson(),
           ]),
+          "point": FieldValue.increment(currentPrice * coinBalance.quantity),
         })
         .then(
           (value) async {
             logger.i("sellCoin success1");
-            result = await App.pointUpdate(
-              profileKey: profileKey,
-              point: (currentPrice * coinBalance.quantity),
-            );
+            result = await App.getProfile();
           },
           onError: (e) async {
             logger.e(e);
@@ -1234,7 +1107,7 @@ class App {
 
     try {
       final httpService = HttpService();
-      final response = await httpService.deleteArticle(key: article.id);
+      final response = await httpService.deleteArticle(id: article.id);
 
       if (response.isSuccess) {
         result = true;

@@ -31,7 +31,7 @@ dependencies:
   flutter_html: ^3.0.0
   url_launcher: ^6.3.1
   tiny_charts: ^0.1.0
-  crypto_font_icons: ^1.0.1
+  crypto_icons_flutter: ^0.0.1
   scroll_loop_auto_scroll: ^0.0.5
   in_app_review: ^2.0.10
   firebase_storage: ^12.4.7
@@ -58,6 +58,14 @@ flutter:
     - family: MapoGoldenPier
       fonts:
         - asset: assets/fonts/MapoGoldenPier.ttf
+    - family: CryptocurrencyIcons
+      fonts:
+        - asset: packages/crypto_icons/assets/fonts/cryptocurrency-icons.ttf
+    - family: BMHANNAPro
+      fonts:
+        - asset: assets/fonts/BMHANNAPro.ttf
+# For changing the app logo
+# flutter_launcher_icons: ^0.13.1
 flutter_launcher_icons:
   android: "launcher_icon"
   image_path: "assets/icon/icon.png"

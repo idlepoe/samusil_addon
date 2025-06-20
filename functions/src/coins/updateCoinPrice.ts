@@ -56,6 +56,12 @@ async function updateCoinPrices(db: admin.firestore.Firestore) {
       }
     }
 
+    // 24시간 거래량 기준으로 정렬하여 상위 10개만 선택
+    coinPriceList.sort((a, b) => (b.volume_24h || 0) - (a.volume_24h || 0));
+    const top10Coins = coinPriceList.slice(0, 10);
+
+    console.log(`Processing top 10 coins by 24h volume: ${top10Coins.map(c => c.id).join(', ')}`);
+
     // 기존 코인 목록 가져오기
     const coinSnapshot = await db.collection(FIRESTORE_COLLECTION_COIN).get();
     const existingCoins = new Map();
@@ -68,7 +74,8 @@ async function updateCoinPrices(db: admin.firestore.Firestore) {
     let createdCount = 0;
     let deletedCount = 0;
     
-    for (const coinPrice of coinPriceList) {
+    for (let i = 0; i < top10Coins.length; i++) {
+      const coinPrice = top10Coins[i];
       const coinRef = db.collection(FIRESTORE_COLLECTION_COIN).doc(coinPrice.id);
       const priceHistoryRef = coinRef.collection('price_history');
       
@@ -82,6 +89,7 @@ async function updateCoinPrices(db: admin.firestore.Firestore) {
             current_price: coinPrice.price,
             current_volume_24h: coinPrice.volume_24h,
             last_updated: currentTimestamp,
+            rank: i + 1, // 1부터 10까지의 랭크
           });
           
           // 한국시간으로 Firebase Timestamp 생성
@@ -109,7 +117,7 @@ async function updateCoinPrices(db: admin.firestore.Firestore) {
             id: coinPrice.id,
             name: coinPrice.id, // API에서 name 정보가 없으므로 id 사용
             symbol: coinPrice.id.toUpperCase(),
-            rank: 0, // 기본값
+            rank: i + 1, // 1부터 10까지의 랭크
             is_active: true,
             current_price: coinPrice.price,
             current_volume_24h: coinPrice.volume_24h,
@@ -142,7 +150,7 @@ async function updateCoinPrices(db: admin.firestore.Firestore) {
       updatedCount,
       createdCount,
       deletedCount,
-      totalProcessed: coinPriceList.length
+      totalProcessed: top10Coins.length
     };
 
   } catch (error) {

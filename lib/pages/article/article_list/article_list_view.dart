@@ -118,9 +118,7 @@ class ArticleListView extends GetView<ArticleListController> {
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: () async {
-            await controller.incrementViewCount(article);
-            controller.navigateToDetail(article);
-            await controller.loadData();
+            Get.toNamed("/detail/${article.id}");
           },
           child: Padding(
             padding: const EdgeInsets.all(16),

@@ -51,7 +51,25 @@ export const getArticleList = onRequest({
     query = query.limit(limitValue);
 
     const querySnapshot = await query.get();
-    const articles = querySnapshot.docs.map(doc => doc.data());
+    const articles = querySnapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        board_name: data.board_name,
+        profile_uid: data.profile_uid,
+        profile_name: data.profile_name,
+        profile_photo_url: data.profile_photo_url,
+        count_view: data.count_view || 0,
+        count_like: data.count_like || 0,
+        count_unlike: data.count_unlike || 0,
+        count_comments: data.count_comments || 0,
+        title: data.title,
+        contents: data.contents || [],
+        created_at: data.created_at,
+        is_notice: data.is_notice || false,
+        thumbnail: data.thumbnail,
+      };
+    });
 
     res.status(200).json({
       success: true,

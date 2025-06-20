@@ -22,6 +22,7 @@ _Coin _$CoinFromJson(Map<String, dynamic> json) => _Coin(
           .toList(),
   diffPercentage: (json['diffPercentage'] as num?)?.toDouble(),
   color: (json['color'] as num?)?.toDouble(),
+  current_volume_24h: (json['current_volume_24h'] as num?)?.toDouble(),
 );
 
 Map<String, dynamic> _$CoinToJson(_Coin instance) => <String, dynamic>{
@@ -34,4 +35,5 @@ Map<String, dynamic> _$CoinToJson(_Coin instance) => <String, dynamic>{
   'diffList': instance.diffList,
   'diffPercentage': instance.diffPercentage,
   'color': instance.color,
+  'current_volume_24h': instance.current_volume_24h,
 };

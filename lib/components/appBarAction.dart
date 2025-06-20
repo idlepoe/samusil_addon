@@ -108,32 +108,9 @@ List<Widget> AppBarAction(BuildContext context, Profile profile) {
                 ],
               ),
             ),
-            // PopupMenuItem<PopupItem>(
-            //
-            //   onTap: () async {
-            //     // await Future.delayed(Duration.zero);
-            //     // await Navigator.of(context).push(MaterialPageRoute(
-            //     //   builder: (BuildContext context) => PointExchangeTabPage(),
-            //     // ));
-            //     GoRouter.of(context).push("/point_exchange");
-            //
-            //   },
-            //   child: Row(
-            //     mainAxisSize: MainAxisSize.min,
-            //     children: [
-            //       const Icon(LineIcons.candyCane),
-            //       const SizedBox(width: 10),
-            //       Text("point_market".tr),
-            //     ],
-            //   ),
-            // ),
             PopupMenuItem<PopupItem>(
-              onTap: () async {
-                // await Future.delayed(Duration.zero);
-                // await Navigator.of(context).push(SwipeablePageRoute(
-                //   builder: (BuildContext context) => PointRankPage(),
-                // ));
-                Get.toNamed("/point_rank");
+              onTap: () {
+                Get.toNamed("/point/rank");
               },
               child: Row(
                 mainAxisSize: MainAxisSize.min,

@@ -155,11 +155,8 @@ class AllArticlesWidget extends StatelessWidget {
 
                           return InkWell(
                             onTap: () async {
-                              await controller.articleCountViewUp(
-                                articleList[index].key,
-                              );
                               if (!Get.context!.mounted) return;
-                              Get.toNamed("/detail/${articleList[index].key}");
+                              Get.toNamed("/detail/${articleList[index].id}");
                             },
                             child: Container(
                               padding: const EdgeInsets.all(16),

@@ -68,8 +68,4 @@ class DashBoardController extends GetxController {
 
     await Future.delayed(const Duration(seconds: 1));
   }
-
-  Future<void> articleCountViewUp(String articleKey) async {
-    await App.articleCountViewUp(key: articleKey);
-  }
 }

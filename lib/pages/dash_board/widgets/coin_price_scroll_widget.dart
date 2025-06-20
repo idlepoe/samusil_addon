@@ -1,4 +1,5 @@
-import 'package:crypto_font_icons/crypto_font_icons.dart';
+import 'package:crypto_icons_flutter/crypto_icons_flutter.dart';
+import 'package:crypto_icons_flutter/cyprot_icon_style.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:scroll_loop_auto_scroll/scroll_loop_auto_scroll.dart';
@@ -7,7 +8,6 @@ import 'package:logger/logger.dart';
 import '../../../models/coin.dart';
 import '../../../utils/app.dart';
 import '../../../main.dart';
-import '../../point/03_point_exchange_tab_page.dart';
 
 class CoinPriceScrollWidget extends StatelessWidget {
   const CoinPriceScrollWidget({super.key});
@@ -15,7 +15,13 @@ class CoinPriceScrollWidget extends StatelessWidget {
   Future<List<Coin>> _loadCoinList() async {
     final logger = Logger();
     try {
-      return await App.getCoinList(withoutNoTrade: true);
+      final coins = await App.getCoinList(withoutNoTrade: true);
+      // 거래량 기준으로 정렬 (내림차순)
+      coins.sort(
+        (a, b) =>
+            (b.current_volume_24h ?? 0).compareTo(a.current_volume_24h ?? 0),
+      );
+      return coins;
     } catch (e) {
       logger.e("Error loading coinList: $e");
       return [];
@@ -96,13 +102,7 @@ class CoinPriceScrollWidget extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               child: InkWell(
                 onTap: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder:
-                          (BuildContext context) =>
-                              const PointExchangeTabPage(),
-                    ),
-                  );
+                  Get.toNamed('/coin_exchange');
                 },
                 child: Row(
                   children: List.generate(coinList.length, (index) {
@@ -114,10 +114,10 @@ class CoinPriceScrollWidget extends StatelessWidget {
                       margin: const EdgeInsets.only(right: 16),
                       child: Row(
                         children: [
-                          Icon(
-                            _getCryptoIcon(coin.id.split("-")[0]),
-                            color: Color(color.toInt()),
-                            size: 16,
+                          CryptoIcons.loadAsset(
+                            coin.symbol,
+                            16,
+                            CryptoIconStyle.color,
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -153,20 +153,5 @@ class CoinPriceScrollWidget extends StatelessWidget {
         );
       },
     );
-  }
-
-  IconData _getCryptoIcon(String symbol) {
-    switch (symbol.toLowerCase()) {
-      case 'btc':
-        return CryptoFontIcons.BTC;
-      case 'eth':
-        return CryptoFontIcons.ETH;
-      case 'usdt':
-        return CryptoFontIcons.USDT;
-      case 'doge':
-        return CryptoFontIcons.DOGE;
-      default:
-        return CryptoFontIcons.BTC;
-    }
   }
 }

@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart' hide Response;
 import 'package:samusil_addon/main.dart';
 import '../models/cloud_function_response.dart';
 
@@ -31,18 +33,44 @@ class HttpService {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // Firebase Auth 토큰 추가
+          logger.i("🚀 [REQUEST] ${options.method} ${options.uri}");
+          if (options.data != null) logger.d("Data: ${options.data}");
+
           try {
             final user = FirebaseAuth.instance.currentUser;
+
             if (user != null) {
-              final token = await user.getIdToken();
-              options.headers['Authorization'] = 'Bearer $token';
+              final idToken = await user.getIdToken(true);
+
+              if (idToken != null && idToken.isNotEmpty) {
+                options.headers['Authorization'] = 'Bearer $idToken';
+              } else {
+                logger.w("⚠️ Firebase ID Token is empty");
+              }
+
+              handler.next(options); // 유저 + 토큰 정상 → 계속 진행
+            } else {
+              logger.w("❌ 로그인 안 된 사용자 요청 차단");
+              _redirectToLogin();
+              handler.reject(
+                DioException(
+                  requestOptions: options,
+                  error: 'User not authenticated',
+                  type: DioExceptionType.cancel,
+                ),
+              );
             }
           } catch (e) {
-            logger.e('Failed to get auth token: $e');
+            logger.e("❌ Firebase 인증 처리 중 오류: $e");
+            _redirectToLogin();
+            handler.reject(
+              DioException(
+                requestOptions: options,
+                error: 'Firebase auth token error',
+                type: DioExceptionType.cancel,
+              ),
+            );
           }
-
-          handler.next(options);
         },
         onResponse: (response, handler) {
           final duration =
@@ -86,6 +114,16 @@ class HttpService {
         },
       ),
     );
+  }
+
+  /// 로그인 페이지로 리다이렉트
+  void _redirectToLogin() {
+    // Firebase Auth의 익명 로그인을 시도하거나 로그인 페이지로 이동
+    try {
+      FirebaseAuth.instance.signInAnonymously();
+    } catch (e) {
+      logger.e('Anonymous sign in failed: $e');
+    }
   }
 
   /// baseUrl 설정
@@ -251,15 +289,16 @@ class HttpService {
   }
 
   /// 게시글 상세 조회
-  Future<CloudFunctionResponse<Map<String, dynamic>>> getArticle({
-    required String key,
-  }) async {
-    return await callCloudFunctionWithResponse<Map<String, dynamic>>(
-      'getArticle',
-      data: {'key': key},
-      method: 'GET',
-      fromJson: (json) => json as Map<String, dynamic>,
-    );
+  Future<CloudFunctionResponse> getArticle({required String id}) async {
+    try {
+      final response = await _dio.get(
+        '/getArticle',
+        queryParameters: {'id': id},
+      );
+      return CloudFunctionResponse(success: true, data: response.data);
+    } catch (e) {
+      return CloudFunctionResponse(success: false, error: e.toString());
+    }
   }
 
   /// 게시글 작성
@@ -278,38 +317,32 @@ class HttpService {
   }
 
   /// 댓글 작성
-  Future<CloudFunctionResponse<List<Map<String, dynamic>>>> createComment({
-    required String articleKey,
+  Future<CloudFunctionResponse> createComment({
+    required String articleId,
     required Map<String, dynamic> commentData,
   }) async {
-    return await callCloudFunctionWithListResponse<Map<String, dynamic>>(
-      'createComment',
-      data: {'article_key': articleKey, 'comment': commentData},
-      fromJson: (json) => json as Map<String, dynamic>,
-    );
+    try {
+      final response = await _dio.post(
+        '/createComment',
+        data: {'articleId': articleId, 'commentData': commentData},
+      );
+      return CloudFunctionResponse(success: true, data: response.data);
+    } catch (e) {
+      return CloudFunctionResponse(success: false, error: e.toString());
+    }
   }
 
-  /// 포인트 업데이트
-  Future<CloudFunctionResponse<Map<String, dynamic>>> updatePoint({
-    required String profileKey,
-    required double point,
-  }) async {
-    return await callCloudFunctionWithResponse<Map<String, dynamic>>(
-      'updatePoint',
-      data: {'profile_key': profileKey, 'point': point},
-      fromJson: (json) => json as Map<String, dynamic>,
-    );
-  }
-
-  /// Wish 생성
-  Future<CloudFunctionResponse<Map<String, dynamic>>> createWish({
-    required String comment,
-  }) async {
-    return await callCloudFunctionWithResponse<Map<String, dynamic>>(
-      'createWish',
-      data: {'comment': comment},
-      fromJson: (json) => json as Map<String, dynamic>,
-    );
+  /// 소원 생성
+  Future<CloudFunctionResponse> createWish({required String comment}) async {
+    try {
+      final response = await _dio.post(
+        '/createWish',
+        data: {'comment': comment},
+      );
+      return CloudFunctionResponse(success: true, data: response.data);
+    } catch (e) {
+      return CloudFunctionResponse(success: false, error: e.toString());
+    }
   }
 
   /// 코인 목록 조회
@@ -354,31 +387,28 @@ class HttpService {
   }
 
   /// 게시글 삭제
-  Future<CloudFunctionResponse<void>> deleteArticle({
-    required String key,
-  }) async {
-    final response = await callCloudFunction(
-      'deleteArticle',
-      data: {'key': key},
-      method: 'DELETE',
-    );
-    return CloudFunctionResponse<void>(
-      success: response['success'] ?? false,
-      data: null,
-      error: response['error'],
-    );
+  Future<CloudFunctionResponse> deleteArticle({required String id}) async {
+    try {
+      final response = await _dio.post('/deleteArticle', data: {'id': id});
+      return CloudFunctionResponse(success: true, data: response.data);
+    } catch (e) {
+      return CloudFunctionResponse(success: false, error: e.toString());
+    }
   }
 
   /// 댓글 삭제
-  Future<CloudFunctionResponse<List<Map<String, dynamic>>>> deleteComment({
-    required String articleKey,
-    required String commentKey,
+  Future<CloudFunctionResponse> deleteComment({
+    required String articleId,
+    required String commentId,
   }) async {
-    return await callCloudFunctionWithListResponse<Map<String, dynamic>>(
-      'deleteComment',
-      data: {'article_key': articleKey, 'comment_key': commentKey},
-      method: 'DELETE',
-      fromJson: (json) => json as Map<String, dynamic>,
-    );
+    try {
+      final response = await _dio.post(
+        '/deleteComment',
+        data: {'articleId': articleId, 'commentId': commentId},
+      );
+      return CloudFunctionResponse(success: true, data: response.data);
+    } catch (e) {
+      return CloudFunctionResponse(success: false, error: e.toString());
+    }
   }
 }

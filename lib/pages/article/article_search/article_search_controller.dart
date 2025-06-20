@@ -36,13 +36,6 @@ class ArticleSearchController extends GetxController {
     );
   }
 
-  Future<void> incrementViewCount(int index) async {
-    final article = list[index];
-    list[index] = article.copyWith(
-      count_view: await App.articleCountViewUp(key: article.key),
-    );
-  }
-
   @override
   void onClose() {
     searchTextFieldController.dispose();

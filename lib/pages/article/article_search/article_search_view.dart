@@ -98,8 +98,7 @@ class ArticleSearchView extends GetView<ArticleSearchController> {
                               ],
                             ),
                             onTap: () async {
-                              Get.toNamed("/detail/${article.key}");
-                              await controller.incrementViewCount(index);
+                              Get.toNamed("/detail/${article.id}");
                             },
                             visualDensity: const VisualDensity(vertical: -4),
                           ),

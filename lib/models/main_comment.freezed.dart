@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MainComment {
 
-@JsonKey(fromJson: _toString) String get key;@JsonKey(fromJson: _toString) String get contents;@JsonKey(fromJson: _toString) String get profile_uid;@JsonKey(fromJson: _toString) String get profile_name;@JsonKey(fromJson: _toString) String get profile_photo_url;@JsonKey(fromJson: _timestampFromJson, toJson: _timestampToJson) DateTime get created_at;@JsonKey(fromJson: _toBool) bool get is_sub;@JsonKey(fromJson: _toString) String get parents_key;
+@JsonKey(fromJson: _toString) String get id;@JsonKey(fromJson: _toString) String get contents;@JsonKey(fromJson: _toString) String get profile_uid;@JsonKey(fromJson: _toString) String get profile_name;@JsonKey(fromJson: _toString) String get profile_photo_url;@JsonKey(fromJson: _timestampFromJson, toJson: _timestampToJson) DateTime get created_at;@JsonKey(fromJson: _toBool) bool get is_sub;@JsonKey(fromJson: _toString) String get parents_key;
 /// Create a copy of MainComment
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +29,16 @@ $MainCommentCopyWith<MainComment> get copyWith => _$MainCommentCopyWithImpl<Main
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MainComment&&(identical(other.key, key) || other.key == key)&&(identical(other.contents, contents) || other.contents == contents)&&(identical(other.profile_uid, profile_uid) || other.profile_uid == profile_uid)&&(identical(other.profile_name, profile_name) || other.profile_name == profile_name)&&(identical(other.profile_photo_url, profile_photo_url) || other.profile_photo_url == profile_photo_url)&&(identical(other.created_at, created_at) || other.created_at == created_at)&&(identical(other.is_sub, is_sub) || other.is_sub == is_sub)&&(identical(other.parents_key, parents_key) || other.parents_key == parents_key));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MainComment&&(identical(other.id, id) || other.id == id)&&(identical(other.contents, contents) || other.contents == contents)&&(identical(other.profile_uid, profile_uid) || other.profile_uid == profile_uid)&&(identical(other.profile_name, profile_name) || other.profile_name == profile_name)&&(identical(other.profile_photo_url, profile_photo_url) || other.profile_photo_url == profile_photo_url)&&(identical(other.created_at, created_at) || other.created_at == created_at)&&(identical(other.is_sub, is_sub) || other.is_sub == is_sub)&&(identical(other.parents_key, parents_key) || other.parents_key == parents_key));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,key,contents,profile_uid,profile_name,profile_photo_url,created_at,is_sub,parents_key);
+int get hashCode => Object.hash(runtimeType,id,contents,profile_uid,profile_name,profile_photo_url,created_at,is_sub,parents_key);
 
 @override
 String toString() {
-  return 'MainComment(key: $key, contents: $contents, profile_uid: $profile_uid, profile_name: $profile_name, profile_photo_url: $profile_photo_url, created_at: $created_at, is_sub: $is_sub, parents_key: $parents_key)';
+  return 'MainComment(id: $id, contents: $contents, profile_uid: $profile_uid, profile_name: $profile_name, profile_photo_url: $profile_photo_url, created_at: $created_at, is_sub: $is_sub, parents_key: $parents_key)';
 }
 
 
@@ -49,7 +49,7 @@ abstract mixin class $MainCommentCopyWith<$Res>  {
   factory $MainCommentCopyWith(MainComment value, $Res Function(MainComment) _then) = _$MainCommentCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(fromJson: _toString) String key,@JsonKey(fromJson: _toString) String contents,@JsonKey(fromJson: _toString) String profile_uid,@JsonKey(fromJson: _toString) String profile_name,@JsonKey(fromJson: _toString) String profile_photo_url,@JsonKey(fromJson: _timestampFromJson, toJson: _timestampToJson) DateTime created_at,@JsonKey(fromJson: _toBool) bool is_sub,@JsonKey(fromJson: _toString) String parents_key
+@JsonKey(fromJson: _toString) String id,@JsonKey(fromJson: _toString) String contents,@JsonKey(fromJson: _toString) String profile_uid,@JsonKey(fromJson: _toString) String profile_name,@JsonKey(fromJson: _toString) String profile_photo_url,@JsonKey(fromJson: _timestampFromJson, toJson: _timestampToJson) DateTime created_at,@JsonKey(fromJson: _toBool) bool is_sub,@JsonKey(fromJson: _toString) String parents_key
 });
 
 
@@ -66,9 +66,9 @@ class _$MainCommentCopyWithImpl<$Res>
 
 /// Create a copy of MainComment
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? key = null,Object? contents = null,Object? profile_uid = null,Object? profile_name = null,Object? profile_photo_url = null,Object? created_at = null,Object? is_sub = null,Object? parents_key = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? contents = null,Object? profile_uid = null,Object? profile_name = null,Object? profile_photo_url = null,Object? created_at = null,Object? is_sub = null,Object? parents_key = null,}) {
   return _then(_self.copyWith(
-key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,contents: null == contents ? _self.contents : contents // ignore: cast_nullable_to_non_nullable
 as String,profile_uid: null == profile_uid ? _self.profile_uid : profile_uid // ignore: cast_nullable_to_non_nullable
 as String,profile_name: null == profile_name ? _self.profile_name : profile_name // ignore: cast_nullable_to_non_nullable
@@ -87,10 +87,10 @@ as String,
 @JsonSerializable()
 
 class _MainComment implements MainComment {
-  const _MainComment({@JsonKey(fromJson: _toString) required this.key, @JsonKey(fromJson: _toString) required this.contents, @JsonKey(fromJson: _toString) required this.profile_uid, @JsonKey(fromJson: _toString) required this.profile_name, @JsonKey(fromJson: _toString) required this.profile_photo_url, @JsonKey(fromJson: _timestampFromJson, toJson: _timestampToJson) required this.created_at, @JsonKey(fromJson: _toBool) required this.is_sub, @JsonKey(fromJson: _toString) required this.parents_key});
+  const _MainComment({@JsonKey(fromJson: _toString) required this.id, @JsonKey(fromJson: _toString) required this.contents, @JsonKey(fromJson: _toString) required this.profile_uid, @JsonKey(fromJson: _toString) required this.profile_name, @JsonKey(fromJson: _toString) required this.profile_photo_url, @JsonKey(fromJson: _timestampFromJson, toJson: _timestampToJson) required this.created_at, @JsonKey(fromJson: _toBool) required this.is_sub, @JsonKey(fromJson: _toString) required this.parents_key});
   factory _MainComment.fromJson(Map<String, dynamic> json) => _$MainCommentFromJson(json);
 
-@override@JsonKey(fromJson: _toString) final  String key;
+@override@JsonKey(fromJson: _toString) final  String id;
 @override@JsonKey(fromJson: _toString) final  String contents;
 @override@JsonKey(fromJson: _toString) final  String profile_uid;
 @override@JsonKey(fromJson: _toString) final  String profile_name;
@@ -112,16 +112,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MainComment&&(identical(other.key, key) || other.key == key)&&(identical(other.contents, contents) || other.contents == contents)&&(identical(other.profile_uid, profile_uid) || other.profile_uid == profile_uid)&&(identical(other.profile_name, profile_name) || other.profile_name == profile_name)&&(identical(other.profile_photo_url, profile_photo_url) || other.profile_photo_url == profile_photo_url)&&(identical(other.created_at, created_at) || other.created_at == created_at)&&(identical(other.is_sub, is_sub) || other.is_sub == is_sub)&&(identical(other.parents_key, parents_key) || other.parents_key == parents_key));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MainComment&&(identical(other.id, id) || other.id == id)&&(identical(other.contents, contents) || other.contents == contents)&&(identical(other.profile_uid, profile_uid) || other.profile_uid == profile_uid)&&(identical(other.profile_name, profile_name) || other.profile_name == profile_name)&&(identical(other.profile_photo_url, profile_photo_url) || other.profile_photo_url == profile_photo_url)&&(identical(other.created_at, created_at) || other.created_at == created_at)&&(identical(other.is_sub, is_sub) || other.is_sub == is_sub)&&(identical(other.parents_key, parents_key) || other.parents_key == parents_key));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,key,contents,profile_uid,profile_name,profile_photo_url,created_at,is_sub,parents_key);
+int get hashCode => Object.hash(runtimeType,id,contents,profile_uid,profile_name,profile_photo_url,created_at,is_sub,parents_key);
 
 @override
 String toString() {
-  return 'MainComment(key: $key, contents: $contents, profile_uid: $profile_uid, profile_name: $profile_name, profile_photo_url: $profile_photo_url, created_at: $created_at, is_sub: $is_sub, parents_key: $parents_key)';
+  return 'MainComment(id: $id, contents: $contents, profile_uid: $profile_uid, profile_name: $profile_name, profile_photo_url: $profile_photo_url, created_at: $created_at, is_sub: $is_sub, parents_key: $parents_key)';
 }
 
 
@@ -132,7 +132,7 @@ abstract mixin class _$MainCommentCopyWith<$Res> implements $MainCommentCopyWith
   factory _$MainCommentCopyWith(_MainComment value, $Res Function(_MainComment) _then) = __$MainCommentCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(fromJson: _toString) String key,@JsonKey(fromJson: _toString) String contents,@JsonKey(fromJson: _toString) String profile_uid,@JsonKey(fromJson: _toString) String profile_name,@JsonKey(fromJson: _toString) String profile_photo_url,@JsonKey(fromJson: _timestampFromJson, toJson: _timestampToJson) DateTime created_at,@JsonKey(fromJson: _toBool) bool is_sub,@JsonKey(fromJson: _toString) String parents_key
+@JsonKey(fromJson: _toString) String id,@JsonKey(fromJson: _toString) String contents,@JsonKey(fromJson: _toString) String profile_uid,@JsonKey(fromJson: _toString) String profile_name,@JsonKey(fromJson: _toString) String profile_photo_url,@JsonKey(fromJson: _timestampFromJson, toJson: _timestampToJson) DateTime created_at,@JsonKey(fromJson: _toBool) bool is_sub,@JsonKey(fromJson: _toString) String parents_key
 });
 
 
@@ -149,9 +149,9 @@ class __$MainCommentCopyWithImpl<$Res>
 
 /// Create a copy of MainComment
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? key = null,Object? contents = null,Object? profile_uid = null,Object? profile_name = null,Object? profile_photo_url = null,Object? created_at = null,Object? is_sub = null,Object? parents_key = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? contents = null,Object? profile_uid = null,Object? profile_name = null,Object? profile_photo_url = null,Object? created_at = null,Object? is_sub = null,Object? parents_key = null,}) {
   return _then(_MainComment(
-key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,contents: null == contents ? _self.contents : contents // ignore: cast_nullable_to_non_nullable
 as String,profile_uid: null == profile_uid ? _self.profile_uid : profile_uid // ignore: cast_nullable_to_non_nullable
 as String,profile_name: null == profile_name ? _self.profile_name : profile_name // ignore: cast_nullable_to_non_nullable

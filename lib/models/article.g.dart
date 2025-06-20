@@ -7,7 +7,7 @@ part of 'article.dart';
 // **************************************************************************
 
 _Article _$ArticleFromJson(Map<String, dynamic> json) => _Article(
-  key: _toString(json['key']),
+  id: _toString(json['id']),
   board_name: _toString(json['board_name']),
   profile_uid: _toString(json['profile_uid']),
   profile_name: _toString(json['profile_name']),
@@ -27,7 +27,7 @@ _Article _$ArticleFromJson(Map<String, dynamic> json) => _Article(
 );
 
 Map<String, dynamic> _$ArticleToJson(_Article instance) => <String, dynamic>{
-  'key': instance.key,
+  'id': instance.id,
   'board_name': instance.board_name,
   'profile_uid': instance.profile_uid,
   'profile_name': instance.profile_name,

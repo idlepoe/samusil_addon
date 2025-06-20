@@ -9,11 +9,7 @@ import 'package:samusil_addon/pages/article/article_detail/article_detail_view.d
 import 'package:samusil_addon/pages/article/article_search/article_search_view.dart';
 import 'package:samusil_addon/pages/option/01_option_page.dart';
 import 'package:samusil_addon/pages/option/02_privacy_policy_page.dart';
-import 'package:samusil_addon/pages/point/01_point_rank_page.dart';
 import 'package:samusil_addon/pages/point/02_point_information_page.dart';
-import 'package:samusil_addon/pages/point/03_point_exchange_tab_page.dart';
-import 'package:samusil_addon/pages/point/04_coin_buy_page.dart';
-import 'package:samusil_addon/pages/point/05_coin_sell_page.dart';
 import 'package:samusil_addon/pages/wish/wish_view.dart';
 import 'package:samusil_addon/utils/get_routes.dart';
 import 'package:samusil_addon/utils/http_service.dart';

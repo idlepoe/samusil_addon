@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Coin {
 
- String get id; String get name; String get symbol; int get rank; bool get is_active; List<Price>? get price_history; List<double>? get diffList; double? get diffPercentage; double? get color;
+ String get id; String get name; String get symbol; int get rank; bool get is_active; List<Price>? get price_history; List<double>? get diffList; double? get diffPercentage; double? get color; double? get current_volume_24h;
 /// Create a copy of Coin
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +29,16 @@ $CoinCopyWith<Coin> get copyWith => _$CoinCopyWithImpl<Coin>(this as Coin, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Coin&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.symbol, symbol) || other.symbol == symbol)&&(identical(other.rank, rank) || other.rank == rank)&&(identical(other.is_active, is_active) || other.is_active == is_active)&&const DeepCollectionEquality().equals(other.price_history, price_history)&&const DeepCollectionEquality().equals(other.diffList, diffList)&&(identical(other.diffPercentage, diffPercentage) || other.diffPercentage == diffPercentage)&&(identical(other.color, color) || other.color == color));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Coin&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.symbol, symbol) || other.symbol == symbol)&&(identical(other.rank, rank) || other.rank == rank)&&(identical(other.is_active, is_active) || other.is_active == is_active)&&const DeepCollectionEquality().equals(other.price_history, price_history)&&const DeepCollectionEquality().equals(other.diffList, diffList)&&(identical(other.diffPercentage, diffPercentage) || other.diffPercentage == diffPercentage)&&(identical(other.color, color) || other.color == color)&&(identical(other.current_volume_24h, current_volume_24h) || other.current_volume_24h == current_volume_24h));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,symbol,rank,is_active,const DeepCollectionEquality().hash(price_history),const DeepCollectionEquality().hash(diffList),diffPercentage,color);
+int get hashCode => Object.hash(runtimeType,id,name,symbol,rank,is_active,const DeepCollectionEquality().hash(price_history),const DeepCollectionEquality().hash(diffList),diffPercentage,color,current_volume_24h);
 
 @override
 String toString() {
-  return 'Coin(id: $id, name: $name, symbol: $symbol, rank: $rank, is_active: $is_active, price_history: $price_history, diffList: $diffList, diffPercentage: $diffPercentage, color: $color)';
+  return 'Coin(id: $id, name: $name, symbol: $symbol, rank: $rank, is_active: $is_active, price_history: $price_history, diffList: $diffList, diffPercentage: $diffPercentage, color: $color, current_volume_24h: $current_volume_24h)';
 }
 
 
@@ -49,7 +49,7 @@ abstract mixin class $CoinCopyWith<$Res>  {
   factory $CoinCopyWith(Coin value, $Res Function(Coin) _then) = _$CoinCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String symbol, int rank, bool is_active, List<Price>? price_history, List<double>? diffList, double? diffPercentage, double? color
+ String id, String name, String symbol, int rank, bool is_active, List<Price>? price_history, List<double>? diffList, double? diffPercentage, double? color, double? current_volume_24h
 });
 
 
@@ -66,7 +66,7 @@ class _$CoinCopyWithImpl<$Res>
 
 /// Create a copy of Coin
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? symbol = null,Object? rank = null,Object? is_active = null,Object? price_history = freezed,Object? diffList = freezed,Object? diffPercentage = freezed,Object? color = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? symbol = null,Object? rank = null,Object? is_active = null,Object? price_history = freezed,Object? diffList = freezed,Object? diffPercentage = freezed,Object? color = freezed,Object? current_volume_24h = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -77,6 +77,7 @@ as bool,price_history: freezed == price_history ? _self.price_history : price_hi
 as List<Price>?,diffList: freezed == diffList ? _self.diffList : diffList // ignore: cast_nullable_to_non_nullable
 as List<double>?,diffPercentage: freezed == diffPercentage ? _self.diffPercentage : diffPercentage // ignore: cast_nullable_to_non_nullable
 as double?,color: freezed == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
+as double?,current_volume_24h: freezed == current_volume_24h ? _self.current_volume_24h : current_volume_24h // ignore: cast_nullable_to_non_nullable
 as double?,
   ));
 }
@@ -88,7 +89,7 @@ as double?,
 @JsonSerializable()
 
 class _Coin implements Coin {
-  const _Coin({required this.id, required this.name, required this.symbol, required this.rank, required this.is_active, final  List<Price>? price_history, final  List<double>? diffList, this.diffPercentage, this.color}): _price_history = price_history,_diffList = diffList;
+  const _Coin({required this.id, required this.name, required this.symbol, required this.rank, required this.is_active, final  List<Price>? price_history, final  List<double>? diffList, this.diffPercentage, this.color, this.current_volume_24h}): _price_history = price_history,_diffList = diffList;
   factory _Coin.fromJson(Map<String, dynamic> json) => _$CoinFromJson(json);
 
 @override final  String id;
@@ -116,6 +117,7 @@ class _Coin implements Coin {
 
 @override final  double? diffPercentage;
 @override final  double? color;
+@override final  double? current_volume_24h;
 
 /// Create a copy of Coin
 /// with the given fields replaced by the non-null parameter values.
@@ -130,16 +132,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Coin&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.symbol, symbol) || other.symbol == symbol)&&(identical(other.rank, rank) || other.rank == rank)&&(identical(other.is_active, is_active) || other.is_active == is_active)&&const DeepCollectionEquality().equals(other._price_history, _price_history)&&const DeepCollectionEquality().equals(other._diffList, _diffList)&&(identical(other.diffPercentage, diffPercentage) || other.diffPercentage == diffPercentage)&&(identical(other.color, color) || other.color == color));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Coin&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.symbol, symbol) || other.symbol == symbol)&&(identical(other.rank, rank) || other.rank == rank)&&(identical(other.is_active, is_active) || other.is_active == is_active)&&const DeepCollectionEquality().equals(other._price_history, _price_history)&&const DeepCollectionEquality().equals(other._diffList, _diffList)&&(identical(other.diffPercentage, diffPercentage) || other.diffPercentage == diffPercentage)&&(identical(other.color, color) || other.color == color)&&(identical(other.current_volume_24h, current_volume_24h) || other.current_volume_24h == current_volume_24h));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,symbol,rank,is_active,const DeepCollectionEquality().hash(_price_history),const DeepCollectionEquality().hash(_diffList),diffPercentage,color);
+int get hashCode => Object.hash(runtimeType,id,name,symbol,rank,is_active,const DeepCollectionEquality().hash(_price_history),const DeepCollectionEquality().hash(_diffList),diffPercentage,color,current_volume_24h);
 
 @override
 String toString() {
-  return 'Coin(id: $id, name: $name, symbol: $symbol, rank: $rank, is_active: $is_active, price_history: $price_history, diffList: $diffList, diffPercentage: $diffPercentage, color: $color)';
+  return 'Coin(id: $id, name: $name, symbol: $symbol, rank: $rank, is_active: $is_active, price_history: $price_history, diffList: $diffList, diffPercentage: $diffPercentage, color: $color, current_volume_24h: $current_volume_24h)';
 }
 
 
@@ -150,7 +152,7 @@ abstract mixin class _$CoinCopyWith<$Res> implements $CoinCopyWith<$Res> {
   factory _$CoinCopyWith(_Coin value, $Res Function(_Coin) _then) = __$CoinCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String symbol, int rank, bool is_active, List<Price>? price_history, List<double>? diffList, double? diffPercentage, double? color
+ String id, String name, String symbol, int rank, bool is_active, List<Price>? price_history, List<double>? diffList, double? diffPercentage, double? color, double? current_volume_24h
 });
 
 
@@ -167,7 +169,7 @@ class __$CoinCopyWithImpl<$Res>
 
 /// Create a copy of Coin
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? symbol = null,Object? rank = null,Object? is_active = null,Object? price_history = freezed,Object? diffList = freezed,Object? diffPercentage = freezed,Object? color = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? symbol = null,Object? rank = null,Object? is_active = null,Object? price_history = freezed,Object? diffList = freezed,Object? diffPercentage = freezed,Object? color = freezed,Object? current_volume_24h = freezed,}) {
   return _then(_Coin(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -178,6 +180,7 @@ as bool,price_history: freezed == price_history ? _self._price_history : price_h
 as List<Price>?,diffList: freezed == diffList ? _self._diffList : diffList // ignore: cast_nullable_to_non_nullable
 as List<double>?,diffPercentage: freezed == diffPercentage ? _self.diffPercentage : diffPercentage // ignore: cast_nullable_to_non_nullable
 as double?,color: freezed == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
+as double?,current_volume_24h: freezed == current_volume_24h ? _self.current_volume_24h : current_volume_24h // ignore: cast_nullable_to_non_nullable
 as double?,
   ));
 }

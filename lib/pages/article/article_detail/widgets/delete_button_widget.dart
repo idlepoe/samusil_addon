@@ -45,11 +45,8 @@ class DeleteButtonWidget extends GetView<ArticleDetailController> {
         actions: [
           CupertinoDialogAction(
             onPressed: () async {
-              Get.back();
-              bool isDeleted = await controller.deleteArticle();
-              if (isDeleted) {
-                Get.back(result: true);
-              }
+  await            controller.deleteArticle();              Get.back();
+
             },
             isDestructiveAction: true,
             child: Text("yes".tr),

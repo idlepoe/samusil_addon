@@ -7,7 +7,7 @@ part of 'main_comment.dart';
 // **************************************************************************
 
 _MainComment _$MainCommentFromJson(Map<String, dynamic> json) => _MainComment(
-  key: _toString(json['key']),
+  id: _toString(json['id']),
   contents: _toString(json['contents']),
   profile_uid: _toString(json['profile_uid']),
   profile_name: _toString(json['profile_name']),
@@ -19,7 +19,7 @@ _MainComment _$MainCommentFromJson(Map<String, dynamic> json) => _MainComment(
 
 Map<String, dynamic> _$MainCommentToJson(_MainComment instance) =>
     <String, dynamic>{
-      'key': instance.key,
+      'id': instance.id,
       'contents': instance.contents,
       'profile_uid': instance.profile_uid,
       'profile_name': instance.profile_name,

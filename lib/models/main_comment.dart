@@ -24,7 +24,7 @@ Timestamp _timestampToJson(DateTime dateTime) {
 @freezed
 abstract class MainComment with _$MainComment {
   const factory MainComment({
-    @JsonKey(fromJson: _toString) required String key,
+    @JsonKey(fromJson: _toString) required String id,
     @JsonKey(fromJson: _toString) required String contents,
     @JsonKey(fromJson: _toString) required String profile_uid,
     @JsonKey(fromJson: _toString) required String profile_name,

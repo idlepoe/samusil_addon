@@ -169,8 +169,7 @@ class GameNewsListWidget extends StatelessWidget {
                     if (gameList.isNotEmpty)
                       InkWell(
                         onTap: () async {
-                          Get.toNamed("/detail/${gameList[0].key}");
-                          await controller.articleCountViewUp(gameList[0].key);
+                          Get.toNamed("/detail/${gameList[0].id}");
                         },
                         child: Container(
                           padding: const EdgeInsets.all(16),
@@ -257,10 +256,7 @@ class GameNewsListWidget extends StatelessWidget {
                         final actualIndex = index + 1;
                         return InkWell(
                           onTap: () async {
-                            Get.toNamed("/detail/${gameList[actualIndex].key}");
-                            await controller.articleCountViewUp(
-                              gameList[actualIndex].key,
-                            );
+                            Get.toNamed("/detail/${gameList[actualIndex].id}");
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(

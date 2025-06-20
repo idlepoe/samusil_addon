@@ -80,6 +80,23 @@ class _LeftDrawerState extends State<LeftDrawer> {
             ),
             Define.APP_DIVIDER,
             ListTile(
+              title: Text("coin_exchange".tr),
+              leading: const Icon(Icons.currency_exchange),
+              onTap: () {
+                Navigator.pop(context);
+                Get.toNamed('/coin_exchange');
+              },
+            ),
+            ListTile(
+              title: Text("point_rank".tr),
+              leading: const Icon(Icons.leaderboard),
+              onTap: () {
+                Navigator.pop(context);
+                Get.toNamed('/point/rank');
+              },
+            ),
+            Define.APP_DIVIDER,
+            ListTile(
               contentPadding: const EdgeInsets.only(left: 60, right: 60),
               title: Html(
                 data:

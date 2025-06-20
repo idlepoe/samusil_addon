@@ -75,11 +75,9 @@ class ArticleDetailController extends GetxController {
 
     try {
       article.value = await App.getArticle(id: articleKey.value);
-      await App.articleCountViewUp(id: articleKey.value);
-      article.value = await App.getArticle(id: articleKey.value);
       boardInfo.value = Arrays.getBoardInfo(article.value.board_name);
       profile.value = await App.getProfile();
-      isAlreadyVote.value = await Utils.checkAlreadyVote(article.value.key);
+      isAlreadyVote.value = await Utils.checkAlreadyVote(article.value.id);
 
       await loadComments();
 
@@ -93,89 +91,60 @@ class ArticleDetailController extends GetxController {
   // 댓글 로드
   Future<void> loadComments() async {
     try {
-      final commentList = await App.getComments(id: article.value.key);
+      final commentList = await App.getComments(id: article.value.id);
       comments.value = commentList;
       _sortComments();
     } catch (e) {
-      logger.e('댓글 로드 실패: $e');
-      comments.clear();
+      logger.e(e);
     }
   }
 
   // 댓글 정렬
   void _sortComments() {
     comments.sort(
-      (a, b) => (a.parents_key.isNotEmpty ? a.parents_key : a.key).compareTo(
-        (b.parents_key.isNotEmpty ? b.parents_key : b.key),
+      (a, b) => (a.parents_key.isNotEmpty ? a.parents_key : a.id).compareTo(
+        (b.parents_key.isNotEmpty ? b.parents_key : b.id),
       ),
     );
   }
 
   // 좋아요
   Future<void> likeArticle() async {
-    if (isPressed.value || isAlreadyVote.value) return;
-
-    isPressed.value = true;
-
     try {
-      article.value = article.value.copyWith(
-        count_like: await App.articleCountLikeUp(key: article.value.key),
-      );
-
-      await Utils.setAlreadyVote(article.value.key);
-      isAlreadyVote.value = true;
-
-      await App.pointUpdate(
-        profileKey: article.value.profile_uid,
-        point: Define.POINT_RECEIVE_LIKE,
-      );
-      await App.pointUpdate(
-        profileKey: profile.value.uid,
-        point: Define.POINT_LIKE,
-      );
-
-      Fluttertoast.showToast(msg: "success_article_like".tr);
+      int newLikeCount = await App.articleCountLikeUp(id: article.value.id);
+      article.value = article.value.copyWith(count_like: newLikeCount);
     } catch (e) {
-      logger.e('좋아요 실패: $e');
-      Fluttertoast.showToast(msg: "error_article_like".tr);
-    } finally {
-      isPressed.value = false;
+      logger.e(e);
     }
   }
 
   // 싫어요
   Future<void> unlikeArticle() async {
-    if (isPressed.value || isAlreadyVote.value) return;
-
-    isPressed.value = true;
-
     try {
-      article.value = article.value.copyWith(
-        count_unlike: await App.articleCountUnLikeUp(key: article.value.key),
-      );
-
-      await Utils.setAlreadyVote(article.value.key);
-      isAlreadyVote.value = true;
-
-      Fluttertoast.showToast(msg: "success_article_unlike".tr);
+      int newUnlikeCount = await App.articleCountUnLikeUp(id: article.value.id);
+      article.value = article.value.copyWith(count_unlike: newUnlikeCount);
     } catch (e) {
-      logger.e('싫어요 실패: $e');
-      Fluttertoast.showToast(msg: "error_article_unlike".tr);
-    } finally {
-      isPressed.value = false;
+      logger.e(e);
     }
   }
 
   // 댓글 작성
-  Future<void> writeComment() async {
-    if (commentController.text.isEmpty || isPressed.value) return;
-
-    isPressed.value = true;
+  Future<void> createComment() async {
+    if (commentController.text.trim().isEmpty) {
+      Get.snackbar(
+        '알림',
+        '댓글 내용을 입력해주세요.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      return;
+    }
 
     try {
       MainComment comment = MainComment(
-        key: Utils.getDateTimeKey(),
-        contents: commentController.text,
+        id: "",
+        contents: commentController.text.trim(),
         profile_uid: profile.value.uid,
         profile_name: profile.value.name,
         profile_photo_url: profile.value.photo_url,
@@ -184,61 +153,44 @@ class ArticleDetailController extends GetxController {
         parents_key: "",
       );
 
-      List<MainComment> newComments = await App.createComment(
+      comments.value = await App.createComment(
         article: article.value,
         comment: comment,
       );
 
-      if (newComments.isNotEmpty) {
-        comments.value = newComments;
-        commentController.clear();
-        commentFocusNode.unfocus();
+      commentController.clear();
+      commentFocusNode.unfocus();
 
-        // 포인트 업데이트
-        await App.pointUpdate(
-          profileKey: profile.value.uid,
-          point: Define.POINT_WRITE_COMMENT,
-        );
-      }
+      // 댓글 수 업데이트
+      article.value = article.value.copyWith(
+        count_comments: article.value.count_comments + 1,
+      );
     } catch (e) {
-      logger.e("댓글 작성 오류: $e");
-    } finally {
-      isPressed.value = false;
+      logger.e(e);
     }
   }
 
   // 댓글 삭제
   Future<void> deleteComment(MainComment comment) async {
     try {
-      List<MainComment> afterList = await App.deleteComment(
-        articleKey: article.value.key,
+      comments.value = await App.deleteComment(
+        articleId: articleKey.value,
         comment: comment,
       );
-
-      comments.value = afterList;
-      _sortComments();
-
-      article.value = article.value.copyWith(
-        count_comments: article.value.count_comments - 1,
-      );
-
-      Fluttertoast.showToast(msg: "success_delete_comment".tr);
     } catch (e) {
-      logger.e('댓글 삭제 실패: $e');
-      Fluttertoast.showToast(msg: "error_delete_comment".tr);
+      logger.e(e);
     }
   }
 
   // 게시글 삭제
-  Future<bool> deleteArticle() async {
+  Future<void> deleteArticle() async {
     try {
-      await App.deleteArticle(article: article.value);
-      Fluttertoast.showToast(msg: "success_delete_article".tr);
-      return true;
+      bool success = await App.deleteArticle(article: article.value);
+      if (success) {
+        Get.back();
+      }
     } catch (e) {
-      logger.e('게시글 삭제 실패: $e');
-      Fluttertoast.showToast(msg: "error_delete_article".tr);
-      return false;
+      logger.e(e);
     }
   }
 
@@ -260,7 +212,7 @@ class ArticleDetailController extends GetxController {
   // 공유
   void shareArticle() {
     Share.share(
-      'https://nippon-life.web.app/#/detail/${article.value.key}',
+      'https://nippon-life.web.app/#/detail/${article.value.id}',
       subject: article.value.title,
     );
   }

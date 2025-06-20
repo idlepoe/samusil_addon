@@ -69,18 +69,6 @@ class ArticleListController extends GetxController {
     await Future.delayed(const Duration(seconds: 1));
   }
 
-  // 조회수 증가
-  Future<void> incrementViewCount(Article article) async {
-    final updatedArticle = article.copyWith(
-      count_view: await App.articleCountViewUp(key: article.key),
-    );
-
-    final index = articleList.indexWhere((item) => item.key == article.key);
-    if (index != -1) {
-      articleList[index] = updatedArticle;
-    }
-  }
-
   // 검색 페이지로 이동
   void navigateToSearch() {
     Get.toNamed("/list/${boardInfo.value.board_name}/search");

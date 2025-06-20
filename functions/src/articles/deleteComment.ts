@@ -1,70 +1,96 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
-import { FIRESTORE_COLLECTION_ARTICLE, FIRESTORE_FIELD_COMMENTS } from '../utils/constants';
+import { FIRESTORE_COLLECTION_ARTICLE } from '../utils/constants';
+import { verifyAuth } from '../utils/auth';
 
 export const deleteComment = onRequest({ 
   cors: true,
+  region: 'asia-northeast3'
 }, async (req, res) => {
   try {
+    // CORS 헤더 설정
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Access-Control-Allow-Methods', 'DELETE, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
+    // OPTIONS 요청 처리
     if (req.method === 'OPTIONS') {
       res.status(204).send('');
       return;
     }
 
+    // DELETE 요청만 허용
     if (req.method !== 'DELETE') {
       res.status(405).json({ success: false, error: 'Method not allowed' });
       return;
     }
 
-    const { articleKey, commentKey } = req.body;
-    
-    if (!articleKey || !commentKey) {
-      res.status(400).json({ success: false, error: 'Article key and comment key are required' });
+    // Firebase Auth 토큰 검증
+    const decoded = await verifyAuth(req);
+    const uid = decoded.uid;
+
+    const { articleId, commentId } = req.body;
+
+    if (!articleId || !commentId) {
+      res.status(400).json({ success: false, error: 'Article ID and comment ID are required' });
       return;
     }
 
-    const db = admin.firestore();
-    const articleRef = db.collection(FIRESTORE_COLLECTION_ARTICLE).doc(articleKey);
-
-    // 현재 게시글 데이터 가져오기
+    // 게시글 존재 여부 확인
+    const articleRef = admin.firestore().collection(FIRESTORE_COLLECTION_ARTICLE).doc(articleId);
     const articleDoc = await articleRef.get();
+
     if (!articleDoc.exists) {
       res.status(404).json({ success: false, error: 'Article not found' });
       return;
     }
 
     const articleData = articleDoc.data();
-    const comments = articleData?.[FIRESTORE_FIELD_COMMENTS] || [];
+    if (!articleData) {
+      res.status(404).json({ success: false, error: 'Article data not found' });
+      return;
+    }
 
-    // 삭제할 댓글 찾기
-    const commentToDelete = comments.find((comment: any) => comment.key === commentKey);
-    if (!commentToDelete) {
+    // 댓글 목록에서 해당 댓글 찾기
+    const comments = articleData.comments || [];
+    const commentIndex = comments.findIndex((comment: any) => comment.id === commentId);
+
+    if (commentIndex === -1) {
       res.status(404).json({ success: false, error: 'Comment not found' });
       return;
     }
 
-    // 댓글 삭제
-    await articleRef.update({
-      [FIRESTORE_FIELD_COMMENTS]: admin.firestore.FieldValue.arrayRemove([commentToDelete])
-    });
+    const commentToDelete = comments[commentIndex];
 
-    // 삭제 후 남은 댓글 목록 가져오기
-    const updatedDoc = await articleRef.get();
-    const updatedData = updatedDoc.data();
-    const remainingComments = updatedData?.[FIRESTORE_FIELD_COMMENTS] || [];
+    // 댓글 작성자 확인 (토큰의 uid와 댓글의 profile_uid 비교)
+    if (commentToDelete.profile_uid !== uid) {
+      res.status(403).json({ success: false, error: 'Only the author can delete the comment' });
+      return;
+    }
+
+    // 댓글 삭제
+    comments.splice(commentIndex, 1);
+
+    await articleRef.update({
+      comments: comments,
+      count_comments: admin.firestore.FieldValue.increment(-1)
+    });
 
     res.status(200).json({
       success: true,
-      message: 'Comment deleted successfully',
-      data: remainingComments
+      data: comments
     });
 
   } catch (error) {
     console.error('Error deleting comment:', error);
-    res.status(500).json({ success: false, error: 'Failed to delete comment' });
+    
+    if (
+      error instanceof Error &&
+      (error.message.includes('authorization') || error.message.includes('token'))
+    ) {
+      res.status(401).json({ success: false, error: 'Authentication failed' });
+    } else {
+      res.status(500).json({ success: false, error: 'Failed to delete comment' });
+    }
   }
 }); 

@@ -1,18 +1,7 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { FIRESTORE_COLLECTION_WISH, FIRESTORE_COLLECTION_PROFILE } from '../utils/constants';
-
-// Firebase Auth 토큰 검증 함수
-async function verifyAuthToken(req: any): Promise<string> {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw new Error('No valid authorization header');
-  }
-
-  const token = authHeader.split('Bearer ')[1];
-  const decodedToken = await admin.auth().verifyIdToken(token);
-  return decodedToken.uid;
-}
+import { verifyAuth } from '../utils/auth';
 
 export const createWish = onRequest({ 
   cors: true,
@@ -34,17 +23,12 @@ export const createWish = onRequest({
     }
 
     // Firebase Auth 토큰 검증
-    let userUid: string;
-    try {
-      userUid = await verifyAuthToken(req);
-    } catch (error) {
-      res.status(401).json({ success: false, error: 'Unauthorized' });
-      return;
-    }
+    const decoded = await verifyAuth(req);
+    const uid = decoded.uid;
 
     const { comment } = req.body;
     
-    if (!comment || comment.trim().isEmpty) {
+    if (!comment || typeof comment !== 'string') {
       res.status(400).json({ success: false, error: 'Comment is required' });
       return;
     }
@@ -52,7 +36,7 @@ export const createWish = onRequest({
     const db = admin.firestore();
     
     // 사용자 프로필 조회
-    const profileRef = db.collection(FIRESTORE_COLLECTION_PROFILE).doc(userUid);
+    const profileRef = db.collection(FIRESTORE_COLLECTION_PROFILE).doc(uid);
     const profileDoc = await profileRef.get();
     
     if (!profileDoc.exists) {
@@ -61,7 +45,7 @@ export const createWish = onRequest({
     }
 
     const profile = profileDoc.data()!;
-    const currentStreak = profile.wish_streak || 1;
+    const currentStreak = profile.wish_streak || 0;
     const currentPoint = profile.point || 0;
 
     // 오늘 날짜 확인
@@ -70,7 +54,7 @@ export const createWish = onRequest({
     const lastWishDate = profile.wish_last_date || '';
 
     let newStreak = currentStreak;
-    let pointToAdd = 5; // 기본 포인트
+    let pointToAdd = 10 + currentStreak; // 기본 10포인트 + 연속 보너스
 
     // 연속 기도 체크
     if (lastWishDate === todayStr) {
@@ -79,21 +63,20 @@ export const createWish = onRequest({
     } else if (lastWishDate === getYesterdayString()) {
       // 연속 기도
       newStreak = currentStreak + 1;
-      pointToAdd = 5 + (newStreak - 1); // 기본 5점 + 연속 보너스
+      pointToAdd = 10 + newStreak; // 기본 10포인트 + 연속 보너스
     } else {
       // 연속 끊김
       newStreak = 1;
-      pointToAdd = 5;
+      pointToAdd = 10;
     }
 
     // Wish 생성
     const wishData = {
-      key: userUid,
-      comments: comment.trim(),
-      nick_name: profile.name || 'Anonymous',
+      profile_uid: uid,
+      comment: comment,
+      profile_name: profile.name || 'Anonymous',
       streak: newStreak,
       created_at: admin.firestore.Timestamp.now(),
-      index: 0, // 나중에 업데이트
     };
 
     // 오늘 Wish 문서에 추가
@@ -137,14 +120,22 @@ export const createWish = onRequest({
       data: {
         profile: updatedProfile,
         wishList: indexedWishList,
-        pointAdded: pointToAdd,
+        pointsEarned: pointToAdd,
         newStreak: newStreak
       }
     });
 
   } catch (error) {
     console.error('Error creating wish:', error);
-    res.status(500).json({ success: false, error: 'Failed to create wish' });
+    
+    if (
+      error instanceof Error &&
+      (error.message.includes('authorization') || error.message.includes('token'))
+    ) {
+      res.status(401).json({ success: false, error: 'Authentication failed' });
+    } else {
+      res.status(500).json({ success: false, error: 'Failed to create wish' });
+    }
   }
 });
 

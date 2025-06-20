@@ -16,6 +16,7 @@ abstract class Coin with _$Coin {
     List<double>? diffList,
     double? diffPercentage,
     double? color,
+    double? current_volume_24h,
   }) = _Coin;
 
   factory Coin.fromJson(Map<String, dynamic> json) => _$CoinFromJson(json);

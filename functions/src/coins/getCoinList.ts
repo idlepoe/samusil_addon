@@ -69,8 +69,8 @@ export const getCoinList = onRequest({
     const coinResults = await Promise.all(coinPromises);
     const filteredCoins = coinResults.filter(coin => coin !== null) as Coin[];
 
-    // 랭크순 정렬
-    filteredCoins.sort((a, b) => a.rank - b.rank);
+    // 거래량 기준으로 정렬 (내림차순)
+    filteredCoins.sort((a, b) => (b.current_volume_24h || 0) - (a.current_volume_24h || 0));
 
     res.status(200).json({
       success: true,

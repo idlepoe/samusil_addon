@@ -8,27 +8,30 @@ if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-// // Articles
+// Articles
 export { createArticle } from './articles/createArticle';
-export { getArticle } from './articles/getArticle';
+export { getArticleDetail } from './articles/getArticle';
 export { getArticleList } from './articles/getArticleList';
+
+// Article
 export { updateArticle } from './articles/updateArticle';
 export { deleteArticle } from './articles/deleteArticle';
+
+// Comments
 export { createComment } from './articles/createComment';
 export { deleteComment } from './articles/deleteComment';
-export { updateArticleCount } from './articles/updateArticleCount';
-export { searchArticles } from './articles/searchArticles';
 
 // Coins
 export { getCoinList } from './coins/getCoinList';
 export { buyCoin } from './coins/buyCoin';
 export { sellCoin } from './coins/sellCoin';
+
+// Coins Schedule
 export { updateCoinPrice } from './coins/updateCoinPrice';
 export { manualUpdateCoinPrice } from './coins/manualUpdateCoinPrice';
 export { scheduledUpdateCoinPrice } from './coins/scheduledUpdateCoinPrice';
 
 // Profiles
-export { updatePoint } from './profiles/updatePoint';
 export { createWish } from './profiles/createWish';
 
 // // Alarms
