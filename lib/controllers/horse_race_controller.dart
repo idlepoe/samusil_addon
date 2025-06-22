@@ -18,6 +18,7 @@ class HorseRaceController extends GetxController {
   final RxBool isLoading = true.obs;
   final RxBool isBetting = false.obs;
   final RxString selectedHorseId = ''.obs;
+  final Rx<String?> betOnHorseId = Rx<String?>(null);
   final RxInt selectedBetAmount = 10.obs;
   final RxString selectedBetType = 'winner'.obs;
   final RxBool hasPlacedBet = false.obs;
@@ -66,6 +67,7 @@ class HorseRaceController extends GetxController {
                 currentRace.value = null;
                 hasPlacedBet.value = false;
                 selectedHorseId.value = '';
+                betOnHorseId.value = null;
                 isLoading.value = false;
                 return;
               }
@@ -74,6 +76,7 @@ class HorseRaceController extends GetxController {
               if (currentRace.value?.id != stadiumData['id']) {
                 hasPlacedBet.value = false;
                 selectedHorseId.value = '';
+                betOnHorseId.value = null;
               }
 
               currentRace.value = HorseRace.fromJson(stadiumData);
@@ -83,6 +86,7 @@ class HorseRaceController extends GetxController {
               currentRace.value = null;
               hasPlacedBet.value = false;
               selectedHorseId.value = '';
+              betOnHorseId.value = null;
               isLoading.value = false;
             }
             isLoading.value = false;
@@ -107,10 +111,17 @@ class HorseRaceController extends GetxController {
               .doc(uid)
               .get();
 
-      hasPlacedBet.value = betDoc.exists;
+      if (betDoc.exists) {
+        hasPlacedBet.value = true;
+        betOnHorseId.value = betDoc.data()?['horseId'] as String?;
+      } else {
+        hasPlacedBet.value = false;
+        betOnHorseId.value = null;
+      }
     } catch (e) {
       logger.e('베팅 확인 오류: $e');
       hasPlacedBet.value = false;
+      betOnHorseId.value = null;
     }
   }
 

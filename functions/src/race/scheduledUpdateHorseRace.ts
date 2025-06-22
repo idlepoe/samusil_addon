@@ -57,8 +57,8 @@ export const scheduledUpdateHorseRace = functions
           // 레이스 총 거리를 1.0으로 보고, 이번 라운드의 평균 이동 거리를 계산
           const averageMovement = 1.0 / race.totalRounds;
 
-          // 평균 이동 거리의 50% ~ 150% 사이의 임의의 값을 생성
-          const randomMovement = averageMovement * (0.5 + Math.random());
+          // 평균 이동 거리의 80% ~ 180% 사이의 임의의 값을 생성하여 최소 속도 보장
+          const randomMovement = averageMovement * (0.8 + Math.random());
 
           const newPosition = horse.currentPosition + randomMovement;
 

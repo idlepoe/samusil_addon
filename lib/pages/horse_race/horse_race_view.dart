@@ -311,25 +311,39 @@ class _HorseRaceViewState extends State<HorseRaceView> {
           // 베팅 버튼
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
-              onPressed:
-                  controller.selectedHorseId.value.isNotEmpty
-                      ? controller.placeBet
-                      : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0064FF),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            child: Obx(
+              () => ElevatedButton(
+                onPressed:
+                    controller.selectedHorseId.value.isNotEmpty &&
+                            !controller.isBetting.value
+                        ? controller.placeBet
+                        : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0064FF),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  disabledBackgroundColor: Colors.grey.shade300,
                 ),
-              ),
-              child: const Text(
-                "베팅하기",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
+                child:
+                    controller.isBetting.value
+                        ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 3.0,
+                          ),
+                        )
+                        : const Text(
+                          "베팅하기",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
               ),
             ),
           ),
@@ -369,7 +383,10 @@ class _HorseRaceViewState extends State<HorseRaceView> {
   }
 
   Widget _buildHorseItem(Horse horse, int rank, bool isBetting) {
-    final isSelected = controller.selectedHorseId.value == horse.coinId;
+    final isSelectedForBetting =
+        controller.selectedHorseId.value == horse.coinId;
+    final isMyBet = controller.betOnHorseId.value == horse.coinId;
+    final bool hasFinished = horse.currentPosition >= 1.0;
 
     // 순위에 따른 슬라이더 색상 결정
     final Color sliderColor;
@@ -383,6 +400,16 @@ class _HorseRaceViewState extends State<HorseRaceView> {
       sliderColor = Colors.green.shade400; // 나머지
     }
 
+    // 베팅 중일 때와 경주 중일 때의 UI 분기
+    final Color itemBackgroundColor =
+        isBetting && isSelectedForBetting ? Colors.blue.shade50 : Colors.white;
+    final Color itemBorderColor =
+        isBetting && isSelectedForBetting
+            ? Colors.blue.shade400
+            : (isMyBet ? Theme.of(context).primaryColor : Colors.grey.shade200);
+    final Color finalSliderColor =
+        isBetting && isSelectedForBetting ? Colors.blue.shade400 : sliderColor;
+
     return GestureDetector(
       onTap: isBetting ? () => controller.selectHorse(horse.coinId) : null,
       behavior: HitTestBehavior.opaque,
@@ -390,20 +417,12 @@ class _HorseRaceViewState extends State<HorseRaceView> {
         margin: const EdgeInsets.only(bottom: 4),
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.blue.shade50 : Colors.white,
+          color: itemBackgroundColor,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? Colors.blue.shade400 : Colors.grey.shade200,
-            width: 1.5,
+            color: itemBorderColor,
+            width: isMyBet ? 2.0 : 1.5,
           ),
-          boxShadow: [
-            if (isSelected)
-              BoxShadow(
-                color: Colors.blue.shade100.withOpacity(0.5),
-                blurRadius: 4,
-                spreadRadius: 2,
-              ),
-          ],
         ),
         child: Row(
           children: [
@@ -442,33 +461,47 @@ class _HorseRaceViewState extends State<HorseRaceView> {
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 5),
-                  SizedBox(
-                    height: 10,
-                    child: SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        trackHeight: 6.0,
-                        thumbShape: const RoundSliderThumbShape(
-                          enabledThumbRadius: 0.0,
-                        ),
-                        overlayShape: const RoundSliderOverlayShape(
-                          overlayRadius: 0.0,
-                        ),
-                        trackShape: const RoundedRectSliderTrackShape(),
-                      ),
-                      child: Slider(
-                        value: horse.currentPosition.clamp(0.0, 1.0),
-                        min: 0,
-                        max: 1.0,
-                        onChanged: null,
-                        activeColor:
-                            isSelected ? Colors.blue.shade400 : sliderColor,
-                        inactiveColor: Colors.grey.shade200,
-                      ),
-                    ),
+                  // 진행률 바
+                  LinearProgressIndicator(
+                    value: horse.currentPosition.clamp(0.0, 1.0),
+                    minHeight: 8,
+                    backgroundColor: Colors.grey.shade200,
+                    color: finalSliderColor,
+                    borderRadius: BorderRadius.circular(4),
                   ),
                 ],
               ),
             ),
+
+            // 완주했을 경우 순위 표시
+            if (hasFinished)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text(
+                  '🏁 $rank위',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: sliderColor, // 순위 색상과 동일하게
+                  ),
+                ),
+              ),
+
+            // "My Bet" 뱃지 표시
+            if (isMyBet)
+              Chip(
+                label: const Text(
+                  'My Bet',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                backgroundColor: Theme.of(context).primaryColor,
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                visualDensity: VisualDensity.compact,
+              ),
           ],
         ),
       ),
