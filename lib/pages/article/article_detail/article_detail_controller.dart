@@ -153,18 +153,24 @@ class ArticleDetailController extends GetxController {
         parents_key: "",
       );
 
-      comments.value = await App.createComment(
+      List<MainComment> newComments = await App.createComment(
         article: article.value,
         comment: comment,
       );
 
-      commentController.clear();
-      commentFocusNode.unfocus();
+      if (newComments.isNotEmpty) {
+        comments.value = newComments;
+        commentController.clear();
+        commentFocusNode.unfocus();
+        AppSnackbar.success('댓글이 작성되었습니다.');
 
-      // 댓글 수 업데이트
-      article.value = article.value.copyWith(
-        count_comments: article.value.count_comments + 1,
-      );
+        // 댓글 수 업데이트
+        article.value = article.value.copyWith(
+          count_comments: article.value.count_comments + 1,
+        );
+      } else {
+        AppSnackbar.error('댓글 작성에 실패했습니다.');
+      }
     } catch (e) {
       logger.e(e);
       AppSnackbar.error('댓글 작성에 실패했습니다.');
@@ -176,12 +182,20 @@ class ArticleDetailController extends GetxController {
   // 댓글 삭제
   Future<void> deleteComment(MainComment comment) async {
     try {
-      comments.value = await App.deleteComment(
+      List<MainComment> newComments = await App.deleteComment(
         articleId: articleKey.value,
         comment: comment,
       );
+
+      if (newComments.length < comments.length) {
+        comments.value = newComments;
+        AppSnackbar.success('댓글이 삭제되었습니다.');
+      } else {
+        AppSnackbar.error('댓글 삭제에 실패했습니다.');
+      }
     } catch (e) {
       logger.e(e);
+      AppSnackbar.error('댓글 삭제 중 오류가 발생했습니다.');
     }
   }
 
@@ -190,10 +204,14 @@ class ArticleDetailController extends GetxController {
     try {
       bool success = await App.deleteArticle(article: article.value);
       if (success) {
+        AppSnackbar.success('게시글이 삭제되었습니다.');
         Get.back();
+      } else {
+        AppSnackbar.error('게시글 삭제에 실패했습니다.');
       }
     } catch (e) {
       logger.e(e);
+      AppSnackbar.error('게시글 삭제 중 오류가 발생했습니다.');
     }
   }
 
@@ -332,13 +350,7 @@ class ArticleDetailController extends GetxController {
       }
     } catch (e) {
       logger.e('좋아요 토글 실패: $e');
-      Get.snackbar(
-        '오류',
-        '좋아요 처리 중 오류가 발생했습니다.',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      AppSnackbar.error('좋아요 처리 중 오류가 발생했습니다.');
     }
   }
 

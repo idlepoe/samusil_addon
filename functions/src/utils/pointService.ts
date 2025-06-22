@@ -75,9 +75,13 @@ export async function awardPoints(pointAction: PointAction): Promise<number> {
       action_type,
       points_earned,
       description,
-      related_id,
       created_at: admin.firestore.Timestamp.now(),
     };
+
+    // related_id가 있는 경우에만 추가
+    if (related_id) {
+      pointHistoryData.related_id = related_id;
+    }
 
     // 3. 트랜잭션으로 포인트 업데이트와 히스토리 기록을 원자적으로 처리
     await db.runTransaction(async (transaction) => {
@@ -149,6 +153,7 @@ export async function awardPointsForWish(profile_uid: string, points: number): P
     profile_uid,
     'wish',
     points,
-    `소원 작성 (연속 ${points - 5}일차)`,
+    `소원 작성 (연속 ${Math.floor(points / 5)}일차)`,
+    undefined // related_id는 소원 작성시 필요하지 않음
   );
 } 

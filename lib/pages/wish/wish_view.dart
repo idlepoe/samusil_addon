@@ -235,6 +235,7 @@ class WishView extends GetView<WishController> {
                       ),
                       maxLength: 20,
                       textInputAction: TextInputAction.send,
+                      onChanged: controller.onTextChanged,
                       onSubmitted: (value) {
                         if (controller.canCreateWish) {
                           controller.createWish(value);

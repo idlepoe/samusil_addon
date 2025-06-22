@@ -5,6 +5,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:samusil_addon/components/article_image_widget.dart';
+import 'package:samusil_addon/components/appSnackbar.dart';
 
 import '../article_detail_controller.dart';
 
@@ -35,10 +36,7 @@ class ArticleContentWidget extends GetView<ArticleDetailController> {
       padding: const EdgeInsets.symmetric(horizontal: 4.0),
       child: Text(
         controller.article.value.title,
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
+        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -80,13 +78,7 @@ class ArticleContentWidget extends GetView<ArticleDetailController> {
           if (await canLaunchUrlString(url!)) {
             await launchUrlString(url);
           } else {
-            Get.snackbar(
-              '오류',
-              '링크를 열 수 없습니다',
-              snackPosition: SnackPosition.TOP,
-              backgroundColor: Colors.red,
-              colorText: Colors.white,
-            );
+            AppSnackbar.error('링크를 열 수 없습니다');
           }
         },
       ),

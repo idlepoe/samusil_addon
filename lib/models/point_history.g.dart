@@ -8,13 +8,13 @@ part of 'point_history.dart';
 
 _PointHistory _$PointHistoryFromJson(Map<String, dynamic> json) =>
     _PointHistory(
-      id: json['id'] as String?,
-      profile_uid: json['profile_uid'] as String,
-      action_type: json['action_type'] as String,
-      points_earned: (json['points_earned'] as num).toInt(),
-      description: json['description'] as String,
-      related_id: json['related_id'] as String?,
-      created_at: json['created_at'] as String,
+      id: _toString(json['id']),
+      profile_uid: _toString(json['profile_uid']),
+      action_type: _toString(json['action_type']),
+      points_earned: _toInt(json['points_earned']),
+      description: _toString(json['description']),
+      related_id: _toString(json['related_id']),
+      created_at: _toDateTimeObj(json['created_at']),
     );
 
 Map<String, dynamic> _$PointHistoryToJson(_PointHistory instance) =>
@@ -25,5 +25,5 @@ Map<String, dynamic> _$PointHistoryToJson(_PointHistory instance) =>
       'points_earned': instance.points_earned,
       'description': instance.description,
       'related_id': instance.related_id,
-      'created_at': instance.created_at,
+      'created_at': instance.created_at.toIso8601String(),
     };

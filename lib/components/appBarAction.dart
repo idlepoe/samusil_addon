@@ -16,7 +16,7 @@ import '../utils/app.dart';
 import '../utils/util.dart';
 import '../controllers/profile_controller.dart';
 
-enum PopupItem { profile, point, option, logout }
+enum PopupItem { profile, point, notifications, option, logout }
 
 List<Widget> AppBarAction(BuildContext context, Profile profile) {
   return [
@@ -29,7 +29,24 @@ List<Widget> AppBarAction(BuildContext context, Profile profile) {
           size: 32,
         );
       }),
-      onSelected: (PopupItem item) {},
+      onSelected: (PopupItem item) {
+        switch (item) {
+          case PopupItem.point:
+            Get.toNamed('/point-history');
+            break;
+          case PopupItem.notifications:
+            Get.toNamed('/notifications');
+            break;
+          case PopupItem.option:
+            Get.toNamed('/option');
+            break;
+          case PopupItem.logout:
+            _showLogoutDialog(context);
+            break;
+          default:
+            break;
+        }
+      },
       itemBuilder:
           (BuildContext context) => <PopupMenuEntry<PopupItem>>[
             PopupMenuItem<PopupItem>(
@@ -68,6 +85,16 @@ List<Widget> AppBarAction(BuildContext context, Profile profile) {
               ),
             ),
             PopupMenuItem<PopupItem>(
+              value: PopupItem.notifications,
+              child: Row(
+                children: [
+                  const Icon(Icons.notifications, color: Color(0xFF0064FF)),
+                  const SizedBox(width: 8),
+                  const Text("알림"),
+                ],
+              ),
+            ),
+            PopupMenuItem<PopupItem>(
               value: PopupItem.option,
               child: Row(
                 children: [
@@ -92,4 +119,24 @@ List<Widget> AppBarAction(BuildContext context, Profile profile) {
     ),
     const SizedBox(width: 10),
   ];
+}
+
+void _showLogoutDialog(BuildContext context) {
+  Get.dialog(
+    AlertDialog(
+      title: const Text('로그아웃'),
+      content: const Text('정말 로그아웃하시겠습니까?'),
+      actions: [
+        TextButton(onPressed: () => Get.back(), child: const Text('취소')),
+        TextButton(
+          onPressed: () async {
+            Get.back();
+            await FirebaseAuth.instance.signOut();
+            Get.offAllNamed('/splash');
+          },
+          child: const Text('로그아웃'),
+        ),
+      ],
+    ),
+  );
 }

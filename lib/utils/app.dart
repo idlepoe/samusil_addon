@@ -380,35 +380,12 @@ class App {
       logger.d("createArticle response: ${response.data}");
 
       if (response.isSuccess) {
-        // 성공 시 snackbar 표시
-        Get.snackbar(
-          '성공',
-          '게시글이 작성되었습니다.',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
-
         // 생성된 게시글의 ID 반환
         return response.data?['id'] as String?;
       } else {
-        Get.snackbar(
-          '오류',
-          '게시글 작성에 실패했습니다.',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
         logger.e("createArticle failed: ${response.error}");
       }
     } catch (e) {
-      Get.snackbar(
-        '오류',
-        '게시글 작성 중 오류가 발생했습니다.',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
       logger.e("createArticle exception: $e");
     }
 
@@ -426,31 +403,14 @@ class App {
 
       if (response.isSuccess) {
         result = response.data!;
-        Get.snackbar(
-          '성공',
-          '소원이 생성되었습니다.',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
       } else {
-        Get.snackbar(
-          '오류',
-          '소원 생성에 실패했습니다.',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
+        result['success'] = false;
+        result['error'] = response.error ?? '소원 생성에 실패했습니다.';
         logger.e("createWish failed: ${response.error}");
       }
     } catch (e) {
-      Get.snackbar(
-        '오류',
-        '소원 생성 중 오류가 발생했습니다.',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      result['success'] = false;
+      result['error'] = '소원 생성 중 오류가 발생했습니다.';
       logger.e("createWish exception: $e");
     }
 
@@ -481,45 +441,26 @@ class App {
       if (response.isSuccess) {
         // response.data는 { success: true, data: comments } 구조
         final commentsData = response.data!['data'] as List<dynamic>;
-        result = commentsData.map((json) {
-          // created_at이 Timestamp 객체인 경우 DateTime으로 변환
-          if (json['created_at'] is Map<String, dynamic>) {
-            final timestamp = json['created_at'] as Map<String, dynamic>;
-            if (timestamp.containsKey('_seconds')) {
-              final seconds = timestamp['_seconds'] as int;
-              final nanoseconds = timestamp['_nanoseconds'] as int? ?? 0;
-              json['created_at'] = DateTime.fromMillisecondsSinceEpoch(
-                seconds * 1000 + (nanoseconds / 1000000).round(),
-              ).toIso8601String();
-            }
-          }
-          return MainComment.fromJson(json);
-        }).toList();
-        Get.snackbar(
-          '성공',
-          '댓글이 작성되었습니다.',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
+        result =
+            commentsData.map((json) {
+              // created_at이 Timestamp 객체인 경우 DateTime으로 변환
+              if (json['created_at'] is Map<String, dynamic>) {
+                final timestamp = json['created_at'] as Map<String, dynamic>;
+                if (timestamp.containsKey('_seconds')) {
+                  final seconds = timestamp['_seconds'] as int;
+                  final nanoseconds = timestamp['_nanoseconds'] as int? ?? 0;
+                  json['created_at'] =
+                      DateTime.fromMillisecondsSinceEpoch(
+                        seconds * 1000 + (nanoseconds / 1000000).round(),
+                      ).toIso8601String();
+                }
+              }
+              return MainComment.fromJson(json);
+            }).toList();
       } else {
-        Get.snackbar(
-          '오류',
-          '댓글 작성에 실패했습니다.',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
         logger.e("createComment failed: ${response.error}");
       }
     } catch (e) {
-      Get.snackbar(
-        '오류',
-        '댓글 작성 중 오류가 발생했습니다.',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
       logger.e("createComment exception: $e");
     }
 
@@ -529,18 +470,16 @@ class App {
   static Future<List<MainComment>> getComments({required String id}) async {
     List<MainComment> result = [];
     try {
-      final commentsSnapshot = await FirebaseFirestore.instance
-          .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
-          .doc(id)
-          .collection('comments')
-          .orderBy('created_at', descending: false)
-          .get();
-      
+      final commentsSnapshot =
+          await FirebaseFirestore.instance
+              .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
+              .doc(id)
+              .collection('comments')
+              .orderBy('created_at', descending: false)
+              .get();
+
       for (var doc in commentsSnapshot.docs) {
-        result.add(MainComment.fromJson({
-          'id': doc.id,
-          ...doc.data(),
-        }));
+        result.add(MainComment.fromJson({'id': doc.id, ...doc.data()}));
       }
     } catch (e) {
       logger.w("no comment: $e");
@@ -622,20 +561,22 @@ class App {
       if (response.isSuccess && response.data != null) {
         // response.data는 { success: true, data: comments } 구조
         final commentsData = response.data!['data'] as List<dynamic>;
-        result = commentsData.map((json) {
-          // created_at이 Timestamp 객체인 경우 DateTime으로 변환
-          if (json['created_at'] is Map<String, dynamic>) {
-            final timestamp = json['created_at'] as Map<String, dynamic>;
-            if (timestamp.containsKey('_seconds')) {
-              final seconds = timestamp['_seconds'] as int;
-              final nanoseconds = timestamp['_nanoseconds'] as int? ?? 0;
-              json['created_at'] = DateTime.fromMillisecondsSinceEpoch(
-                seconds * 1000 + (nanoseconds / 1000000).round(),
-              ).toIso8601String();
-            }
-          }
-          return MainComment.fromJson(json);
-        }).toList();
+        result =
+            commentsData.map((json) {
+              // created_at이 Timestamp 객체인 경우 DateTime으로 변환
+              if (json['created_at'] is Map<String, dynamic>) {
+                final timestamp = json['created_at'] as Map<String, dynamic>;
+                if (timestamp.containsKey('_seconds')) {
+                  final seconds = timestamp['_seconds'] as int;
+                  final nanoseconds = timestamp['_nanoseconds'] as int? ?? 0;
+                  json['created_at'] =
+                      DateTime.fromMillisecondsSinceEpoch(
+                        seconds * 1000 + (nanoseconds / 1000000).round(),
+                      ).toIso8601String();
+                }
+              }
+              return MainComment.fromJson(json);
+            }).toList();
         Get.snackbar(
           '성공',
           '댓글이 삭제되었습니다.',
@@ -675,14 +616,17 @@ class App {
 
     try {
       // 먼저 현재 댓글 목록을 가져와서 해당 인덱스의 댓글 키를 찾습니다
-      final commentsSnapshot = await FirebaseFirestore.instance
-          .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
-          .doc(articleId)
-          .collection('comments')
-          .orderBy('created_at', descending: false)
-          .get();
+      final commentsSnapshot =
+          await FirebaseFirestore.instance
+              .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
+              .doc(articleId)
+              .collection('comments')
+              .orderBy('created_at', descending: false)
+              .get();
 
-      if (commentsSnapshot.docs.isNotEmpty && index >= 0 && index < commentsSnapshot.docs.length) {
+      if (commentsSnapshot.docs.isNotEmpty &&
+          index >= 0 &&
+          index < commentsSnapshot.docs.length) {
         final commentToDelete = MainComment.fromJson({
           'id': commentsSnapshot.docs[index].id,
           ...commentsSnapshot.docs[index].data(),
@@ -698,56 +642,30 @@ class App {
         if (response.isSuccess && response.data != null) {
           // response.data는 { success: true, data: comments } 구조
           final commentsData = response.data!['data'] as List<dynamic>;
-          result = commentsData.map((json) {
-            // created_at이 Timestamp 객체인 경우 DateTime으로 변환
-            if (json['created_at'] is Map<String, dynamic>) {
-              final timestamp = json['created_at'] as Map<String, dynamic>;
-              if (timestamp.containsKey('_seconds')) {
-                final seconds = timestamp['_seconds'] as int;
-                final nanoseconds = timestamp['_nanoseconds'] as int? ?? 0;
-                json['created_at'] = DateTime.fromMillisecondsSinceEpoch(
-                  seconds * 1000 + (nanoseconds / 1000000).round(),
-                ).toIso8601String();
-              }
-            }
-            return MainComment.fromJson(json);
-          }).toList();
-          Get.snackbar(
-            '성공',
-            '댓글이 삭제되었습니다.',
-            snackPosition: SnackPosition.TOP,
-            backgroundColor: Colors.green,
-            colorText: Colors.white,
-          );
+          result =
+              commentsData.map((json) {
+                // created_at이 Timestamp 객체인 경우 DateTime으로 변환
+                if (json['created_at'] is Map<String, dynamic>) {
+                  final timestamp = json['created_at'] as Map<String, dynamic>;
+                  if (timestamp.containsKey('_seconds')) {
+                    final seconds = timestamp['_seconds'] as int;
+                    final nanoseconds = timestamp['_nanoseconds'] as int? ?? 0;
+                    json['created_at'] =
+                        DateTime.fromMillisecondsSinceEpoch(
+                          seconds * 1000 + (nanoseconds / 1000000).round(),
+                        ).toIso8601String();
+                  }
+                }
+                return MainComment.fromJson(json);
+              }).toList();
         } else {
           logger.e("deleteCommentByIndex failed: ${response.error}");
-          Get.snackbar(
-            '오류',
-            '댓글 삭제에 실패했습니다.',
-            snackPosition: SnackPosition.TOP,
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-          );
         }
       } else {
         logger.e("Invalid comment index: $index");
-        Get.snackbar(
-          '오류',
-          '유효하지 않은 댓글 인덱스입니다.',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
       }
     } catch (e) {
       logger.e("deleteCommentByIndex exception: $e");
-      Get.snackbar(
-        '오류',
-        '댓글 삭제 중 오류가 발생했습니다.',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
     }
 
     return result;
@@ -769,13 +687,7 @@ class App {
           })
           .then(
             (value) async {
-              Get.snackbar(
-                '성공',
-                '알림이 생성되었습니다.',
-                snackPosition: SnackPosition.TOP,
-                backgroundColor: Colors.green,
-                colorText: Colors.white,
-              );
+              // 알림 생성 성공
             },
             onError: (e) async {
               if (e.code == Define.FIRESTORE_ERROR_CODE_NOT_FOUND) {
@@ -785,13 +697,7 @@ class App {
                     })
                     .then(
                       (value) async {
-                        Get.snackbar(
-                          '성공',
-                          '알림이 생성되었습니다.',
-                          snackPosition: SnackPosition.TOP,
-                          backgroundColor: Colors.green,
-                          colorText: Colors.white,
-                        );
+                        // 알림 생성 성공
                       },
                       onError: (e) {
                         logger.e(e);
@@ -855,13 +761,7 @@ class App {
           })
           .then(
             (value) async {
-              Get.snackbar(
-                '성공',
-                '알림이 삭제되었습니다.',
-                snackPosition: SnackPosition.TOP,
-                backgroundColor: Colors.green,
-                colorText: Colors.white,
-              );
+              // 알림 삭제 성공
             },
             onError: (e) async {
               logger.e(e);
@@ -1245,32 +1145,11 @@ class App {
 
       if (response.isSuccess) {
         result = true;
-        Get.snackbar(
-          '성공',
-          '게시글이 삭제되었습니다.',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
       } else {
         logger.e("deleteArticle failed: ${response.error}");
-        Get.snackbar(
-          '오류',
-          '게시글 삭제에 실패했습니다.',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
       }
     } catch (e) {
       logger.e("deleteArticle exception: $e");
-      Get.snackbar(
-        '오류',
-        '게시글 삭제 중 오류가 발생했습니다.',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
     }
 
     return result;
@@ -1303,35 +1182,12 @@ class App {
       logger.d("updateArticle response: ${response.data}");
 
       if (response.isSuccess) {
-        // 성공 시 snackbar 표시
-        Get.snackbar(
-          '성공',
-          '게시글이 수정되었습니다.',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
-
         // 수정된 게시글의 ID 반환
         return response.data?['id'] as String?;
       } else {
-        Get.snackbar(
-          '오류',
-          '게시글 수정에 실패했습니다.',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
         logger.e("updateArticle failed: ${response.error}");
       }
     } catch (e) {
-      Get.snackbar(
-        '오류',
-        '게시글 수정 중 오류가 발생했습니다.',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
       logger.e("updateArticle exception: $e");
     }
 
@@ -1349,7 +1205,7 @@ class App {
         final data = response.data!;
         if (data['data'] != null && data['data']['wishList'] != null) {
           List<dynamic> wishDataList = data['data']['wishList'];
-          
+
           for (var wishData in wishDataList) {
             try {
               // Cloud Functions 응답 구조를 클라이언트 모델에 맞게 변환
@@ -1359,9 +1215,10 @@ class App {
                 'comments': wishData['comment'] ?? '',
                 'nick_name': wishData['profile_name'] ?? '',
                 'streak': wishData['streak'] ?? 1,
-                'created_at': wishData['created_at'] != null
-                    ? _formatTimestamp(wishData['created_at'])
-                    : DateFormat("yyyy-MM-dd").format(DateTime.now()),
+                'created_at':
+                    wishData['created_at'] != null
+                        ? _formatTimestamp(wishData['created_at'])
+                        : DateFormat("yyyy-MM-dd").format(DateTime.now()),
               };
 
               Wish wish = Wish.fromJson(convertedWishData);
@@ -1415,11 +1272,12 @@ class App {
           .collection(Define.FIRESTORE_COLLECTION_PROFILE)
           .doc(fireUser.uid);
 
-      final historySnapshot = await profileRef
-          .collection('point_history')
-          .orderBy('created_at', descending: true)
-          .limit(50)
-          .get();
+      final historySnapshot =
+          await profileRef
+              .collection('point_history')
+              .orderBy('created_at', descending: true)
+              .limit(50)
+              .get();
 
       for (var doc in historySnapshot.docs) {
         try {
@@ -1428,11 +1286,8 @@ class App {
           if (data['created_at'] != null) {
             data['created_at'] = _formatTimestamp(data['created_at']);
           }
-          
-          PointHistory history = PointHistory.fromJson({
-            'id': doc.id,
-            ...data,
-          });
+
+          PointHistory history = PointHistory.fromJson({'id': doc.id, ...data});
           result.add(history);
         } catch (e) {
           logger.e("Error parsing point history: $e");

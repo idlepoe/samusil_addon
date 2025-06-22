@@ -7,6 +7,7 @@ import 'package:samusil_addon/utils/util.dart';
 import 'package:samusil_addon/components/profile_badge_widget.dart';
 import 'package:samusil_addon/components/profile_avatar_widget.dart';
 import 'package:samusil_addon/components/article_image_widget.dart';
+import 'package:samusil_addon/components/appSnackbar.dart';
 
 import '../../../../models/article.dart';
 
@@ -187,35 +188,17 @@ class ArticleItemWidget extends StatelessWidget {
 
   void _shareArticle() {
     // 공유 기능 구현
-    Get.snackbar(
-      '공유',
-      '게시글을 공유합니다.',
-      snackPosition: SnackPosition.TOP,
-      backgroundColor: Colors.blue,
-      colorText: Colors.white,
-    );
+    AppSnackbar.info('게시글을 공유합니다.');
   }
 
   void _blockUser() {
     // 차단 기능 구현
-    Get.snackbar(
-      '차단',
-      '사용자를 차단합니다.',
-      snackPosition: SnackPosition.TOP,
-      backgroundColor: Colors.orange,
-      colorText: Colors.white,
-    );
+    AppSnackbar.warning('사용자를 차단합니다.');
   }
 
   void _reportArticle() {
     // 신고 기능 구현
-    Get.snackbar(
-      '신고',
-      '게시글을 신고합니다.',
-      snackPosition: SnackPosition.TOP,
-      backgroundColor: Colors.red,
-      colorText: Colors.white,
-    );
+    AppSnackbar.error('게시글을 신고합니다.');
   }
 
   Widget _buildActions() {

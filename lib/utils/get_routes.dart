@@ -27,6 +27,10 @@ import '../pages/wish/wish_view.dart';
 import '../pages/wish/wish_binding.dart';
 import '../pages/horse_race/horse_race_view.dart';
 import '../pages/horse_race/horse_race_binding.dart';
+import '../pages/notification/notification_history_view.dart';
+import '../pages/notification/notification_history_binding.dart';
+import '../pages/point/point_history_view.dart';
+import '../pages/point/point_history_binding.dart';
 
 class GetRoutes {
   static final routes = [
@@ -92,6 +96,16 @@ class GetRoutes {
       name: '/horse-race',
       page: () => const HorseRaceView(),
       binding: HorseRaceBinding(),
+    ),
+    GetPage(
+      name: '/notifications',
+      page: () => const NotificationHistoryView(),
+      binding: NotificationHistoryBinding(),
+    ),
+    GetPage(
+      name: '/point-history',
+      page: () => const PointHistoryView(),
+      binding: PointHistoryBinding(),
     ),
   ];
 }

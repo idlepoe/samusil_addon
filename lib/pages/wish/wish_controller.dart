@@ -22,6 +22,7 @@ class WishController extends GetxController {
   final alreadyWished = true.obs;
   final isPressed = false.obs;
   final isLoading = false.obs;
+  final hasText = false.obs;
 
   // 텍스트 컨트롤러
   final TextEditingController commentController = TextEditingController();
@@ -130,7 +131,9 @@ class WishController extends GetxController {
   }
 
   bool get canCreateWish =>
-      !alreadyWished.value &&
-      commentController.text.isNotEmpty &&
-      !isPressed.value;
+      !alreadyWished.value && hasText.value && !isPressed.value;
+
+  void onTextChanged(String text) {
+    hasText.value = text.trim().isNotEmpty;
+  }
 }

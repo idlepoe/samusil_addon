@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PointHistory {
 
- String? get id; String get profile_uid; String get action_type; int get points_earned; String get description; String? get related_id; String get created_at;
+@JsonKey(fromJson: _toString) String? get id;@JsonKey(fromJson: _toString) String get profile_uid;@JsonKey(fromJson: _toString) String get action_type;@JsonKey(fromJson: _toInt) int get points_earned;@JsonKey(fromJson: _toString) String get description;@JsonKey(fromJson: _toString) String? get related_id;@JsonKey(fromJson: _toDateTimeObj) DateTime get created_at;
 /// Create a copy of PointHistory
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -49,7 +49,7 @@ abstract mixin class $PointHistoryCopyWith<$Res>  {
   factory $PointHistoryCopyWith(PointHistory value, $Res Function(PointHistory) _then) = _$PointHistoryCopyWithImpl;
 @useResult
 $Res call({
- String? id, String profile_uid, String action_type, int points_earned, String description, String? related_id, String created_at
+@JsonKey(fromJson: _toString) String? id,@JsonKey(fromJson: _toString) String profile_uid,@JsonKey(fromJson: _toString) String action_type,@JsonKey(fromJson: _toInt) int points_earned,@JsonKey(fromJson: _toString) String description,@JsonKey(fromJson: _toString) String? related_id,@JsonKey(fromJson: _toDateTimeObj) DateTime created_at
 });
 
 
@@ -75,7 +75,7 @@ as String,points_earned: null == points_earned ? _self.points_earned : points_ea
 as int,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,related_id: freezed == related_id ? _self.related_id : related_id // ignore: cast_nullable_to_non_nullable
 as String?,created_at: null == created_at ? _self.created_at : created_at // ignore: cast_nullable_to_non_nullable
-as String,
+as DateTime,
   ));
 }
 
@@ -86,16 +86,16 @@ as String,
 @JsonSerializable()
 
 class _PointHistory implements PointHistory {
-  const _PointHistory({this.id, required this.profile_uid, required this.action_type, required this.points_earned, required this.description, this.related_id, required this.created_at});
+  const _PointHistory({@JsonKey(fromJson: _toString) this.id, @JsonKey(fromJson: _toString) required this.profile_uid, @JsonKey(fromJson: _toString) required this.action_type, @JsonKey(fromJson: _toInt) required this.points_earned, @JsonKey(fromJson: _toString) required this.description, @JsonKey(fromJson: _toString) this.related_id, @JsonKey(fromJson: _toDateTimeObj) required this.created_at});
   factory _PointHistory.fromJson(Map<String, dynamic> json) => _$PointHistoryFromJson(json);
 
-@override final  String? id;
-@override final  String profile_uid;
-@override final  String action_type;
-@override final  int points_earned;
-@override final  String description;
-@override final  String? related_id;
-@override final  String created_at;
+@override@JsonKey(fromJson: _toString) final  String? id;
+@override@JsonKey(fromJson: _toString) final  String profile_uid;
+@override@JsonKey(fromJson: _toString) final  String action_type;
+@override@JsonKey(fromJson: _toInt) final  int points_earned;
+@override@JsonKey(fromJson: _toString) final  String description;
+@override@JsonKey(fromJson: _toString) final  String? related_id;
+@override@JsonKey(fromJson: _toDateTimeObj) final  DateTime created_at;
 
 /// Create a copy of PointHistory
 /// with the given fields replaced by the non-null parameter values.
@@ -130,7 +130,7 @@ abstract mixin class _$PointHistoryCopyWith<$Res> implements $PointHistoryCopyWi
   factory _$PointHistoryCopyWith(_PointHistory value, $Res Function(_PointHistory) _then) = __$PointHistoryCopyWithImpl;
 @override @useResult
 $Res call({
- String? id, String profile_uid, String action_type, int points_earned, String description, String? related_id, String created_at
+@JsonKey(fromJson: _toString) String? id,@JsonKey(fromJson: _toString) String profile_uid,@JsonKey(fromJson: _toString) String action_type,@JsonKey(fromJson: _toInt) int points_earned,@JsonKey(fromJson: _toString) String description,@JsonKey(fromJson: _toString) String? related_id,@JsonKey(fromJson: _toDateTimeObj) DateTime created_at
 });
 
 
@@ -156,7 +156,7 @@ as String,points_earned: null == points_earned ? _self.points_earned : points_ea
 as int,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,related_id: freezed == related_id ? _self.related_id : related_id // ignore: cast_nullable_to_non_nullable
 as String?,created_at: null == created_at ? _self.created_at : created_at // ignore: cast_nullable_to_non_nullable
-as String,
+as DateTime,
   ));
 }
 

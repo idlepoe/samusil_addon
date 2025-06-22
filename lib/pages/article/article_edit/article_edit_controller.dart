@@ -14,6 +14,7 @@ import '../../../models/board_info.dart';
 import '../../../models/profile.dart';
 import '../../../utils/app.dart';
 import '../../../utils/util.dart';
+import '../../../components/appSnackbar.dart';
 
 class Contents {
   bool isPicture;
@@ -201,13 +202,7 @@ class ArticleEditController extends GetxController {
 
       // 최소 하나의 콘텐츠가 있는지 확인
       if (processedContents.isEmpty) {
-        Get.snackbar(
-          '알림',
-          '텍스트를 입력해주세요.',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-        );
+        AppSnackbar.warning('텍스트를 입력해주세요.');
         return;
       }
 
@@ -235,7 +230,13 @@ class ArticleEditController extends GetxController {
         logger.d("updateArticle board_name: ${boardInfo.value.board_name}");
         logger.d("updateArticle article: ${article.toJson()}");
 
-        await App.updateArticle(article: article);
+        String? result = await App.updateArticle(article: article);
+        if (result != null) {
+          AppSnackbar.success('게시글이 수정되었습니다.');
+        } else {
+          AppSnackbar.error('게시글 수정에 실패했습니다.');
+          return;
+        }
       } else {
         // 새 게시글 작성
         Article article = Article(
@@ -257,7 +258,13 @@ class ArticleEditController extends GetxController {
         logger.d("writeArticle board_name: ${boardInfo.value.board_name}");
         logger.d("writeArticle article: ${article.toJson()}");
 
-        await App.createArticle(article: article);
+        String? result = await App.createArticle(article: article);
+        if (result != null) {
+          AppSnackbar.success('게시글이 작성되었습니다.');
+        } else {
+          AppSnackbar.error('게시글 작성에 실패했습니다.');
+          return;
+        }
       }
 
       // 성공 시 콜백 호출
@@ -269,12 +276,8 @@ class ArticleEditController extends GetxController {
       Get.back();
     } catch (e) {
       logger.e("writeArticle error: $e");
-      Get.snackbar(
-        '오류',
+      AppSnackbar.error(
         articleKey != null ? '게시글 수정 중 오류가 발생했습니다.' : '게시글 작성 중 오류가 발생했습니다.',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
       );
     } finally {
       isPressed.value = false;
