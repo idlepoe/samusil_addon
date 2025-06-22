@@ -2,14 +2,51 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:scroll_loop_auto_scroll/scroll_loop_auto_scroll.dart';
 import 'package:logger/logger.dart';
+import 'dart:async';
 
 import '../../../utils/app.dart';
 import '../../../main.dart';
 import '../dash_board_controller.dart';
 import '../../../controllers/horse_race_controller.dart';
 
-class RaceStatusWidget extends StatelessWidget {
+class RaceStatusWidget extends StatefulWidget {
   const RaceStatusWidget({super.key});
+
+  @override
+  State<RaceStatusWidget> createState() => _RaceStatusWidgetState();
+}
+
+class _RaceStatusWidgetState extends State<RaceStatusWidget>
+    with TickerProviderStateMixin {
+  Timer? _timer;
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
+    // 1초마다 시간 업데이트
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _animationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +82,15 @@ class RaceStatusWidget extends StatelessWidget {
           ),
         );
       }
-      
+
+      // 경주 중일 때 애니메이션 시작
+      final raceStatus = horseRaceController!.getRaceStatus();
+      if (raceStatus == '경주 중') {
+        _animationController.repeat();
+      } else {
+        _animationController.stop();
+      }
+
       return Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -69,7 +114,7 @@ class RaceStatusWidget extends StatelessWidget {
             child: Row(
               children: [
                 // 경마 상태 표시
-                _buildRaceStatusWidget(horseRaceController!),
+                _buildRaceStatusWidget(horseRaceController),
                 const SizedBox(width: 16),
                 // 경마 설명 텍스트
                 Expanded(
@@ -98,11 +143,11 @@ class RaceStatusWidget extends StatelessWidget {
   Widget _buildRaceStatusWidget(HorseRaceController horseRaceController) {
     final raceStatus = horseRaceController.getRaceStatus();
     final remainingTime = horseRaceController.getRemainingTime();
-    
+
     Color statusColor;
     IconData statusIcon;
     String statusText;
-    
+
     switch (raceStatus) {
       case '베팅 중':
         statusColor = Colors.orange;
@@ -125,8 +170,8 @@ class RaceStatusWidget extends StatelessWidget {
         statusText = '다음 경마 대기';
         break;
     }
-    
-    return Container(
+
+    Widget statusWidget = Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: statusColor.withOpacity(0.1),
@@ -136,11 +181,7 @@ class RaceStatusWidget extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            statusIcon,
-            size: 14,
-            color: statusColor,
-          ),
+          Icon(statusIcon, size: 14, color: statusColor),
           const SizedBox(width: 4),
           Text(
             statusText,
@@ -164,5 +205,23 @@ class RaceStatusWidget extends StatelessWidget {
         ],
       ),
     );
+
+    // 경주 중일 때 애니메이션 효과 추가
+    if (raceStatus == '경주 중') {
+      return AnimatedBuilder(
+        animation: _animation,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: 1.0 + (_animation.value * 0.05),
+            child: Opacity(
+              opacity: 0.8 + (_animation.value * 0.2),
+              child: statusWidget,
+            ),
+          );
+        },
+      );
+    }
+
+    return statusWidget;
   }
-} 
+}

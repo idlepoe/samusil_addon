@@ -53,7 +53,6 @@ flutter:
     - assets/
     - assets/icon/
     - assets/images/
-    - assets/fonts/
     - assets/animations/
 # For changing the app logo
 # flutter_launcher_icons: ^0.13.1

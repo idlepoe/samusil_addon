@@ -24,7 +24,7 @@ class DashBoardController extends GetxController {
   final showInput = false.obs;
 
   final listMaxLength = Define.DEFAULT_BOARD_GET_LENGTH.obs;
-  
+
   // 게시글 데이터 관리
   final RxList<Article> allArticles = <Article>[].obs;
   final RxList<Article> gameNews = <Article>[].obs;
@@ -42,7 +42,7 @@ class DashBoardController extends GetxController {
     if (!Get.isRegistered<WishController>()) {
       Get.put(WishController());
     }
-    
+
     // HorseRaceController가 없으면 초기화 (Splash에서 초기화되지 않은 경우 대비)
     if (!Get.isRegistered<HorseRaceController>()) {
       Get.put(HorseRaceController());
@@ -54,10 +54,10 @@ class DashBoardController extends GetxController {
   void onReady() async {
     super.onReady();
     logger.i("DashBoardController onReady called");
-    
+
     // ProfileController 초기화 확인 및 처리
     await _ensureProfileControllerInitialized();
-    
+
     logger.i("Starting DashBoardController init...");
     await init();
     logger.i("DashBoardController init completed");
@@ -67,17 +67,17 @@ class DashBoardController extends GetxController {
   Future<void> _ensureProfileControllerInitialized() async {
     try {
       final profileController = ProfileController.to;
-      
+
       // ProfileController가 초기화되지 않았다면 초기화
       if (!profileController.isInitialized.value) {
         logger.i("ProfileController가 초기화되지 않았습니다. 초기화를 시작합니다.");
-        
+
         // 프로필 데이터 로드
         final profile = await App.getProfile();
-        
+
         // ProfileController 초기화
         await profileController.initializeWithProfile(profile);
-        
+
         logger.i("ProfileController 초기화 완료");
       } else {
         logger.i("ProfileController가 이미 초기화되어 있습니다.");
@@ -94,7 +94,7 @@ class DashBoardController extends GetxController {
 
   Future<void> init() async {
     logger.i("DashBoardController init started");
-    
+
     if (kIsWeb) {
       logger.i(Uri.base.origin);
     }
@@ -102,13 +102,13 @@ class DashBoardController extends GetxController {
     // ProfileController를 통해 프로필 데이터 새로고침
     logger.i("Refreshing profile...");
     await ProfileController.to.refreshProfile();
-    
+
     // 게시글 데이터 로딩
     logger.i("Loading all articles...");
     await loadAllArticles();
     logger.i("Loading game news...");
     await loadGameNews();
-    
+
     logger.i("DashBoardController init completed successfully");
   }
 
@@ -130,7 +130,7 @@ class DashBoardController extends GetxController {
   // 자유게시판 게시글 로딩
   Future<void> loadAllArticles() async {
     if (isLoadingAllArticles.value) return;
-    
+
     isLoadingAllArticles.value = true;
     try {
       final articles = await App.getArticleList(
@@ -149,7 +149,7 @@ class DashBoardController extends GetxController {
   // 게임뉴스 로딩
   Future<void> loadGameNews() async {
     if (isLoadingGameNews.value) return;
-    
+
     isLoadingGameNews.value = true;
     try {
       final articles = await App.getArticleList(

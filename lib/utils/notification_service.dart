@@ -7,23 +7,24 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notifications =
+      FlutterLocalNotificationsPlugin();
   final Logger _logger = Logger();
 
   /// 알림 서비스를 초기화합니다.
   Future<void> initialize() async {
     try {
       // Android 설정
-      const AndroidInitializationSettings androidSettings = 
+      const AndroidInitializationSettings androidSettings =
           AndroidInitializationSettings('@mipmap/ic_launcher');
 
       // iOS 설정
-      const DarwinInitializationSettings iosSettings = 
+      const DarwinInitializationSettings iosSettings =
           DarwinInitializationSettings(
-        requestAlertPermission: true,
-        requestBadgePermission: true,
-        requestSoundPermission: true,
-      );
+            requestAlertPermission: true,
+            requestBadgePermission: true,
+            requestSoundPermission: true,
+          );
 
       // 초기화 설정
       const InitializationSettings initSettings = InitializationSettings(
@@ -58,7 +59,9 @@ class NotificationService {
     );
 
     await _notifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(channel);
   }
 
@@ -70,16 +73,17 @@ class NotificationService {
     int id = 0,
   }) async {
     try {
-      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-        'default',
-        '기본 알림',
-        channelDescription: '기본 알림 채널',
-        importance: Importance.high,
-        priority: Priority.high,
-        showWhen: true,
-        enableVibration: true,
-        playSound: true,
-      );
+      const AndroidNotificationDetails androidDetails =
+          AndroidNotificationDetails(
+            'default',
+            '기본 알림',
+            channelDescription: '기본 알림 채널',
+            importance: Importance.high,
+            priority: Priority.high,
+            showWhen: true,
+            enableVibration: true,
+            playSound: true,
+          );
 
       const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
         presentAlert: true,
@@ -92,13 +96,7 @@ class NotificationService {
         iOS: iosDetails,
       );
 
-      await _notifications.show(
-        id,
-        title,
-        body,
-        details,
-        payload: payload,
-      );
+      await _notifications.show(id, title, body, details, payload: payload);
 
       _logger.i('알림 표시 완료: $title');
     } catch (e) {
@@ -109,7 +107,7 @@ class NotificationService {
   /// 알림 클릭 이벤트를 처리합니다.
   void _onNotificationTapped(NotificationResponse response) {
     _logger.i('알림 클릭: ${response.payload}');
-    
+
     // 페이로드에서 데이터 추출
     if (response.payload != null) {
       try {
@@ -117,12 +115,15 @@ class NotificationService {
         final payload = response.payload!;
         if (payload.contains('article_id')) {
           // 게시글 ID 추출 (간단한 파싱)
-          final articleIdMatch = RegExp(r'article_id[":\s]+([^,}]+)').firstMatch(payload);
+          final articleIdMatch = RegExp(
+            r'article_id[":\s]+([^,}]+)',
+          ).firstMatch(payload);
           if (articleIdMatch != null) {
-            final articleId = articleIdMatch.group(1)?.replaceAll('"', '').trim();
+            final articleId =
+                articleIdMatch.group(1)?.replaceAll('"', '').trim();
             if (articleId != null) {
               // 해당 게시글로 이동
-              Get.toNamed('/article-detail/$articleId');
+              Get.toNamed('/detail/$articleId');
               return;
             }
           }
@@ -131,7 +132,7 @@ class NotificationService {
         _logger.e('알림 페이로드 파싱 오류: $e');
       }
     }
-    
+
     // 기본적으로 대시보드로 이동
     Get.toNamed('/');
   }
@@ -152,4 +153,4 @@ class NotificationService {
   Future<List<PendingNotificationRequest>> getPendingNotifications() async {
     return await _notifications.pendingNotificationRequests();
   }
-} 
+}

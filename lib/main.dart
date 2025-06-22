@@ -105,7 +105,7 @@ Future<void> _initializeFirebaseMessaging() async {
         final articleId = data['article_id'];
         if (articleId != null) {
           // 해당 게시글로 이동
-          Get.toNamed('/article-detail/$articleId');
+          Get.toNamed('/detail/$articleId');
         }
       }
     });

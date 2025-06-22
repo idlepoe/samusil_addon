@@ -73,12 +73,12 @@ class SplashController extends GetxController {
       } else {
         logger.w('ProfileController가 등록되지 않았습니다. 대시보드에서 초기화됩니다.');
       }
-      
+
       // HorseRaceController 초기화
-      if (!Get.isRegistered<HorseRaceController>()) {
-        Get.put(HorseRaceController());
-        logger.i('HorseRaceController 초기화 완료');
-      }
+      // if (!Get.isRegistered<HorseRaceController>()) {
+      //   Get.put(HorseRaceController());
+      //   logger.i('HorseRaceController 초기화 완료');
+      // }
     } catch (e) {
       logger.e('ProfileController 초기화 오류: $e');
     }

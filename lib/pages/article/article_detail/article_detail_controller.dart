@@ -54,20 +54,20 @@ class ArticleDetailController extends GetxController {
   final TextEditingController commentController = TextEditingController();
   final FocusNode commentFocusNode = FocusNode();
 
-  // 라우트 파라미터에서 articleId 받기
-  String get articleIdFromRoute => Get.parameters['articleId'] ?? '';
+  // 라우트 파라미터에서 id 받기
+  String get articleIdFromRoute => Get.parameters['id'] ?? '';
 
   @override
   void onInit() {
     super.onInit();
     // 라우트 파라미터에서 articleId 설정
     articleKey.value = articleIdFromRoute;
-    
+
     // 댓글 텍스트 변경 감지
     commentController.addListener(() {
       isCommentEmpty.value = commentController.text.trim().isEmpty;
     });
-    
+
     // 데이터 로드 (한 번만 실행)
     if (!isDataLoaded.value) {
       loadData();
@@ -147,7 +147,7 @@ class ArticleDetailController extends GetxController {
 
     try {
       isCommentLoading.value = true;
-      
+
       MainComment comment = MainComment(
         id: "",
         contents: commentController.text.trim(),
@@ -248,7 +248,7 @@ class ArticleDetailController extends GetxController {
   void addEmojiToComment(String emoji) {
     final currentText = commentController.text;
     final selection = commentController.selection;
-    
+
     // 선택 영역이 유효하지 않거나 텍스트가 없을 때 처리
     if (!selection.isValid || selection.start < 0) {
       // 텍스트 끝에 이모티콘 추가
@@ -268,7 +268,7 @@ class ArticleDetailController extends GetxController {
         offset: selection.start + emoji.length,
       );
     }
-    
+
     commentFocusNode.requestFocus();
   }
 
@@ -320,12 +320,10 @@ class ArticleDetailController extends GetxController {
       final db = FirebaseFirestore.instance;
       final articleRef = db.collection('articles').doc(article.value.id);
       final likeRef = articleRef.collection('likes').doc(profile.value.uid);
-      
+
       if (isLiked.value) {
         // 좋아요 취소
-        await articleRef.update({
-          'count_like': FieldValue.increment(-1),
-        });
+        await articleRef.update({'count_like': FieldValue.increment(-1)});
         await likeRef.delete(); // 좋아요 상태 삭제
         article.value = article.value.copyWith(
           count_like: article.value.count_like - 1,
@@ -333,9 +331,7 @@ class ArticleDetailController extends GetxController {
         isLiked.value = false;
       } else {
         // 좋아요 추가
-        await articleRef.update({
-          'count_like': FieldValue.increment(1),
-        });
+        await articleRef.update({'count_like': FieldValue.increment(1)});
         await likeRef.set({
           'uid': profile.value.uid,
           'created_at': FieldValue.serverTimestamp(),
@@ -366,7 +362,7 @@ class ArticleDetailController extends GetxController {
           .doc(article.value.id)
           .collection('likes')
           .doc(profile.value.uid);
-      
+
       final likeDoc = await likeRef.get();
       isLiked.value = likeDoc.exists;
     } catch (e) {
