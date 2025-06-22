@@ -109,12 +109,6 @@ class ArticleListView extends GetView<ArticleListController> {
               ),
             ),
           ),
-          TextButton(
-            onPressed: () {
-              // TODO: 내 프로필 페이지로 이동
-            },
-            child: const Text('내 프로필', style: TextStyle(color: Colors.grey)),
-          ),
         ],
       ),
     );

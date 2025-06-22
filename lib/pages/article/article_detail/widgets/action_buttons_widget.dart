@@ -36,18 +36,43 @@ class ActionButtonsWidget extends GetView<ArticleDetailController> {
       onTap: controller.toggleLike,
       child: Row(
         children: [
-          Icon(
-            LineIcons.heart,
-            size: 20,
-            color: controller.isLiked.value ? Colors.red : Colors.grey[600],
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return ScaleTransition(scale: animation, child: child);
+            },
+            child:
+                controller.isLiked.value
+                    ? TweenAnimationBuilder<double>(
+                      key: const ValueKey('filled_heart'),
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      duration: const Duration(milliseconds: 300),
+                      builder: (context, value, child) {
+                        return Transform.scale(
+                          scale: 0.8 + (value * 0.2),
+                          child: Icon(
+                            Icons.favorite,
+                            size: 20,
+                            color: Colors.red.withOpacity(value),
+                          ),
+                        );
+                      },
+                    )
+                    : Icon(
+                      key: const ValueKey('empty_heart'),
+                      LineIcons.heart,
+                      size: 20,
+                      color: Colors.grey[600],
+                    ),
           ),
           const SizedBox(width: 6),
-          Text(
-            controller.article.value.count_like.toString(),
+          AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 300),
             style: TextStyle(
               color: controller.isLiked.value ? Colors.red : Colors.grey[600],
               fontSize: 14,
             ),
+            child: Text(controller.article.value.count_like.toString()),
           ),
         ],
       ),

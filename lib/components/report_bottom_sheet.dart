@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:office_lounge/define/define.dart';
+import 'package:office_lounge/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/article.dart';
 import '../controllers/profile_controller.dart';
@@ -213,7 +215,9 @@ class _ReportBottomSheetState extends State<ReportBottomSheet> {
 
       // Firestore에 신고 내용 저장
       final db = FirebaseFirestore.instance;
-      final articleRef = db.collection('articles').doc(widget.article.id);
+      final articleRef = db
+          .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
+          .doc(widget.article.id);
 
       // 서브컬렉션에 신고 내용 저장
       await articleRef.collection('reports').add({
@@ -233,9 +237,10 @@ class _ReportBottomSheetState extends State<ReportBottomSheet> {
       reportedArticles.add(widget.article.id);
       await prefs.setStringList('reported_articles', reportedArticles);
 
-      AppSnackbar.success('신고가 접수되었습니다.');
       Get.back();
+      AppSnackbar.success('신고가 접수되었습니다.');
     } catch (e) {
+      logger.e(e);
       AppSnackbar.error('신고 처리 중 오류가 발생했습니다.');
     } finally {
       setState(() {

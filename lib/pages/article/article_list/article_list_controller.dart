@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../define/define.dart';
 import '../../../define/enum.dart';
@@ -33,7 +34,7 @@ class ArticleListController extends GetxController {
     if (boardName.isNotEmpty) {
       boardInfo.value = Arrays.getBoardInfo(boardName);
     }
-    
+
     // 데이터 로드 (한 번만 실행)
     if (!isDataLoaded.value) {
       loadData();
@@ -61,12 +62,31 @@ class ArticleListController extends GetxController {
     }
 
     profile.value = await App.getProfile();
-    articleList.value = await App.getArticleList(
+    final articles = await App.getArticleList(
       boardInfo: boardInfo.value,
       search: "",
       limit: Define.DEFAULT_BOARD_GET_LENGTH,
     );
+
+    // 차단된 사용자의 게시글 필터링
+    final filteredArticles = await _filterBlockedUsers(articles);
+    articleList.value = filteredArticles;
     isDataLoaded.value = true;
+  }
+
+  // 차단된 사용자의 게시글 필터링
+  Future<List<Article>> _filterBlockedUsers(List<Article> articles) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final blockedUsers = prefs.getStringList('blocked_users') ?? [];
+
+      return articles
+          .where((article) => !blockedUsers.contains(article.profile_uid))
+          .toList();
+    } catch (e) {
+      logger.e('차단된 사용자 필터링 중 오류: $e');
+      return articles;
+    }
   }
 
   // 정렬 타입 변경
@@ -78,7 +98,7 @@ class ArticleListController extends GetxController {
   // 게시글 정렬
   void _sortArticles() {
     final sortedList = List<Article>.from(articleList);
-    
+
     switch (currentSortType.value) {
       case SortType.latest:
         sortedList.sort((a, b) => b.created_at.compareTo(a.created_at));
@@ -86,24 +106,26 @@ class ArticleListController extends GetxController {
       case SortType.popular:
         // 7일 이내 게시글만 필터링하여 인기순 정렬
         final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
-        final recentArticles = sortedList.where((article) => 
-          article.created_at.isAfter(sevenDaysAgo)
-        ).toList();
-        
+        final recentArticles =
+            sortedList
+                .where((article) => article.created_at.isAfter(sevenDaysAgo))
+                .toList();
+
         recentArticles.sort((a, b) => b.count_like.compareTo(a.count_like));
-        
+
         // 7일 이내 게시글을 앞으로, 나머지는 최신순으로 정렬
-        final oldArticles = sortedList.where((article) => 
-          article.created_at.isBefore(sevenDaysAgo)
-        ).toList();
+        final oldArticles =
+            sortedList
+                .where((article) => article.created_at.isBefore(sevenDaysAgo))
+                .toList();
         oldArticles.sort((a, b) => b.created_at.compareTo(a.created_at));
-        
+
         sortedList.clear();
         sortedList.addAll(recentArticles);
         sortedList.addAll(oldArticles);
         break;
     }
-    
+
     articleList.value = sortedList;
   }
 

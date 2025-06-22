@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/article.dart';
 import 'appSnackbar.dart';
 import 'report_bottom_sheet.dart';
+import 'block_bottom_sheet.dart';
 
 class ArticleMenuWidget extends StatelessWidget {
   final Article article;
@@ -147,9 +148,27 @@ $appLink
     }
   }
 
-  void _blockUser() {
-    // TODO: 실제 차단 기능 구현
-    AppSnackbar.warning('사용자를 차단합니다.');
+  void _blockUser() async {
+    try {
+      // SharedPreferences에서 차단된 사용자 확인
+      final prefs = await SharedPreferences.getInstance();
+      final blockedUsers = prefs.getStringList('blocked_users') ?? [];
+
+      if (blockedUsers.contains(article.profile_uid)) {
+        AppSnackbar.warning('이미 차단된 사용자입니다.');
+        return;
+      }
+
+      // 차단 확인 bottom sheet 표시
+      Get.bottomSheet(
+        BlockBottomSheet(article: article),
+        isScrollControlled: true,
+        enableDrag: true,
+        isDismissible: true,
+      );
+    } catch (e) {
+      AppSnackbar.error('차단 처리 중 오류가 발생했습니다.');
+    }
   }
 
   void _reportArticle() async {

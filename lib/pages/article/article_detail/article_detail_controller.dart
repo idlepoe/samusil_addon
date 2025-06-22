@@ -316,7 +316,9 @@ class ArticleDetailController extends GetxController {
   Future<void> toggleLike() async {
     try {
       final db = FirebaseFirestore.instance;
-      final articleRef = db.collection('articles').doc(article.value.id);
+      final articleRef = db
+          .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
+          .doc(article.value.id);
       final likeRef = articleRef.collection('likes').doc(profile.value.uid);
 
       if (isLiked.value) {
