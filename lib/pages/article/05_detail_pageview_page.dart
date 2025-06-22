@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
-import 'package:samusil_addon/models/article_contents.dart';
+import 'package:office_lounge/models/article_contents.dart';
 
 import '../../define/define.dart';
 import '../../utils/util.dart';
@@ -16,7 +16,7 @@ class DetailPageViewPage extends StatefulWidget {
   final int index;
 
   const DetailPageViewPage({Key? key, required this.list, required this.index})
-      : super(key: key);
+    : super(key: key);
 
   @override
   State<DetailPageViewPage> createState() => _DetailPageViewPageState();
@@ -25,9 +25,9 @@ class DetailPageViewPage extends StatefulWidget {
 class MouseDraggableScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => <PointerDeviceKind>{
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+  };
 }
 
 class _DetailPageViewPageState extends State<DetailPageViewPage> {
@@ -73,19 +73,20 @@ class _DetailPageViewPageState extends State<DetailPageViewPage> {
             ),
             actions: [
               IconButton(
-                  onPressed: () async {
-                    List<String> saveList = [];
-                    saveList.add(_list[index].contents);
-                    bool result = await Utils.saveNetworkImage(saveList);
-                    if (mounted && result) {
-                      // Utils.showSnackBar(
-                      //     context, SnackType.success, "success_image_save".tr);
-                      Fluttertoast.showToast(msg: "success_image_save".tr);
-                    } else {
-                      Fluttertoast.showToast(msg: "error_image_save".tr);
-                    }
-                  },
-                  icon: const Icon(Icons.save_alt))
+                onPressed: () async {
+                  List<String> saveList = [];
+                  saveList.add(_list[index].contents);
+                  bool result = await Utils.saveNetworkImage(saveList);
+                  if (mounted && result) {
+                    // Utils.showSnackBar(
+                    //     context, SnackType.success, "success_image_save".tr);
+                    Fluttertoast.showToast(msg: "success_image_save".tr);
+                  } else {
+                    Fluttertoast.showToast(msg: "error_image_save".tr);
+                  }
+                },
+                icon: const Icon(Icons.save_alt),
+              ),
             ],
           ),
           body: RefreshIndicator(

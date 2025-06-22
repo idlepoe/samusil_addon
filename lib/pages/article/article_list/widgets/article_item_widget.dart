@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:line_icons/line_icons.dart';
-import 'package:samusil_addon/utils/app.dart';
-import 'package:samusil_addon/utils/util.dart';
-import 'package:samusil_addon/components/profile_badge_widget.dart';
-import 'package:samusil_addon/components/profile_avatar_widget.dart';
-import 'package:samusil_addon/components/article_image_widget.dart';
-import 'package:samusil_addon/components/appSnackbar.dart';
+import 'package:office_lounge/utils/app.dart';
+import 'package:office_lounge/utils/util.dart';
+import 'package:office_lounge/components/profile_badge_widget.dart';
+import 'package:office_lounge/components/profile_avatar_widget.dart';
+import 'package:office_lounge/components/article_image_widget.dart';
+import 'package:office_lounge/components/article_menu_widget.dart';
 
 import '../../../../models/article.dart';
 
@@ -128,77 +128,13 @@ class ArticleItemWidget extends StatelessWidget {
         SizedBox(
           width: 40,
           height: 40,
-          child: PopupMenuButton<String>(
-            icon: Icon(Icons.more_horiz, color: Colors.grey[600]),
-            onSelected: (value) {
-              _handleMenuAction(value);
-            },
-            itemBuilder:
-                (BuildContext context) => [
-                  const PopupMenuItem<String>(
-                    value: 'share',
-                    child: Row(
-                      children: [
-                        Icon(Icons.share, size: 18),
-                        SizedBox(width: 8),
-                        Text('공유'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem<String>(
-                    value: 'block',
-                    child: Row(
-                      children: [
-                        Icon(Icons.block, size: 18),
-                        SizedBox(width: 8),
-                        Text('차단'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem<String>(
-                    value: 'report',
-                    child: Row(
-                      children: [
-                        Icon(Icons.report, size: 18),
-                        SizedBox(width: 8),
-                        Text('신고'),
-                      ],
-                    ),
-                  ),
-                ],
+          child: ArticleMenuWidget(
+            article: article,
+            isAuthor: false, // 목록에서는 일반적으로 작성자 여부를 확인하지 않음
           ),
         ),
       ],
     );
-  }
-
-  void _handleMenuAction(String value) {
-    switch (value) {
-      case 'share':
-        _shareArticle();
-        break;
-      case 'block':
-        _blockUser();
-        break;
-      case 'report':
-        _reportArticle();
-        break;
-    }
-  }
-
-  void _shareArticle() {
-    // 공유 기능 구현
-    AppSnackbar.info('게시글을 공유합니다.');
-  }
-
-  void _blockUser() {
-    // 차단 기능 구현
-    AppSnackbar.warning('사용자를 차단합니다.');
-  }
-
-  void _reportArticle() {
-    // 신고 기능 구현
-    AppSnackbar.error('게시글을 신고합니다.');
   }
 
   Widget _buildActions() {

@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:line_icons/line_icons.dart';
-import 'package:samusil_addon/main.dart';
+import 'package:office_lounge/main.dart';
 
 import '../define/arrays.dart';
 import '../define/define.dart';

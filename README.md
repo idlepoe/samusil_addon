@@ -32,3 +32,4 @@ flutter pub get
 flutter build windows
 flutter pub run msix:create
 
+dart run change_app_package_name:main com.jylee.office_lounge

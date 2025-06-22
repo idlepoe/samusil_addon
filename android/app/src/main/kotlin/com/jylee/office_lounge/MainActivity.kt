@@ -1,4 +1,4 @@
-package com.jylee.samusil_addon
+package com.jylee.office_lounge
 
 import io.flutter.embedding.android.FlutterActivity
 

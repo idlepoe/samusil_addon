@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -228,14 +227,6 @@ class ArticleDetailController extends GetxController {
       logger.e('이미지 저장 실패: $e');
       Fluttertoast.showToast(msg: "error_image_save".tr);
     }
-  }
-
-  // 공유
-  void shareArticle() {
-    Share.share(
-      'https://nippon-life.web.app/#/detail/${article.value.id}',
-      subject: article.value.title,
-    );
   }
 
   // 답글 설정

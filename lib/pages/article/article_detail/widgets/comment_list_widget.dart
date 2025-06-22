@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:intl/intl.dart';
-import 'package:samusil_addon/models/main_comment.dart';
-import 'package:samusil_addon/components/profile_avatar_widget.dart';
-import 'package:samusil_addon/components/profile_badge_widget.dart';
+import 'package:office_lounge/models/main_comment.dart';
+import 'package:office_lounge/components/profile_avatar_widget.dart';
+import 'package:office_lounge/components/profile_badge_widget.dart';
 
 import '../../../../utils/util.dart';
 import '../article_detail_controller.dart';
@@ -65,8 +65,9 @@ class CommentListWidget extends GetView<ArticleDetailController> {
                     const SizedBox(width: 8),
                     Text(
                       Utils.toConvertFireDateToCommentTime(
-                        DateFormat('yyyyMMddHHmm')
-                            .format(comment.created_at ?? DateTime.now()),
+                        DateFormat(
+                          'yyyyMMddHHmm',
+                        ).format(comment.created_at ?? DateTime.now()),
                       ),
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
@@ -92,11 +93,16 @@ class CommentListWidget extends GetView<ArticleDetailController> {
                       onTap: () => controller.setSubComment(comment),
                       child: Row(
                         children: [
-                          Icon(LineIcons.arrowLeft,
-                              size: 20, color: Colors.grey[600]),
+                          Icon(
+                            LineIcons.arrowLeft,
+                            size: 20,
+                            color: Colors.grey[600],
+                          ),
                           const SizedBox(width: 4),
-                          Text('답글 달기',
-                              style: TextStyle(color: Colors.grey[600])),
+                          Text(
+                            '답글 달기',
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
                         ],
                       ),
                     ),
@@ -119,28 +125,29 @@ class CommentListWidget extends GetView<ArticleDetailController> {
           // 차단 로직
         }
       },
-      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-        const PopupMenuItem<String>(
-          value: 'report',
-          child: Row(
-            children: [
-              Icon(Icons.report_gmailerrorred, size: 20),
-              SizedBox(width: 8),
-              Text('신고'),
-            ],
-          ),
-        ),
-        const PopupMenuItem<String>(
-          value: 'block',
-          child: Row(
-            children: [
-              Icon(Icons.block, size: 20),
-              SizedBox(width: 8),
-              Text('차단'),
-            ],
-          ),
-        ),
-      ],
+      itemBuilder:
+          (BuildContext context) => <PopupMenuEntry<String>>[
+            const PopupMenuItem<String>(
+              value: 'report',
+              child: Row(
+                children: [
+                  Icon(Icons.report_gmailerrorred, size: 20),
+                  SizedBox(width: 8),
+                  Text('신고'),
+                ],
+              ),
+            ),
+            const PopupMenuItem<String>(
+              value: 'block',
+              child: Row(
+                children: [
+                  Icon(Icons.block, size: 20),
+                  SizedBox(width: 8),
+                  Text('차단'),
+                ],
+              ),
+            ),
+          ],
       child: const Icon(Icons.more_horiz, color: Colors.grey),
     );
   }

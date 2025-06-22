@@ -1,4 +1,4 @@
-import 'package:samusil_addon/main.dart';
+import 'package:office_lounge/main.dart';
 
 class CloudFunctionResponse<T> {
   final bool success;

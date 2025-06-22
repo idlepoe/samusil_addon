@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:intl/intl.dart';
-import 'package:samusil_addon/models/main_comment.dart';
+import 'package:office_lounge/models/main_comment.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'article_contents.dart';

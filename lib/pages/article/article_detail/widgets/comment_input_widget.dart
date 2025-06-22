@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:samusil_addon/components/profile_avatar_widget.dart';
-import 'package:samusil_addon/components/appButton.dart';
-import 'package:samusil_addon/components/appCircularProgress.dart';
+import 'package:office_lounge/components/profile_avatar_widget.dart';
+import 'package:office_lounge/components/appButton.dart';
+import 'package:office_lounge/components/appCircularProgress.dart';
 
 import '../article_detail_controller.dart';
 

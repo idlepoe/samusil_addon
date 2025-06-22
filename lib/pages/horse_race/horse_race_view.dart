@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:samusil_addon/components/appBarAction.dart';
+import 'package:office_lounge/components/appBarAction.dart';
 import 'dart:async';
-import 'package:samusil_addon/utils/app.dart';
+import 'package:office_lounge/utils/app.dart';
 import 'package:intl/intl.dart';
 
 import '../../components/appCircularProgress.dart';

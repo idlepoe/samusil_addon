@@ -1,11 +1,11 @@
 {
-    "name": "samusil_addon",
-    "short_name": "samusil_addon",
+    "name": "OfficeLounge",
+    "short_name": "OfficeLounge",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "OfficeLounge - 사무실에서 즐기는 BGM, 점심 추천, 자유 게시판이 있는 오피스 커뮤니티 앱",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

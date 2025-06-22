@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart' hide Response;
-import 'package:samusil_addon/main.dart';
+import 'package:office_lounge/main.dart';
 import '../models/cloud_function_response.dart';
 
 class HttpService {

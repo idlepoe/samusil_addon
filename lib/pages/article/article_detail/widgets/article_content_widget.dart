@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher_string.dart';
-import 'package:samusil_addon/components/article_image_widget.dart';
-import 'package:samusil_addon/components/appSnackbar.dart';
+import 'package:office_lounge/components/article_image_widget.dart';
+import 'package:office_lounge/components/appSnackbar.dart';
 
 import '../article_detail_controller.dart';
 

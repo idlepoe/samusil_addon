@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logger/logger.dart';
-import 'package:samusil_addon/define/define.dart';
+import 'package:office_lounge/define/define.dart';
 
 import '../../models/point_history.dart';
 import '../../controllers/profile_controller.dart';

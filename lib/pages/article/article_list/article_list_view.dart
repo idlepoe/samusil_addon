@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:line_icons/line_icons.dart';
-import 'package:samusil_addon/components/profile_avatar_widget.dart';
-import 'package:samusil_addon/controllers/profile_controller.dart';
-import 'package:samusil_addon/utils/util.dart';
+import 'package:office_lounge/components/profile_avatar_widget.dart';
+import 'package:office_lounge/controllers/profile_controller.dart';
+import 'package:office_lounge/utils/util.dart';
 import 'package:intl/intl.dart';
 
 import '../../../components/appBarAction.dart';

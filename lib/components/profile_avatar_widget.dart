@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:samusil_addon/utils/util.dart';
+import 'package:office_lounge/utils/util.dart';
 
 import 'appCircularProgress.dart';
 

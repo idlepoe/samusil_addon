@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:samusil_addon/models/price.dart';
+import 'package:office_lounge/models/price.dart';
 
 part 'coin.freezed.dart';
 part 'coin.g.dart';

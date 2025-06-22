@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
-import 'package:samusil_addon/components/article_image_widget.dart';
+import 'package:office_lounge/components/article_image_widget.dart';
 
 import '../../../components/appCircularProgress.dart';
 import '../../../define/arrays.dart';

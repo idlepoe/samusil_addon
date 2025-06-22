@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:samusil_addon/models/coin_balance.dart';
+import 'package:office_lounge/models/coin_balance.dart';
 
 import 'alarm.dart';
 

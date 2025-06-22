@@ -1,5 +1,5 @@
-name: samusil_addon
-description: "A new Flutter project."
+name: office_lounge
+description: "OfficeLounge - 사무실에서 즐기는 BGM, 점심 추천, 자유 게시판이 있는 오피스 커뮤니티 앱"
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 environment:
@@ -41,6 +41,7 @@ dependencies:
   dio: ^5.8.0+1
   package_info_plus: ^8.3.0
   flutter_local_notifications: ^18.0.1
+  change_app_package_name: ^1.5.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
