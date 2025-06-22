@@ -202,39 +202,34 @@ class HorseRaceController extends GetxController {
   Duration getRemainingTime() {
     final now = DateTime.now();
 
-    // 현재 진행중인 경마가 있을 경우
-    if (currentRace.value != null) {
+    // 현재 진행중인 경마가 있고, 아직 끝나지 않았을 경우
+    if (currentRace.value != null && !currentRace.value!.isFinished) {
       final race = currentRace.value!;
-      if (race.isFinished) return Duration.zero;
-      if (now.isBefore(race.bettingEndTime))
-        return race.bettingEndTime.difference(now);
-      if (race.isActive && now.isBefore(race.endTime))
-        return race.endTime.difference(now);
+      if (now.isBefore(race.bettingEndTime)) {
+        return race.bettingEndTime.difference(now); // 베팅 마감까지
+      } else if (now.isBefore(race.startTime)) {
+        return race.startTime.difference(now); // 경주 시작까지
+      } else if (now.isBefore(race.endTime)) {
+        return race.endTime.difference(now); // 경주 종료까지
+      }
     }
 
-    // 현재 진행중인 경마가 없을 경우, 다음 경마까지 남은 시간 계산
-    final currentMinute = now.minute;
-    final currentSecond = now.second;
-
-    int nextRaceMinute;
-    if (currentMinute < 30) {
-      nextRaceMinute = 30;
+    // 현재 진행중인 경마가 없거나, 종료된 경우 다음 경마까지 남은 시간 계산
+    final DateTime nextRaceTime;
+    if (now.minute < 30) {
+      // 현재 시간이 30분 미만이면, 다음 경주는 현재 시간의 30분
+      nextRaceTime = DateTime(now.year, now.month, now.day, now.hour, 30);
     } else {
-      nextRaceMinute = 60; // 다음 시간 정각
+      // 현재 시간이 30분 이상이면, 다음 경주는 다음 시간 정각
+      nextRaceTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        now.hour,
+      ).add(const Duration(hours: 1));
     }
 
-    final remainingMinutes =
-        nextRaceMinute - currentMinute - (currentSecond > 0 ? 1 : 0);
-    final remainingSeconds = 60 - currentSecond;
-
-    if (remainingMinutes < 0) {
-      // 다음 시간 정각으로 넘어가는 경우
-      return Duration(
-        minutes: 60 + remainingMinutes,
-        seconds: remainingSeconds,
-      );
-    }
-    return Duration(minutes: remainingMinutes, seconds: remainingSeconds);
+    return nextRaceTime.difference(now);
   }
 
   /// 베팅 배당률 계산

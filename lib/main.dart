@@ -30,17 +30,17 @@ final logger = Logger();
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  
+
   // 백그라운드에서 로컬 알림 표시
   final notificationService = NotificationService();
   await notificationService.initialize();
-  
+
   await notificationService.showNotification(
     title: message.notification?.title ?? '새 알림',
     body: message.notification?.body ?? '',
     payload: message.data.toString(),
   );
-  
+
   logger.i('백그라운드 메시지 수신: ${message.messageId}');
 }
 
@@ -70,22 +70,23 @@ Future<void> _initializeFirebaseMessaging() async {
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
     // 알림 권한 요청
-    NotificationSettings settings = await FirebaseMessaging.instance.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
-    );
+    NotificationSettings settings = await FirebaseMessaging.instance
+        .requestPermission(
+          alert: true,
+          announcement: false,
+          badge: true,
+          carPlay: false,
+          criticalAlert: false,
+          provisional: false,
+          sound: true,
+        );
 
     logger.i('FCM 권한 상태: ${settings.authorizationStatus}');
 
     // 포그라운드 메시지 핸들러
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       logger.i('포그라운드 메시지 수신: ${message.messageId}');
-      
+
       // 포그라운드에서 로컬 알림 표시
       await NotificationService().showNotification(
         title: message.notification?.title ?? '새 알림',
@@ -97,7 +98,7 @@ Future<void> _initializeFirebaseMessaging() async {
     // 알림 클릭 핸들러
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       logger.i('알림 클릭: ${message.messageId}');
-      
+
       // 알림 데이터에서 게시글 ID 추출
       final data = message.data;
       if (data['type'] == 'comment' || data['type'] == 'like') {
@@ -108,7 +109,6 @@ Future<void> _initializeFirebaseMessaging() async {
         }
       }
     });
-
   } catch (e) {
     logger.e('FCM 초기화 오류: $e');
   }
@@ -120,17 +120,28 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: "app_name".tr,
-      locale: Get.deviceLocale,
-      translations: Messages(),
       debugShowCheckedModeBanner: false,
+      title: 'Samusil Addon',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        primaryColor: const Color(0xFF0064FF), // 토스 스타일 포인트 컬러
+        scaffoldBackgroundColor: const Color(0xFFF4F6F8), // 토스 스타일 배경색
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Color(0xFF333D4B),
+          elevation: 0,
+          titleTextStyle: TextStyle(
+            color: Color(0xFF333D4B),
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+      ),
       initialRoute: '/splash',
       getPages: GetRoutes.routes,
-      unknownRoute: GetPage(
-        name: '/unknown',
-        page: () => const SplashView(),
-        binding: SplashBinding(),
-      ),
+      locale: Get.deviceLocale,
+      translations: Messages(),
+      unknownRoute: GetPage(name: '/notfound', page: () => const SplashView()),
     );
   }
 }

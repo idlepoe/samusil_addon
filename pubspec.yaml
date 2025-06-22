@@ -55,14 +55,6 @@ flutter:
     - assets/images/
     - assets/fonts/
     - assets/animations/
-#    - shorebird.yaml
-  fonts:
-    - family: MapoGoldenPier
-      fonts:
-        - asset: assets/fonts/MapoGoldenPier.ttf
-    - family: BMHANNAPro
-      fonts:
-        - asset: assets/fonts/BMHANNAPro.ttf
 # For changing the app logo
 # flutter_launcher_icons: ^0.13.1
 flutter_launcher_icons:
