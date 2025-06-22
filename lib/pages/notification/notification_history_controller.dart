@@ -78,7 +78,7 @@ class NotificationHistoryController extends GetxController {
       }
     } catch (e) {
       logger.e('알림 히스토리 로드 오류: $e');
-      AppSnackbar.error('알림 히스토리를 불러오는 중 오류가 발생했습니다.');
+      AppSnackbar.error('load_notification_error'.tr);
     } finally {
       isLoading.value = false;
     }

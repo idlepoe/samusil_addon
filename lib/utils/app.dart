@@ -405,12 +405,12 @@ class App {
         result = response.data!;
       } else {
         result['success'] = false;
-        result['error'] = response.error ?? '소원 생성에 실패했습니다.';
+        result['error'] = response.error ?? 'wish_create_failed'.tr;
         logger.e("createWish failed: ${response.error}");
       }
     } catch (e) {
       result['success'] = false;
-      result['error'] = '소원 생성 중 오류가 발생했습니다.';
+      result['error'] = 'wish_create_error'.tr;
       logger.e("createWish exception: $e");
     }
 

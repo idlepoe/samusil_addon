@@ -21,9 +21,9 @@ class PointHistoryView extends GetView<PointHistoryController> {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: () => Get.back(),
         ),
-        title: const Text(
-          '포인트 내역',
-          style: TextStyle(
+        title: Text(
+          'point_history'.tr,
+          style: const TextStyle(
             color: Colors.black,
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -57,7 +57,7 @@ class PointHistoryView extends GetView<PointHistoryController> {
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        '포인트 내역이 없어요',
+                        'no_point_history'.tr,
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
@@ -66,7 +66,7 @@ class PointHistoryView extends GetView<PointHistoryController> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '활동하시면 포인트 내역이 쌓여요',
+                        'point_history_empty_message'.tr,
                         style: TextStyle(fontSize: 16, color: Colors.grey[500]),
                       ),
                     ],
@@ -140,9 +140,9 @@ class PointHistoryView extends GetView<PointHistoryController> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '보유 포인트',
-                      style: TextStyle(
+                    Text(
+                      'owned_points_title'.tr,
+                      style: const TextStyle(
                         fontSize: 14,
                         color: Colors.grey,
                         fontWeight: FontWeight.w500,
@@ -169,7 +169,10 @@ class PointHistoryView extends GetView<PointHistoryController> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
-                    '이번 달 +${controller.thisMonthPoints.round()}P',
+                    'this_month_points'.tr.replaceAll(
+                      '{points}',
+                      controller.thisMonthPoints.round().toString(),
+                    ),
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -207,7 +210,7 @@ class PointHistoryView extends GetView<PointHistoryController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    pointItem.action_type,
+                    _getTranslatedPointType(pointItem.action_type),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -301,18 +304,39 @@ class PointHistoryView extends GetView<PointHistoryController> {
     );
   }
 
+  String _getTranslatedPointType(String type) {
+    switch (type) {
+      case '게시글 작성':
+        return 'article_write_point'.tr;
+      case '댓글 작성':
+        return 'comment_write_point'.tr;
+      case '좋아요 받음':
+        return 'like_received_point'.tr;
+      case '좋아요':
+        return 'like_given_point'.tr;
+      case '소원 작성':
+        return 'wish_write_point'.tr;
+      case '코인 경마 우승':
+        return 'horse_race_win_point'.tr;
+      case '출석 보너스':
+        return 'attendance_bonus_point'.tr;
+      default:
+        return type;
+    }
+  }
+
   String _formatDate(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
 
     if (difference.inMinutes < 1) {
-      return '방금 전';
+      return 'just_now'.tr;
     } else if (difference.inHours < 1) {
-      return '${difference.inMinutes}분 전';
+      return '${difference.inMinutes}${'minutes_ago'.tr}';
     } else if (difference.inDays < 1) {
-      return '${difference.inHours}시간 전';
+      return '${difference.inHours}${'hours_ago'.tr}';
     } else if (difference.inDays < 7) {
-      return '${difference.inDays}일 전';
+      return '${difference.inDays}${'days_ago'.tr}';
     } else {
       return DateFormat('MM/dd').format(dateTime);
     }

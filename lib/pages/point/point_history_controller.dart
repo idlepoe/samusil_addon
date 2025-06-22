@@ -78,7 +78,7 @@ class PointHistoryController extends GetxController {
       }
     } catch (e) {
       logger.e('포인트 히스토리 로드 오류: $e');
-      AppSnackbar.error('포인트 내역을 불러오는 중 오류가 발생했습니다.');
+      AppSnackbar.error('load_point_error'.tr);
     } finally {
       isLoading.value = false;
     }

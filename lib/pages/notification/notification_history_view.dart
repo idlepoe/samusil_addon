@@ -21,9 +21,9 @@ class NotificationHistoryView extends GetView<NotificationHistoryController> {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: () => Get.back(),
         ),
-        title: const Text(
-          '알림',
-          style: TextStyle(
+        title: Text(
+          'notification'.tr,
+          style: const TextStyle(
             color: Colors.black,
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -33,9 +33,9 @@ class NotificationHistoryView extends GetView<NotificationHistoryController> {
         actions: [
           TextButton(
             onPressed: controller.markAllAsRead,
-            child: const Text(
-              '설정',
-              style: TextStyle(
+            child: Text(
+              'settings'.tr,
+              style: const TextStyle(
                 color: Colors.grey,
                 fontSize: 16,
                 fontWeight: FontWeight.w400,
@@ -61,7 +61,7 @@ class NotificationHistoryView extends GetView<NotificationHistoryController> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  '알림이 없어요',
+                  'no_notifications'.tr,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
@@ -70,7 +70,7 @@ class NotificationHistoryView extends GetView<NotificationHistoryController> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '새로운 소식이 있으면 알려드릴게요',
+                  'notification_empty_message'.tr,
                   style: TextStyle(fontSize: 16, color: Colors.grey[500]),
                 ),
               ],
@@ -243,13 +243,13 @@ class NotificationHistoryView extends GetView<NotificationHistoryController> {
     final difference = now.difference(dateTime);
 
     if (difference.inMinutes < 1) {
-      return '방금 전';
+      return 'just_now'.tr;
     } else if (difference.inHours < 1) {
-      return '${difference.inMinutes}분 전';
+      return '${difference.inMinutes}${'minutes_ago'.tr}';
     } else if (difference.inDays < 1) {
-      return '${difference.inHours}시간 전';
+      return '${difference.inHours}${'hours_ago'.tr}';
     } else if (difference.inDays < 7) {
-      return '${difference.inDays}일 전';
+      return '${difference.inDays}${'days_ago'.tr}';
     } else {
       return DateFormat('MM/dd HH:mm').format(dateTime);
     }

@@ -41,9 +41,9 @@ class _HorseRaceViewState extends State<HorseRaceView> {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F8), // 토스 스타일 배경
       appBar: AppBar(
-        title: const Text(
-          "코인 경마",
-          style: TextStyle(
+        title: Text(
+          "coin_horse_race".tr,
+          style: const TextStyle(
             color: Color(0xFF333D4B),
             fontWeight: FontWeight.bold,
           ),
@@ -64,11 +64,14 @@ class _HorseRaceViewState extends State<HorseRaceView> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildStatusCard("경마 없음", null),
+                  _buildStatusCard("no_race".tr, null),
                   const SizedBox(height: 20),
-                  const Text(
-                    "다음 경마를 기다려주세요.",
-                    style: TextStyle(color: Color(0xFF6B7684), fontSize: 16),
+                  Text(
+                    "wait_next_race".tr,
+                    style: const TextStyle(
+                      color: Color(0xFF6B7684),
+                      fontSize: 16,
+                    ),
                   ),
                 ],
               ),
@@ -106,16 +109,16 @@ class _HorseRaceViewState extends State<HorseRaceView> {
     final String timeLabel;
     switch (status) {
       case '베팅 중':
-        timeLabel = '베팅 마감까지';
+        timeLabel = 'until_betting_end'.tr;
         break;
       case '경주 중':
-        timeLabel = '경주 종료까지';
+        timeLabel = 'until_race_end'.tr;
         break;
       case '대기 중':
-        timeLabel = '경주 시작까지';
+        timeLabel = 'until_race_start'.tr;
         break;
       default: // '경마 없음', '경주 종료' 포함
-        timeLabel = '다음 경마까지';
+        timeLabel = 'until_next_race'.tr;
         break;
     }
 
@@ -144,8 +147,8 @@ class _HorseRaceViewState extends State<HorseRaceView> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "오늘의 경마",
-                style: TextStyle(
+                "todays_race".tr,
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF333D4B),
@@ -174,12 +177,12 @@ class _HorseRaceViewState extends State<HorseRaceView> {
           const SizedBox(height: 16),
           if (race != null) ...[
             Text(
-              "∙ 베팅: $bettingStart ~ $bettingEnd",
+              "∙ ${'betting_time'.tr}: $bettingStart ~ $bettingEnd",
               style: TextStyle(color: Color(0xFF4E5968), fontSize: 14),
             ),
             const SizedBox(height: 4),
             Text(
-              "∙ 경마: $raceStart ~ $raceEnd",
+              "∙ ${'race_time'.tr}: $raceStart ~ $raceEnd",
               style: TextStyle(color: Color(0xFF4E5968), fontSize: 14),
             ),
             const SizedBox(height: 16),
@@ -215,7 +218,7 @@ class _HorseRaceViewState extends State<HorseRaceView> {
       children: [
         _buildSectionContainer([
           _buildTitleValueRow(
-            "소유 포인트",
+            "owned_points".tr,
             Obx(
               () => Text(
                 '${ProfileController.to.currentPoint} P',
@@ -230,19 +233,21 @@ class _HorseRaceViewState extends State<HorseRaceView> {
         ]),
         const SizedBox(height: 12),
         _buildSectionContainer([
-          _buildTitleRow("베팅 종류"),
+          _buildTitleRow("bet_type".tr),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: _buildBetTypeButton('winner', '1등 맞추기', 5.0)),
+              Expanded(
+                child: _buildBetTypeButton('winner', 'winner_bet'.tr, 5.0),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: _buildBetTypeButton('top2', '2등 안에 맞추기', 2.0)),
+              Expanded(child: _buildBetTypeButton('top2', 'top2_bet'.tr, 2.0)),
               const SizedBox(width: 8),
-              Expanded(child: _buildBetTypeButton('top3', '3등 안에 맞추기', 1.5)),
+              Expanded(child: _buildBetTypeButton('top3', 'top3_bet'.tr, 1.5)),
             ],
           ),
           const SizedBox(height: 20),
-          _buildTitleRow("베팅 금액"),
+          _buildTitleRow("betting_amount".tr),
           const SizedBox(height: 12),
           Row(
             children:
@@ -259,7 +264,7 @@ class _HorseRaceViewState extends State<HorseRaceView> {
           ),
           const SizedBox(height: 20),
           _buildTitleValueRow(
-            "예상 획득 포인트",
+            "expected_points".tr,
             Obx(
               () => Text(
                 "${controller.getExpectedPoints()}P",
@@ -294,9 +299,9 @@ class _HorseRaceViewState extends State<HorseRaceView> {
               child:
                   controller.isBetting.value
                       ? const AppButtonProgress(color: Colors.white, size: 24)
-                      : const Text(
-                        "베팅하기",
-                        style: TextStyle(
+                      : Text(
+                        "place_bet".tr,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -356,9 +361,9 @@ class _HorseRaceViewState extends State<HorseRaceView> {
 
   Widget _buildRaceSection(HorseRace race) {
     return _buildSectionContainer([
-      const Text(
-        "경주 현황",
-        style: TextStyle(
+      Text(
+        "race_status".tr,
+        style: const TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.bold,
           color: Color(0xFF333D4B),
@@ -474,7 +479,7 @@ class _HorseRaceViewState extends State<HorseRaceView> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Text(
-                  '🏁 $rank위',
+                  '🏁 $rank${'rank_position'.tr}',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
@@ -491,7 +496,7 @@ class _HorseRaceViewState extends State<HorseRaceView> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  'MY BET',
+                  'my_bet'.tr.toUpperCase(),
                   style: TextStyle(
                     color: Theme.of(context).primaryColor,
                     fontSize: 10,
@@ -530,7 +535,7 @@ class _HorseRaceViewState extends State<HorseRaceView> {
             ),
             const SizedBox(height: 4),
             Text(
-              "${multiplier.toStringAsFixed(1)}배",
+              "${multiplier.toStringAsFixed(1)}${'multiplier'.tr}",
               style: TextStyle(
                 fontSize: 11,
                 color: isSelected ? Colors.white70 : Colors.grey[600],
@@ -584,18 +589,18 @@ class _HorseRaceViewState extends State<HorseRaceView> {
             size: 48,
           ),
           const SizedBox(height: 12),
-          const Text(
-            "베팅 완료!",
-            style: TextStyle(
+          Text(
+            "bet_completed".tr,
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Color(0xFF333D4B),
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            "경주가 시작될 때까지 기다려주세요.",
-            style: TextStyle(fontSize: 15, color: Color(0xFF6B7684)),
+          Text(
+            "wait_race_start".tr,
+            style: const TextStyle(fontSize: 15, color: Color(0xFF6B7684)),
           ),
         ],
       ),
