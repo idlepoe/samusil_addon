@@ -3,6 +3,7 @@ import * as admin from 'firebase-admin';
 import { verifyAuth } from '../utils/auth';
 import { FIRESTORE_COLLECTION_ARTICLE } from '../utils/constants';
 import { awardPointsForLike } from '../utils/pointService';
+import { sendLikeNotification } from '../utils/notificationService';
 
 export const toggleLike = onRequest({
   cors: true,
@@ -28,42 +29,93 @@ export const toggleLike = onRequest({
     }
 
     const articleRef = admin.firestore().collection(FIRESTORE_COLLECTION_ARTICLE).doc(articleId);
+    const articleDoc = await articleRef.get();
+
+    if (!articleDoc.exists) {
+      res.status(404).json({ success: false, error: 'Article not found' });
+      return;
+    }
+
+    const articleData = articleDoc.data()!;
+    const authorUid = articleData.author_uid;
+
     const likeRef = articleRef.collection('likes').doc(uid);
+    const likeDoc = await likeRef.get();
 
-    await admin.firestore().runTransaction(async (transaction) => {
-      const articleDoc = await transaction.get(articleRef);
-      if (!articleDoc.exists) {
-        throw new Error('Article not found');
+    let isLiked = false;
+    let pointsEarned = 0;
+    let newPoints = 0;
+
+    if (likeDoc.exists) {
+      // 좋아요 취소
+      await likeRef.delete();
+      
+      // 게시글의 좋아요 수 감소
+      await articleRef.update({
+        count_like: admin.firestore.FieldValue.increment(-1)
+      });
+    } else {
+      // 좋아요 추가
+      await likeRef.set({
+        user_uid: uid,
+        created_at: new Date()
+      });
+      
+      // 게시글의 좋아요 수 증가
+      await articleRef.update({
+        count_like: admin.firestore.FieldValue.increment(1)
+      });
+
+      isLiked = true;
+
+      // 좋아요 시 포인트 지급 (작성자에게)
+      if (uid !== authorUid) {
+        newPoints = await awardPointsForLike(authorUid, articleId);
+        pointsEarned = 1;
       }
-      const likeDoc = await transaction.get(likeRef);
-      let countLike = articleDoc.get('count_like') || 0;
-      const articleData = articleDoc.data()!;
-      const authorUid = articleData.profile_uid;
 
-      if (likeDoc.exists) {
-        // 좋아요 취소
-        transaction.delete(likeRef);
-        transaction.update(articleRef, { count_like: Math.max(0, countLike - 1) });
-      } else {
-        // 좋아요 추가
-        transaction.set(likeRef, { created_at: new Date() });
-        transaction.update(articleRef, { count_like: countLike + 1 });
-        
-        // 작성자에게 포인트 지급 (자신의 게시글에 좋아요를 누른 경우는 제외)
-        if (authorUid !== uid) {
-          try {
-            await awardPointsForLike(authorUid, articleId);
-          } catch (error) {
-            console.error('Error awarding points for like:', error);
-            // 포인트 지급 실패는 좋아요 기능에 영향을 주지 않도록 함
-          }
-        }
+      // 좋아요 알림 발송
+      const likerProfileRef = admin.firestore().collection('profile').doc(uid);
+      const likerProfileDoc = await likerProfileRef.get();
+      let likerName = '사용자';
+      
+      if (likerProfileDoc.exists) {
+        const likerProfileData = likerProfileDoc.data();
+        likerName = likerProfileData?.name || '사용자';
+      }
+
+      await sendLikeNotification(
+        articleId,
+        articleData.title,
+        authorUid,
+        uid,
+        likerName
+      );
+    }
+
+    // 업데이트된 좋아요 수 반환
+    const updatedArticleDoc = await articleRef.get();
+    const updatedCountLike = updatedArticleDoc.data()?.count_like || 0;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        isLiked: isLiked,
+        countLike: updatedCountLike,
+        pointsEarned: pointsEarned,
+        newPoints: newPoints
       }
     });
-
-    res.status(200).json({ success: true });
   } catch (error: any) {
     console.error('Error toggling like:', error);
-    res.status(500).json({ success: false, error: error.message || 'Failed to toggle like' });
+    
+    if (
+      error instanceof Error &&
+      (error.message.includes('authorization') || error.message.includes('token'))
+    ) {
+      res.status(401).json({ success: false, error: 'Authentication failed' });
+    } else {
+      res.status(500).json({ success: false, error: 'Failed to toggle like' });
+    }
   }
 }); 

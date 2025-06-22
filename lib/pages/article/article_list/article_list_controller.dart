@@ -43,7 +43,14 @@ class ArticleListController extends GetxController {
   @override
   void onReady() {
     super.onReady();
-    // onReady에서는 추가 작업 없음 (데이터는 onInit에서 로드)
+    // arguments에서 showWriteSheet 확인
+    final arguments = Get.arguments;
+    if (arguments != null && arguments['showWriteSheet'] == true) {
+      // 약간의 지연 후 작성 bottom sheet 표시
+      Future.delayed(const Duration(milliseconds: 500), () {
+        navigateToEdit();
+      });
+    }
   }
 
   // 데이터 로드

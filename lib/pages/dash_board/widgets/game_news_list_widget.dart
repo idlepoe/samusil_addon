@@ -45,26 +45,31 @@ class GameNewsListWidget extends StatelessWidget {
       if (controller.gameNews.isEmpty) {
         return Card(
           color: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.article_outlined,
-                      color: Colors.grey[600],
-                      size: 32,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '게임 뉴스가 없습니다',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                    ),
-                  ],
-                ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.article_outlined,
+                    color: Colors.grey[600],
+                    size: 48,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    '게임 뉴스가 없습니다',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '새로운 게임 소식을 기다려주세요!',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 14),
+                  ),
+                ],
               ),
             ),
-          );
+          ),
+        );
       }
 
       final gameList = controller.gameNews;

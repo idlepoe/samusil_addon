@@ -1,12 +1,18 @@
 import 'package:get/get.dart';
 import 'package:samusil_addon/controllers/profile_controller.dart';
 import 'dash_board_controller.dart';
+import 'package:logger/logger.dart';
 
 class DashBoardBinding extends Bindings {
+  final logger = Logger();
+
   @override
   void dependencies() {
     Get.put<DashBoardController>(DashBoardController());
-    // 전역 컨트롤러 초기화
-    Get.put<ProfileController>(ProfileController(), permanent: true);
+    
+    // ProfileController 등록 (자동 초기화 방지)
+    if (!Get.isRegistered<ProfileController>()) {
+      Get.put<ProfileController>(ProfileController(), permanent: true);
+    }
   }
 }

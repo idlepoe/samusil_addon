@@ -29,22 +29,48 @@ class AllArticlesWidget extends StatelessWidget {
       }
 
       if (controller.allArticles.isEmpty) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Center(
-            child: Column(
-              children: [
-                Icon(
-                  Icons.article_outlined,
-                  color: Colors.grey[600],
-                  size: 48,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  '게시글이 없습니다',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 16),
-                ),
-              ],
+        return Card(
+          color: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.article_outlined,
+                    color: Colors.grey[600],
+                    size: 48,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    '게시글이 없습니다',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '첫 번째 게시글을 작성해보세요!',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 14),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      // 게시글 목록 화면으로 이동하고 작성 bottom sheet 표시
+                      Get.toNamed("/list/${Define.BOARD_FREE}", arguments: {'showWriteSheet': true}
+                      );
+                    },
+                    icon: const Icon(Icons.edit, size: 18),
+                    label: const Text('게시글 작성하기'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0064FF),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );

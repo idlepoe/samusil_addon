@@ -23,12 +23,6 @@ export const BOARD_IT_NEWS = "it_news_board";
 export const BOARD_GAME_NEWS = "game_news_board";
 export const BOARD_REPORT = "report_suggestion_board";
 
-// 게시판 인덱스
-export const INDEX_BOARD_ALL_PAGE = 0;
-export const INDEX_BOARD_FREE_PAGE = 1;
-export const INDEX_BOARD_GAME_NEWS_PAGE = 2;
-export const INDEX_BOARD_IT_NEWS_PAGE = 3;
-
 // 포인트 상수
 export const POINT_WRITE_ARTICLE = 10;
 export const POINT_RECEIVE_LIKE = 5;

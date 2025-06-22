@@ -4,10 +4,13 @@ import 'package:line_icons/line_icons.dart';
 import 'package:samusil_addon/components/profile_avatar_widget.dart';
 import 'package:samusil_addon/controllers/profile_controller.dart';
 import 'package:samusil_addon/utils/util.dart';
+import 'package:intl/intl.dart';
 
 import '../../../components/appBarAction.dart';
 import '../../../components/bottomButton.dart';
 import '../../../define/define.dart';
+import '../../../define/arrays.dart';
+import '../../../define/enum.dart';
 import '../../../models/article.dart';
 import '../../../models/board_info.dart';
 import '../../../utils/util.dart';

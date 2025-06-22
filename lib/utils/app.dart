@@ -144,7 +144,6 @@ class App {
     } catch (e) {
       logger.e(e);
     }
-    result = result.copyWith(alarms: result.alarms.reversed.toList());
     return result;
   }
 
@@ -155,7 +154,7 @@ class App {
         .doc(profile.uid);
 
     await docRef
-        .update({"profile_image_url": profile.profile_image_url})
+        .update({"photo_url": profile.photo_url})
         .then(
           (value) async {
             result = true;

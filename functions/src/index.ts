@@ -10,30 +10,31 @@ if (!admin.apps.length) {
 
 // Articles
 export { createArticle } from './articles/createArticle';
-export { getArticleDetail } from './articles/getArticleDetail';
 export { getArticleList } from './articles/getArticleList';
-
-// Article
+export { getArticleDetail } from './articles/getArticleDetail';
 export { updateArticle } from './articles/updateArticle';
 export { deleteArticle } from './articles/deleteArticle';
-
-// Comments
 export { createComment } from './articles/createComment';
 export { deleteComment } from './articles/deleteComment';
-
-// Coins
-export { getCoinList } from './coins/getCoinList';
-export { buyCoin } from './coins/buyCoin';
-export { sellCoin } from './coins/sellCoin';
-
-// Coins Schedule
-export { updateCoinPrice } from './coins/updateCoinPrice';
-export { manualUpdateCoinPrice } from './coins/manualUpdateCoinPrice';
-export { scheduledUpdateCoinPrice } from './coins/scheduledUpdateCoinPrice';
+export { toggleLike } from './articles/toggleLike';
 
 // Profiles
 export { createWish } from './profiles/createWish';
 export { getWish } from './profiles/getWish';
+
+// Alarms
+export { createAlarm } from './alarms/createAlarm';
+export { getAlarms } from './alarms/getAlarms';
+export { updateAlarm } from './alarms/updateAlarm';
+
+// News
+export { scheduledGameNewsCollection } from './news/scheduledNewsCollection';
+export { manualNewsCollection } from './news/manualNewsCollection';
+
+// Race
+export { scheduledCreateHorseRace } from './race/scheduledCreateHorseRace';
+export { scheduledUpdateHorseRace } from './race/scheduledUpdateHorseRace';
+export { placeBet } from './race/placeBet';
 
 // // Alarms
 // export { createAlarm } from './alarms/createAlarm';
@@ -42,6 +43,6 @@ export { getWish } from './profiles/getWish';
 
 // News
 // export { scheduledGameNewsCollection } from './news/scheduledNewsCollection';
-export { manualNewsCollection } from './news/manualNewsCollection';
+// export { manualNewsCollection } from './news/manualNewsCollection';
 
-export * from './articles/toggleLike'; 
+// export * from './articles/toggleLike'; 

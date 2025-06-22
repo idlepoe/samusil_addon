@@ -20,37 +20,6 @@ enum PopupItem { profile, point, option, logout }
 
 List<Widget> AppBarAction(BuildContext context, Profile profile) {
   return [
-    Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Obx(() {
-          final profileController = ProfileController.to;
-          int noReadLength = 0;
-          for (Alarm row in profileController.profile.value.alarms) {
-            if (!row.is_read) {
-              noReadLength++;
-            }
-          }
-          
-          return badges.Badge(
-            badgeContent: Text(
-              noReadLength.toString(),
-              style: const TextStyle(color: Colors.white),
-            ),
-            badgeStyle: const badges.BadgeStyle(),
-            position: badges.BadgePosition.topEnd(top: 0, end: 0),
-            showBadge: noReadLength > 0,
-            child: IconButton(
-              onPressed: () async {
-                Get.toNamed("/alarm");
-              },
-              icon: const Icon(Icons.notifications_none_outlined),
-            ),
-          );
-        }),
-      ],
-    ),
-    const SizedBox(width: 10),
     PopupMenuButton<PopupItem>(
       icon: Obx(() {
         final profileController = ProfileController.to;

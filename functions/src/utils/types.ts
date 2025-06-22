@@ -124,4 +124,24 @@ export interface PointAction {
   points_earned: number;
   description: string;
   related_id?: string;
+}
+
+/**
+ * Cloud Function의 표준 응답 형식입니다.
+ */
+export interface CloudFunctionResponse {
+  success: boolean;
+  message?: string;
+  data?: any;
+}
+
+/**
+ * 사용자 프로필 정보를 나타냅니다.
+ */
+export interface UserProfile {
+  uid: string;
+  name: string;
+  photo_url: string;
+  point: number;
+  one_comment: string;
 } 

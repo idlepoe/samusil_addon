@@ -3,6 +3,7 @@ import * as admin from 'firebase-admin';
 import { FIRESTORE_COLLECTION_ARTICLE } from '../utils/constants';
 import { verifyAuth } from '../utils/auth';
 import { awardPointsForComment } from '../utils/pointService';
+import { sendCommentNotification } from '../utils/notificationService';
 
 export const createComment = onRequest({ 
   cors: true,
@@ -42,12 +43,13 @@ export const createComment = onRequest({
     }
 
     // 작성자의 프로필 정보 조회 (포인트 포함)
-    const profileRef = admin.firestore().collection('profiles').doc(uid);
+    const profileRef = admin.firestore().collection('profile').doc(uid);
     const profileDoc = await profileRef.get();
     let profilePoint = 0;
+    let profileData: any = null;
     
     if (profileDoc.exists) {
-      const profileData = profileDoc.data();
+      profileData = profileDoc.data();
       profilePoint = profileData?.point || 0;
     }
 
@@ -80,6 +82,19 @@ export const createComment = onRequest({
     // 포인트 지급
     const pointsEarned = isFirstComment ? 8 : 3;
     const newPoints = await awardPointsForComment(uid, commentRef.id, isFirstComment);
+
+    // 댓글 알림 발송
+    const articleData = articleDoc.data()!;
+    const authorUid = articleData.author_uid;
+    const commenterName = profileData?.name || commentData.profile_name;
+
+    await sendCommentNotification(
+      articleId,
+      articleData.title,
+      authorUid,
+      uid,
+      commenterName
+    );
 
     // 업데이트된 댓글 목록 반환
     const commentsSnapshot = await articleRef.collection('comments').orderBy('created_at', 'asc').get();

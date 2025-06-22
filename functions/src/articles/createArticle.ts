@@ -48,7 +48,7 @@ export const createArticle = onRequest({
     const articleRef = db.collection(FIRESTORE_COLLECTION_ARTICLE).doc();
 
     // 작성자의 프로필 정보 조회 (포인트 포함)
-    const profileRef = db.collection('profiles').doc(uid);
+    const profileRef = db.collection('profile').doc(uid);
     const profileDoc = await profileRef.get();
     let profilePoint = 0;
     

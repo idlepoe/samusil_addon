@@ -14,6 +14,7 @@ import '../../utils/app.dart';
 import '../../utils/util.dart';
 import '../wish/wish_controller.dart';
 import '../../controllers/profile_controller.dart';
+import '../../controllers/horse_race_controller.dart';
 import '../../main.dart';
 
 class DashBoardController extends GetxController {
@@ -46,6 +47,11 @@ class DashBoardController extends GetxController {
     if (!Get.isRegistered<WishController>()) {
       Get.put(WishController());
     }
+    
+    // HorseRaceController 바인딩
+    if (!Get.isRegistered<HorseRaceController>()) {
+      Get.put(HorseRaceController());
+    }
   }
 
   @override
@@ -53,15 +59,36 @@ class DashBoardController extends GetxController {
     super.onReady();
     logger.i("DashBoardController onReady called");
     
-    // ProfileController의 프로필이 로드될 때까지 대기
-    if (ProfileController.to.profile.value == null) {
-      logger.i("Waiting for profile to load...");
-      await ProfileController.to.loadProfile();
-    }
+    // ProfileController 초기화 확인 및 처리
+    await _ensureProfileControllerInitialized();
     
     logger.i("Starting DashBoardController init...");
     await init();
     logger.i("DashBoardController init completed");
+  }
+
+  /// ProfileController가 초기화되었는지 확인하고, 필요시 초기화합니다.
+  Future<void> _ensureProfileControllerInitialized() async {
+    try {
+      final profileController = ProfileController.to;
+      
+      // ProfileController가 초기화되지 않았다면 초기화
+      if (!profileController.isInitialized.value) {
+        logger.i("ProfileController가 초기화되지 않았습니다. 초기화를 시작합니다.");
+        
+        // 프로필 데이터 로드
+        final profile = await App.getProfile();
+        
+        // ProfileController 초기화
+        await profileController.initializeWithProfile(profile);
+        
+        logger.i("ProfileController 초기화 완료");
+      } else {
+        logger.i("ProfileController가 이미 초기화되어 있습니다.");
+      }
+    } catch (e) {
+      logger.e("ProfileController 초기화 오류: $e");
+    }
   }
 
   @override

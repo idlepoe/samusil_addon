@@ -7,7 +7,7 @@ import '../../controllers/profile_controller.dart';
 import '../../models/profile.dart';
 import '../left_drawer/left_drawer.dart';
 import 'dash_board_controller.dart';
-import 'widgets/coin_price_scroll_widget.dart';
+import 'widgets/race_status_widget.dart';
 import 'widgets/date_wish_card_widget.dart';
 import 'widgets/game_news_list_widget.dart';
 import 'widgets/all_articles_widget.dart';
@@ -40,7 +40,7 @@ class DashBoardView extends GetView<DashBoardController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 코인 가격 스크롤
-            const CoinPriceScrollWidget(),
+            const RaceStatusWidget(),
             const SizedBox(height: 20),
 
             // 오늘 날짜 헤더
