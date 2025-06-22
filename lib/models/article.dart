@@ -25,6 +25,10 @@ Timestamp _timestampToJson(DateTime dateTime) {
   return Timestamp.fromDate(dateTime);
 }
 
+Timestamp? _timestampToJsonNullable(DateTime? dateTime) {
+  return dateTime != null ? Timestamp.fromDate(dateTime) : null;
+}
+
 @freezed
 abstract class Article with _$Article {
   const factory Article({
@@ -41,8 +45,12 @@ abstract class Article with _$Article {
     required List<ArticleContent> contents,
     @JsonKey(fromJson: _timestampFromJson, toJson: _timestampToJson)
     required DateTime created_at,
+    @JsonKey(fromJson: _timestampFromJson, toJson: _timestampToJsonNullable)
+    DateTime? updated_at,
+    @JsonKey(fromJson: _toInt) int? profile_point,
     required bool is_notice,
     String? thumbnail,
+    List<MainComment>? comments,
   }) = _Article;
 
   factory Article.fromJson(Map<String, dynamic> json) =>

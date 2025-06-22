@@ -22,10 +22,10 @@ export const updateArticle = onRequest({
     const decoded = await verifyAuth(req);
     const uid = decoded.uid;
 
-    const { articleKey, contents } = req.body;
+    const { articleKey, contents, title } = req.body;
     
-    if (!articleKey || !contents) {
-      res.status(400).json({ success: false, error: 'Article key and contents are required' });
+    if (!articleKey || !contents || !title) {
+      res.status(400).json({ success: false, error: 'Article key, title and contents are required' });
       return;
     }
 

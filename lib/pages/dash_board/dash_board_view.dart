@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../components/appBarAction.dart';
 import '../../define/define.dart';
 import '../../controllers/profile_controller.dart';
+import '../../models/profile.dart';
 import '../left_drawer/left_drawer.dart';
 import 'dash_board_controller.dart';
 import 'widgets/coin_price_scroll_widget.dart';
@@ -31,7 +32,7 @@ class DashBoardView extends GetView<DashBoardController> {
           ),
         ),
         centerTitle: true,
-        actions: AppBarAction(context, ProfileController.to.profile.value),
+        actions: AppBarAction(context, Profile.init()),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),

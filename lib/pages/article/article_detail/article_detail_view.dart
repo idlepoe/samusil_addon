@@ -27,24 +27,15 @@ class ArticleDetailView extends GetView<ArticleDetailController> {
               child: CustomScrollView(
                 slivers: [
                   SliverToBoxAdapter(
-                    child: Container(
-                      margin: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const ArticleHeaderWidget(),
+                          const SizedBox(height: 16),
                           const ArticleContentWidget(),
+                          const SizedBox(height: 24),
                           const ActionButtonsWidget(),
                         ],
                       ),

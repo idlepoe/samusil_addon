@@ -40,36 +40,41 @@ export const deleteComment = onRequest({
       return;
     }
 
-    const articleData = articleDoc.data();
-    if (!articleData) {
-      res.status(404).json({ success: false, error: 'Article data not found' });
-      return;
-    }
+    // 댓글 서브컬렉션에서 댓글 찾기
+    const commentRef = articleRef.collection('comments').doc(commentId);
+    const commentDoc = await commentRef.get();
 
-    // 댓글 목록에서 해당 댓글 찾기
-    const comments = articleData.comments || [];
-    const commentIndex = comments.findIndex((comment: any) => comment.id === commentId);
-
-    if (commentIndex === -1) {
+    if (!commentDoc.exists) {
       res.status(404).json({ success: false, error: 'Comment not found' });
       return;
     }
 
-    const commentToDelete = comments[commentIndex];
+    const commentData = commentDoc.data();
+    if (!commentData) {
+      res.status(404).json({ success: false, error: 'Comment data not found' });
+      return;
+    }
 
     // 댓글 작성자 확인 (토큰의 uid와 댓글의 profile_uid 비교)
-    if (commentToDelete.profile_uid !== uid) {
+    if (commentData.profile_uid !== uid) {
       res.status(403).json({ success: false, error: 'Only the author can delete the comment' });
       return;
     }
 
     // 댓글 삭제
-    comments.splice(commentIndex, 1);
+    await commentRef.delete();
 
+    // 게시글의 댓글 수 감소
     await articleRef.update({
-      comments: comments,
       count_comments: admin.firestore.FieldValue.increment(-1)
     });
+
+    // 업데이트된 댓글 목록 반환
+    const commentsSnapshot = await articleRef.collection('comments').orderBy('created_at', 'asc').get();
+    const comments = commentsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
 
     res.status(200).json({
       success: true,

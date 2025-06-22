@@ -180,6 +180,11 @@ class Utils {
     return result;
   }
 
+  static String formatDateTime(DateTime dateTime) {
+    DateFormat df = DateFormat('MM/dd HH:mm');
+    return df.format(dateTime);
+  }
+
   static Future<void> setLanguage(int language) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setInt(Define.SHARED_LANGUAGE, language);

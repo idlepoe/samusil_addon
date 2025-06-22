@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/profile.dart';
 import '../utils/app.dart';
@@ -14,14 +17,90 @@ class ProfileController extends GetxController {
   final Rx<Profile> profile = Profile.init().obs;
   final RxBool isLoading = false.obs;
 
+  // Firestore 스트림 구독을 위한 변수
+  StreamSubscription<DocumentSnapshot>? _profileStreamSubscription;
+
   @override
   void onInit() {
     super.onInit();
-    // 컨트롤러 초기화 시 프로필 데이터 로드
-    loadProfile();
+    // Firestore 스트림 초기화
+    _initProfileStream();
   }
 
-  /// 프로필 데이터를 로드합니다.
+  @override
+  void onClose() {
+    _profileStreamSubscription?.cancel();
+    super.onClose();
+  }
+
+  /// Firestore 프로필 스트림 초기화
+  void _initProfileStream() {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        logger.w('User not authenticated, cannot initialize profile stream');
+        return;
+      }
+
+      final profileRef = FirebaseFirestore.instance
+          .collection('profiles')
+          .doc(user.uid);
+
+      _profileStreamSubscription = profileRef.snapshots().listen(
+        (DocumentSnapshot snapshot) async {
+          if (snapshot.exists) {
+            try {
+              final profileData = snapshot.data() as Map<String, dynamic>;
+              final userProfile = Profile.fromJson(profileData);
+              profile.value = userProfile;
+              logger.i('Profile updated via stream: ${userProfile.name}');
+            } catch (e) {
+              logger.e('Error parsing profile data from stream: $e');
+            }
+          } else {
+            logger.w('Profile document does not exist');
+            // 프로필이 없으면 초기 프로필 생성
+            await _createInitialProfile(user.uid);
+          }
+        },
+        onError: (error) {
+          logger.e('Profile stream error: $error');
+        },
+      );
+    } catch (e) {
+      logger.e('Error initializing profile stream: $e');
+    }
+  }
+
+  /// 초기 프로필 생성
+  Future<void> _createInitialProfile(String uid) async {
+    try {
+      final initialProfile = Profile(
+        uid: uid,
+        name: '익명${uid.substring(0, 5)}',
+        profile_image_url: '',
+        photo_url: '',
+        wish_last_date: '',
+        wish_streak: 0,
+        point: 0.0,
+        alarms: [],
+        coin_balance: [],
+        one_comment: '',
+      );
+
+      await FirebaseFirestore.instance
+          .collection('profiles')
+          .doc(uid)
+          .set(initialProfile.toJson());
+
+      profile.value = initialProfile;
+      logger.i('Initial profile created: ${initialProfile.name}');
+    } catch (e) {
+      logger.e('Error creating initial profile: $e');
+    }
+  }
+
+  /// 프로필 데이터를 로드합니다. (스트림이 실패할 경우를 위한 백업)
   Future<void> loadProfile() async {
     try {
       isLoading.value = true;

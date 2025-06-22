@@ -5,6 +5,7 @@ import 'package:line_icons/line_icons.dart';
 
 import '../../../define/define.dart';
 import '../../../models/board_info.dart';
+import '../../../components/appButton.dart';
 import 'article_edit_controller.dart';
 
 class ArticleEditView extends GetView<ArticleEditController> {
@@ -15,13 +16,9 @@ class ArticleEditView extends GetView<ArticleEditController> {
 
   @override
   Widget build(BuildContext context) {
-    // 컨트롤러에 파라미터 전달
-    final controller = ArticleEditController(articleKey: id);
-    Get.lazyPut(() => controller);
-
-    // boardInfo를 컨트롤러에 직접 설정 (있는 경우에만)
+    // boardInfo를 컨트롤러에 직접 설정
     if (boardInfo != null) {
-      controller.init(boardInfo!);
+      controller.init(boardInfo);
     }
 
     return Scaffold(
@@ -89,8 +86,9 @@ class ArticleEditView extends GetView<ArticleEditController> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0064FF)),
+              AppLoadingIndicator(
+                size: 32,
+                color: Color(0xFF0064FF),
               ),
               SizedBox(height: 16),
               Text(

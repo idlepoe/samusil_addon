@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
+import 'package:samusil_addon/components/article_image_widget.dart';
 
 import '../../../define/arrays.dart';
 import '../../../define/define.dart';
@@ -17,337 +18,287 @@ class AllArticlesWidget extends StatelessWidget {
 
   AllArticlesWidget({super.key, required this.controller});
 
-  Future<List<Article>> _loadAllArticles() async {
-    try {
-      return await App.getArticleList(
-        boardInfo: Arrays.getBoardInfo(Define.BOARD_FREE),
-        search: "",
-        limit: Define.DEFAULT_DASH_BOARD_GET_LENGTH,
-      );
-    } catch (e) {
-      logger.e("Error loading all articles: $e");
-      return [];
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Article>>(
-      future: _loadAllArticles(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
+    return Obx(() {
+      if (controller.isLoadingAllArticles.value) {
+        return const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Center(child: CircularProgressIndicator()),
+        );
+      }
 
-        if (snapshot.hasError) {
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Center(
-              child: Column(
-                children: [
-                  Icon(Icons.error_outline, color: Colors.grey[600], size: 48),
-                  const SizedBox(height: 16),
-                  Text(
-                    '게시글을 불러올 수 없습니다',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
-                  ),
-                ],
-              ),
+      if (controller.allArticles.isEmpty) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Center(
+            child: Column(
+              children: [
+                Icon(
+                  Icons.article_outlined,
+                  color: Colors.grey[600],
+                  size: 48,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  '게시글이 없습니다',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                ),
+              ],
             ),
-          );
-        }
-
-        if (!snapshot.hasData) {
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Center(
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.article_outlined,
-                    color: Colors.grey[600],
-                    size: 48,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '게시글이 없습니다',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        final articleList = snapshot.data!;
-
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 섹션 헤더
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 4,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF00C851),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+        );
+      }
+
+      final articleList = controller.allArticles;
+
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 섹션 헤더
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF00C851),
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: InkWell(
-                        onTap: () {
-                          Get.toNamed("/list/${Define.BOARD_FREE}");
-                        },
-                        child: Text(
-                          "자유게시판",
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF191F28),
-                          ),
-                        ),
-                      ),
-                    ),
-                    InkWell(
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: InkWell(
                       onTap: () {
                         Get.toNamed("/list/${Define.BOARD_FREE}");
                       },
                       child: Text(
-                        "더보기",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
+                        "자유게시판",
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF191F28),
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  InkWell(
+                    onTap: () {
+                      Get.toNamed("/list/${Define.BOARD_FREE}");
+                    },
+                    child: Text(
+                      "더보기",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
-                child: Column(
-                  children: [
-                    if (articleList.isNotEmpty)
-                      ...List.generate(
-                        articleList.length <= 20 ? articleList.length : 20,
-                        (index) {
-                          String image = "";
-                          for (
-                            int i = 0;
-                            i < articleList[index].contents.length;
-                            i++
-                          ) {
-                            if (articleList[index].contents[i].isPicture) {
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+              child: Column(
+                children: [
+                  if (articleList.isNotEmpty)
+                    ...List.generate(
+                      articleList.length <= 20 ? articleList.length : 20,
+                      (index) {
+                        String image = "";
+                        int imageCount = 0;
+                        int additionalImageCount = 0;
+                        
+                        // 이미지 개수 계산
+                        for (int i = 0; i < articleList[index].contents.length; i++) {
+                          if (articleList[index].contents[i].isPicture) {
+                            imageCount++;
+                            if (image.isEmpty) {
                               image = articleList[index].contents[i].contents;
-                              break;
                             }
                           }
+                        }
+                        
+                        // 추가 이미지 개수 계산 (첫 번째 이미지 제외)
+                        if (imageCount > 1) {
+                          additionalImageCount = imageCount - 1;
+                        }
 
-                          return InkWell(
-                            onTap: () async {
-                              if (!Get.context!.mounted) return;
-                              Get.toNamed("/detail/${articleList[index].id}");
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              margin: const EdgeInsets.only(bottom: 8),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF8F9FA),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // 섬네일
-                                  ClipRRect(
+                        return InkWell(
+                          onTap: () async {
+                            if (!Get.context!.mounted) return;
+                            Get.toNamed("/detail/${articleList[index].id}");
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            margin: const EdgeInsets.only(bottom: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8F9FA),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // 이미지 섹션 (왼쪽)
+                                if (image.isNotEmpty)
+                                  ArticleImageWidget(
+                                    imageUrl: image,
+                                    width: 50,
+                                    height: 50,
                                     borderRadius: BorderRadius.circular(6),
-                                    child: CachedNetworkImage(
-                                      imageUrl: image,
-                                      width: 60,
-                                      height: 45,
-                                      fit: BoxFit.cover,
-                                      placeholder:
-                                          (context, url) => Container(
-                                            width: 60,
-                                            height: 45,
-                                            color: Colors.grey[200],
-                                            child: const Center(
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                              ),
-                                            ),
-                                          ),
-                                      errorWidget:
-                                          (context, url, error) => Container(
-                                            width: 60,
-                                            height: 45,
-                                            color: Colors.grey[200],
-                                            child: Icon(
-                                              Icons.image,
-                                              color: Colors.grey[400],
-                                              size: 20,
-                                            ),
-                                          ),
+                                    showLoadingIndicator: false,
+                                    additionalImageCount: additionalImageCount > 0 ? additionalImageCount : null,
+                                  )
+                                else
+                                  Container(
+                                    width: 50,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[200],
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Icon(
+                                      Icons.image,
+                                      color: Colors.grey[400],
+                                      size: 20,
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  // 제목과 정보
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          articleList[index].title,
-                                          style: const TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w600,
-                                            color: Color(0xFF191F28),
-                                          ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
+                                const SizedBox(width: 12),
+                                // 제목과 정보 (오른쪽)
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        articleList[index].title,
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF191F28),
                                         ),
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          children: [
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 6,
-                                                    vertical: 2,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color: const Color(
-                                                  0xFF0064FF,
-                                                ).withOpacity(0.1),
-                                                borderRadius:
-                                                    BorderRadius.circular(4),
-                                              ),
-                                              child: Text(
-                                                Arrays.getBoardInfo(
-                                                  articleList[index].board_name,
-                                                ).title.tr,
-                                                style: const TextStyle(
-                                                  fontSize: 11,
-                                                  color: Color(0xFF0064FF),
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 2,
                                             ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              Utils.toConvertFireDateToCommentTime(
-                                                DateFormat(
-                                                  'yyyyMMddHHmm',
-                                                ).format(
-                                                  articleList[index].created_at,
-                                                ),
-                                              ),
-                                              style: TextStyle(
-                                                color: Colors.grey[600],
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF0064FF)
+                                                  .withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              Arrays.getBoardInfo(
+                                                articleList[index].board_name,
+                                              ).title.tr,
+                                              style: const TextStyle(
                                                 fontSize: 11,
+                                                color: Color(0xFF0064FF),
                                                 fontWeight: FontWeight.w500,
                                               ),
                                             ),
-                                            if (articleList[index]
-                                                    .count_comments >
-                                                0) ...[
-                                              const SizedBox(width: 8),
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 4,
-                                                      vertical: 1,
-                                                    ),
-                                                decoration: BoxDecoration(
-                                                  color: const Color(
-                                                    0xFF00C851,
-                                                  ).withOpacity(0.1),
-                                                  borderRadius:
-                                                      BorderRadius.circular(3),
-                                                ),
-                                                child: Text(
-                                                  "${articleList[index].count_comments}",
-                                                  style: const TextStyle(
-                                                    fontSize: 10,
-                                                    color: Color(0xFF00C851),
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ],
-                                        ),
-                                      ],
-                                    ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            articleList[index].profile_name,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          Text(
+                                            DateFormat('MM/dd').format(
+                                              articleList[index].created_at,
+                                            ),
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[500],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.remove_red_eye_outlined,
+                                            size: 14,
+                                            color: Colors.grey[500],
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${articleList[index].count_view}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[500],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Icon(
+                                            Icons.favorite_outline,
+                                            size: 14,
+                                            color: Colors.grey[500],
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${articleList[index].count_like}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[500],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Icon(
+                                            Icons.chat_bubble_outline,
+                                            size: 14,
+                                            color: Colors.grey[500],
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${articleList[index].count_comments}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[500],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          );
-                        },
-                      )
-                    else
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 40,
-                          horizontal: 20,
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.article_outlined,
-                              color: Colors.grey[400],
-                              size: 48,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              '게시글이 없습니다',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '첫 번째 게시글을 작성해보세요!',
-                              style: TextStyle(
-                                color: Colors.grey[500],
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
+                          ),
+                        );
+                      },
+                    ),
+                ],
               ),
-            ],
-          ),
-        );
-      },
-    );
+            ),
+          ],
+        ),
+      );
+    });
   }
 }

@@ -10,6 +10,8 @@ import '../../../models/profile.dart';
 import '../../../utils/app.dart';
 import '../../../main.dart';
 
+enum SortType { latest, popular }
+
 class ArticleListController extends GetxController {
   // 상태 관리
   final Rx<Profile> profile = Profile.init().obs;
@@ -17,6 +19,8 @@ class ArticleListController extends GetxController {
   final RxList<Article> articleList = <Article>[].obs;
   final RxInt listMaxLength = Define.DEFAULT_BOARD_PAGE_LENGTH.obs;
   final Rx<ViewType> viewType = ViewType.normal.obs;
+  final RxBool isDataLoaded = false.obs;
+  final Rx<SortType> currentSortType = SortType.latest.obs;
 
   // 라우트 파라미터에서 boardName 받기
   String get boardNameFromRoute => Get.parameters['boardName'] ?? '';
@@ -29,13 +33,17 @@ class ArticleListController extends GetxController {
     if (boardName.isNotEmpty) {
       boardInfo.value = Arrays.getBoardInfo(boardName);
     }
+    
+    // 데이터 로드 (한 번만 실행)
+    if (!isDataLoaded.value) {
+      loadData();
+    }
   }
 
   @override
   void onReady() {
     super.onReady();
-    // 페이지가 준비되면 데이터 로드
-    loadData();
+    // onReady에서는 추가 작업 없음 (데이터는 onInit에서 로드)
   }
 
   // 데이터 로드
@@ -51,6 +59,55 @@ class ArticleListController extends GetxController {
       search: "",
       limit: Define.DEFAULT_BOARD_GET_LENGTH,
     );
+    isDataLoaded.value = true;
+  }
+
+  // 정렬 타입 변경
+  void changeSortType(SortType sortType) {
+    currentSortType.value = sortType;
+    _sortArticles();
+  }
+
+  // 게시글 정렬
+  void _sortArticles() {
+    final sortedList = List<Article>.from(articleList);
+    
+    switch (currentSortType.value) {
+      case SortType.latest:
+        sortedList.sort((a, b) => b.created_at.compareTo(a.created_at));
+        break;
+      case SortType.popular:
+        // 7일 이내 게시글만 필터링하여 인기순 정렬
+        final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
+        final recentArticles = sortedList.where((article) => 
+          article.created_at.isAfter(sevenDaysAgo)
+        ).toList();
+        
+        recentArticles.sort((a, b) => b.count_like.compareTo(a.count_like));
+        
+        // 7일 이내 게시글을 앞으로, 나머지는 최신순으로 정렬
+        final oldArticles = sortedList.where((article) => 
+          article.created_at.isBefore(sevenDaysAgo)
+        ).toList();
+        oldArticles.sort((a, b) => b.created_at.compareTo(a.created_at));
+        
+        sortedList.clear();
+        sortedList.addAll(recentArticles);
+        sortedList.addAll(oldArticles);
+        break;
+    }
+    
+    articleList.value = sortedList;
+  }
+
+  // 정렬 타입 텍스트 가져오기
+  String getSortTypeText(SortType sortType) {
+    switch (sortType) {
+      case SortType.latest:
+        return '최신순';
+      case SortType.popular:
+        return '인기순(7일)';
+    }
   }
 
   // 새로고침

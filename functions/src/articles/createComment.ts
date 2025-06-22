@@ -2,6 +2,7 @@ import { onRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { FIRESTORE_COLLECTION_ARTICLE } from '../utils/constants';
 import { verifyAuth } from '../utils/auth';
+import { awardPointsForComment } from '../utils/pointService';
 
 export const createComment = onRequest({ 
   cors: true,
@@ -40,32 +41,61 @@ export const createComment = onRequest({
       return;
     }
 
-    // 댓글 데이터 준비
+    // 작성자의 프로필 정보 조회 (포인트 포함)
+    const profileRef = admin.firestore().collection('profiles').doc(uid);
+    const profileDoc = await profileRef.get();
+    let profilePoint = 0;
+    
+    if (profileDoc.exists) {
+      const profileData = profileDoc.data();
+      profilePoint = profileData?.point || 0;
+    }
+
+    // 댓글 서브컬렉션에 댓글 추가
+    const commentRef = articleRef.collection('comments').doc();
     const comment = {
-      id: admin.firestore().collection('comments').doc().id, // 자동 생성된 ID
+      id: commentRef.id,
       contents: commentData.contents,
       profile_uid: uid, // 토큰에서 추출한 uid 사용
       profile_name: commentData.profile_name,
       profile_photo_url: commentData.profile_photo_url,
-      created_at: admin.firestore.FieldValue.serverTimestamp(),
+      profile_point: profilePoint,
+      created_at: new Date(),
       is_sub: false,
       parents_key: '',
     };
 
-    // 댓글 추가
+    // 첫 번째 댓글인지 확인
+    const existingCommentsSnapshot = await articleRef.collection('comments').limit(1).get();
+    const isFirstComment = existingCommentsSnapshot.empty;
+
+    // 댓글 저장
+    await commentRef.set(comment);
+
+    // 게시글의 댓글 수 증가
     await articleRef.update({
-      comments: admin.firestore.FieldValue.arrayUnion(comment),
       count_comments: admin.firestore.FieldValue.increment(1)
     });
 
+    // 포인트 지급
+    const pointsEarned = isFirstComment ? 8 : 3;
+    const newPoints = await awardPointsForComment(uid, commentRef.id, isFirstComment);
+
     // 업데이트된 댓글 목록 반환
-    const updatedDoc = await articleRef.get();
-    const updatedData = updatedDoc.data();
-    const comments = updatedData?.comments || [];
+    const commentsSnapshot = await articleRef.collection('comments').orderBy('created_at', 'asc').get();
+    const comments = commentsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
 
     res.status(200).json({
       success: true,
-      data: comments
+      data: {
+        comments: comments,
+        pointsEarned: pointsEarned,
+        newPoints: newPoints,
+        isFirstComment: isFirstComment
+      }
     });
 
   } catch (error) {

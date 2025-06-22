@@ -32,6 +32,7 @@ import '../models/coin_price.dart';
 import '../models/price.dart';
 import '../models/profile.dart';
 import '../models/wish.dart';
+import '../models/point_history.dart';
 import '../main.dart';
 
 class App {
@@ -479,8 +480,22 @@ class App {
       );
 
       if (response.isSuccess) {
-        result =
-            response.data!.map((json) => MainComment.fromJson(json)).toList();
+        // response.data는 { success: true, data: comments } 구조
+        final commentsData = response.data!['data'] as List<dynamic>;
+        result = commentsData.map((json) {
+          // created_at이 Timestamp 객체인 경우 DateTime으로 변환
+          if (json['created_at'] is Map<String, dynamic>) {
+            final timestamp = json['created_at'] as Map<String, dynamic>;
+            if (timestamp.containsKey('_seconds')) {
+              final seconds = timestamp['_seconds'] as int;
+              final nanoseconds = timestamp['_nanoseconds'] as int? ?? 0;
+              json['created_at'] = DateTime.fromMillisecondsSinceEpoch(
+                seconds * 1000 + (nanoseconds / 1000000).round(),
+              ).toIso8601String();
+            }
+          }
+          return MainComment.fromJson(json);
+        }).toList();
         Get.snackbar(
           '성공',
           '댓글이 작성되었습니다.',
@@ -515,16 +530,21 @@ class App {
   static Future<List<MainComment>> getComments({required String id}) async {
     List<MainComment> result = [];
     try {
-      final docRef =
-          await FirebaseFirestore.instance
-              .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
-              .doc(id)
-              .get();
-      for (dynamic s in docRef.get(Define.FIRESTORE_FIELD_COMMETS)) {
-        result.add(MainComment.fromJson(s));
+      final commentsSnapshot = await FirebaseFirestore.instance
+          .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
+          .doc(id)
+          .collection('comments')
+          .orderBy('created_at', descending: false)
+          .get();
+      
+      for (var doc in commentsSnapshot.docs) {
+        result.add(MainComment.fromJson({
+          'id': doc.id,
+          ...doc.data(),
+        }));
       }
     } catch (e) {
-      logger.w("no comment");
+      logger.w("no comment: $e");
     }
     return result;
   }
@@ -601,8 +621,22 @@ class App {
       );
 
       if (response.isSuccess && response.data != null) {
-        result =
-            response.data!.map((json) => MainComment.fromJson(json)).toList();
+        // response.data는 { success: true, data: comments } 구조
+        final commentsData = response.data!['data'] as List<dynamic>;
+        result = commentsData.map((json) {
+          // created_at이 Timestamp 객체인 경우 DateTime으로 변환
+          if (json['created_at'] is Map<String, dynamic>) {
+            final timestamp = json['created_at'] as Map<String, dynamic>;
+            if (timestamp.containsKey('_seconds')) {
+              final seconds = timestamp['_seconds'] as int;
+              final nanoseconds = timestamp['_nanoseconds'] as int? ?? 0;
+              json['created_at'] = DateTime.fromMillisecondsSinceEpoch(
+                seconds * 1000 + (nanoseconds / 1000000).round(),
+              ).toIso8601String();
+            }
+          }
+          return MainComment.fromJson(json);
+        }).toList();
         Get.snackbar(
           '성공',
           '댓글이 삭제되었습니다.',
@@ -642,61 +676,65 @@ class App {
 
     try {
       // 먼저 현재 댓글 목록을 가져와서 해당 인덱스의 댓글 키를 찾습니다
-      final docRef = FirebaseFirestore.instance
+      final commentsSnapshot = await FirebaseFirestore.instance
           .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
-          .doc(articleId);
-      final docSnapshot = await docRef.get();
+          .doc(articleId)
+          .collection('comments')
+          .orderBy('created_at', descending: false)
+          .get();
 
-      if (docSnapshot.exists) {
-        final comments =
-            docSnapshot.get(Define.FIRESTORE_FIELD_COMMETS) as List<dynamic>;
-        if (index >= 0 && index < comments.length) {
-          final commentToDelete = MainComment.fromJson(comments[index]);
+      if (commentsSnapshot.docs.isNotEmpty && index >= 0 && index < commentsSnapshot.docs.length) {
+        final commentToDelete = MainComment.fromJson({
+          'id': commentsSnapshot.docs[index].id,
+          ...commentsSnapshot.docs[index].data(),
+        });
 
-          // Cloud Functions를 사용하여 댓글 삭제
-          final httpService = HttpService();
-          final response = await httpService.deleteComment(
-            articleId: articleId,
-            commentId: commentToDelete.id,
+        // Cloud Functions를 사용하여 댓글 삭제
+        final httpService = HttpService();
+        final response = await httpService.deleteComment(
+          articleId: articleId,
+          commentId: commentToDelete.id,
+        );
+
+        if (response.isSuccess && response.data != null) {
+          // response.data는 { success: true, data: comments } 구조
+          final commentsData = response.data!['data'] as List<dynamic>;
+          result = commentsData.map((json) {
+            // created_at이 Timestamp 객체인 경우 DateTime으로 변환
+            if (json['created_at'] is Map<String, dynamic>) {
+              final timestamp = json['created_at'] as Map<String, dynamic>;
+              if (timestamp.containsKey('_seconds')) {
+                final seconds = timestamp['_seconds'] as int;
+                final nanoseconds = timestamp['_nanoseconds'] as int? ?? 0;
+                json['created_at'] = DateTime.fromMillisecondsSinceEpoch(
+                  seconds * 1000 + (nanoseconds / 1000000).round(),
+                ).toIso8601String();
+              }
+            }
+            return MainComment.fromJson(json);
+          }).toList();
+          Get.snackbar(
+            '성공',
+            '댓글이 삭제되었습니다.',
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
           );
-
-          if (response.isSuccess && response.data != null) {
-            result =
-                response.data!
-                    .map((json) => MainComment.fromJson(json))
-                    .toList();
-            Get.snackbar(
-              '성공',
-              '댓글이 삭제되었습니다.',
-              snackPosition: SnackPosition.TOP,
-              backgroundColor: Colors.green,
-              colorText: Colors.white,
-            );
-          } else {
-            logger.e("deleteCommentByIndex failed: ${response.error}");
-            Get.snackbar(
-              '오류',
-              '댓글 삭제에 실패했습니다.',
-              snackPosition: SnackPosition.TOP,
-              backgroundColor: Colors.red,
-              colorText: Colors.white,
-            );
-          }
         } else {
-          logger.e("Invalid comment index: $index");
+          logger.e("deleteCommentByIndex failed: ${response.error}");
           Get.snackbar(
             '오류',
-            '유효하지 않은 댓글 인덱스입니다.',
+            '댓글 삭제에 실패했습니다.',
             snackPosition: SnackPosition.TOP,
             backgroundColor: Colors.red,
             colorText: Colors.white,
           );
         }
       } else {
-        logger.e("Article not found: $articleId");
+        logger.e("Invalid comment index: $index");
         Get.snackbar(
           '오류',
-          '게시글을 찾을 수 없습니다.',
+          '유효하지 않은 댓글 인덱스입니다.',
           snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.red,
           colorText: Colors.white,
@@ -1299,5 +1337,112 @@ class App {
     }
 
     return null;
+  }
+
+  static Future<List<Wish>> getWish() async {
+    List<Wish> result = [];
+
+    try {
+      final httpService = HttpService();
+      final response = await httpService.getWish();
+
+      if (response.isSuccess) {
+        final data = response.data!;
+        if (data['data'] != null && data['data']['wishList'] != null) {
+          List<dynamic> wishDataList = data['data']['wishList'];
+          
+          for (var wishData in wishDataList) {
+            try {
+              // Cloud Functions 응답 구조를 클라이언트 모델에 맞게 변환
+              Map<String, dynamic> convertedWishData = {
+                'index': wishData['index'] ?? 1,
+                'uid': wishData['profile_uid'] ?? '',
+                'comments': wishData['comment'] ?? '',
+                'nick_name': wishData['profile_name'] ?? '',
+                'streak': wishData['streak'] ?? 1,
+                'created_at': wishData['created_at'] != null
+                    ? _formatTimestamp(wishData['created_at'])
+                    : DateFormat("yyyy-MM-dd").format(DateTime.now()),
+              };
+
+              Wish wish = Wish.fromJson(convertedWishData);
+              result.add(wish);
+            } catch (e) {
+              logger.e("Error converting wish data: $e");
+            }
+          }
+        }
+      } else {
+        logger.e("getWish failed: ${response.error}");
+      }
+    } catch (e) {
+      logger.e("getWish exception: $e");
+    }
+
+    return result;
+  }
+
+  // Firestore Timestamp를 문자열로 변환하는 헬퍼 메서드
+  static String _formatTimestamp(dynamic timestamp) {
+    try {
+      if (timestamp is Map<String, dynamic> && timestamp['_seconds'] != null) {
+        // Firestore Timestamp 객체인 경우
+        int seconds = timestamp['_seconds'];
+        DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
+        return DateFormat("yyyy-MM-dd").format(dateTime);
+      } else if (timestamp is String) {
+        // 이미 문자열인 경우
+        return timestamp;
+      } else {
+        // 기타 경우 현재 날짜 반환
+        return DateFormat("yyyy-MM-dd").format(DateTime.now());
+      }
+    } catch (e) {
+      logger.e("Error formatting timestamp: $e");
+      return DateFormat("yyyy-MM-dd").format(DateTime.now());
+    }
+  }
+
+  static Future<List<PointHistory>> getPointHistory() async {
+    List<PointHistory> result = [];
+
+    try {
+      final fireUser = FirebaseAuth.instance.currentUser;
+      if (fireUser == null) {
+        throw Exception('Firebase Auth user not found');
+      }
+
+      final profileRef = FirebaseFirestore.instance
+          .collection(Define.FIRESTORE_COLLECTION_PROFILE)
+          .doc(fireUser.uid);
+
+      final historySnapshot = await profileRef
+          .collection('point_history')
+          .orderBy('created_at', descending: true)
+          .limit(50)
+          .get();
+
+      for (var doc in historySnapshot.docs) {
+        try {
+          final data = doc.data();
+          // Timestamp를 문자열로 변환
+          if (data['created_at'] != null) {
+            data['created_at'] = _formatTimestamp(data['created_at']);
+          }
+          
+          PointHistory history = PointHistory.fromJson({
+            'id': doc.id,
+            ...data,
+          });
+          result.add(history);
+        } catch (e) {
+          logger.e("Error parsing point history: $e");
+        }
+      }
+    } catch (e) {
+      logger.e("getPointHistory exception: $e");
+    }
+
+    return result;
   }
 }

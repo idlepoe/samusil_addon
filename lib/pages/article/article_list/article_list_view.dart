@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:line_icons/line_icons.dart';
+import 'package:samusil_addon/components/profile_avatar_widget.dart';
 import 'package:samusil_addon/controllers/profile_controller.dart';
 import 'package:samusil_addon/utils/util.dart';
 
@@ -81,11 +82,21 @@ class ArticleListView extends GetView<ArticleListController> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: const [
-              Text('최신순', style: TextStyle(fontWeight: FontWeight.bold)),
-              Icon(Icons.arrow_downward, size: 16),
-            ],
+          GestureDetector(
+            onTap: () {
+              _showSortOptions();
+            },
+            child: Obx(
+              () => Row(
+                children: [
+                  Text(
+                    controller.getSortTypeText(controller.currentSortType.value),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const Icon(Icons.arrow_drop_down, size: 20),
+                ],
+              ),
+            ),
           ),
           TextButton(
             onPressed: () {
@@ -95,6 +106,59 @@ class ArticleListView extends GetView<ArticleListController> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showSortOptions() {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              '정렬',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ...SortType.values.map((sortType) => ListTile(
+              title: Text(controller.getSortTypeText(sortType)),
+              trailing: Obx(
+                () => controller.currentSortType.value == sortType
+                    ? const Icon(Icons.check, color: Color(0xFF0064FF))
+                    : const SizedBox.shrink(),
+              ),
+              onTap: () {
+                controller.changeSortType(sortType);
+                Get.back();
+              },
+            )),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
+      enableDrag: true,
+      isDismissible: true,
     );
   }
 
@@ -118,7 +182,10 @@ class ArticleListView extends GetView<ArticleListController> {
         child: InkWell(
           onTap: () {
             // ArticleEditBinding의 의존성을 수동으로 주입
-            final ArticleEditBinding binding = ArticleEditBinding();
+            final ArticleEditBinding binding = ArticleEditBinding(
+              boardInfo: controller.boardInfo.value,
+              articleId: null,
+            );
             binding.dependencies();
 
             Get.bottomSheet(
@@ -152,15 +219,10 @@ class ArticleListView extends GetView<ArticleListController> {
             ),
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundImage:
-                      Utils.isValidNilEmptyStr(
-                            profileController.profileImageUrl,
-                          )
-                          ? NetworkImage(profileController.profileImageUrl)
-                          : const AssetImage('assets/anon_icon.jpg')
-                              as ImageProvider,
+                ProfileAvatarWidget(
+                  photoUrl: profileController.profileImageUrl,
+                  name: profileController.userName,
+                  size: 40,
                 ),
                 const SizedBox(width: 12),
                 Expanded(

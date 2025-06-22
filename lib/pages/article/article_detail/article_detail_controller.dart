@@ -6,6 +6,7 @@ import 'package:logger/logger.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../define/arrays.dart';
 import '../../../define/define.dart';
@@ -43,7 +44,11 @@ class ArticleDetailController extends GetxController {
   final RxBool isAlreadyVote = false.obs;
   final RxBool isPressed = false.obs;
   final RxBool isLoading = true.obs;
+  final RxBool isLiked = false.obs;
   final Rx<MainComment?> subComment = Rx<MainComment?>(null);
+  final RxBool isCommentEmpty = true.obs;
+  final RxBool isDataLoaded = false.obs;
+  final RxBool isCommentLoading = false.obs;
 
   // 컨트롤러들
   final TextEditingController commentController = TextEditingController();
@@ -57,13 +62,22 @@ class ArticleDetailController extends GetxController {
     super.onInit();
     // 라우트 파라미터에서 articleId 설정
     articleKey.value = articleIdFromRoute;
+    
+    // 댓글 텍스트 변경 감지
+    commentController.addListener(() {
+      isCommentEmpty.value = commentController.text.trim().isEmpty;
+    });
+    
+    // 데이터 로드 (한 번만 실행)
+    if (!isDataLoaded.value) {
+      loadData();
+    }
   }
 
   @override
   void onReady() {
     super.onReady();
-    // 페이지가 준비되면 데이터 로드
-    loadData();
+    // onReady에서는 추가 작업 없음 (데이터는 onInit에서 로드)
   }
 
   // 데이터 로드
@@ -79,33 +93,20 @@ class ArticleDetailController extends GetxController {
       profile.value = await App.getProfile();
       isAlreadyVote.value = await Utils.checkAlreadyVote(article.value.id);
 
-      await loadComments();
+      // 댓글은 article.value.comments에서 가져옴
+      final commentList = article.value.comments ?? [];
+      comments.value = List.from(commentList);
+      _sortComments();
+
+      // 좋아요 상태 확인
+      await checkLikeStatus();
 
       isLoading.value = false;
+      isDataLoaded.value = true;
     } catch (e) {
       logger.e('데이터 로드 실패: $e');
       isLoading.value = false;
     }
-  }
-
-  // 댓글 로드
-  Future<void> loadComments() async {
-    try {
-      final commentList = await App.getComments(id: article.value.id);
-      comments.value = commentList;
-      _sortComments();
-    } catch (e) {
-      logger.e(e);
-    }
-  }
-
-  // 댓글 정렬
-  void _sortComments() {
-    comments.sort(
-      (a, b) => (a.parents_key.isNotEmpty ? a.parents_key : a.id).compareTo(
-        (b.parents_key.isNotEmpty ? b.parents_key : b.id),
-      ),
-    );
   }
 
   // 좋아요
@@ -141,14 +142,18 @@ class ArticleDetailController extends GetxController {
       return;
     }
 
+    // 이미 로딩 중이면 중복 실행 방지
+    if (isCommentLoading.value) return;
+
     try {
+      isCommentLoading.value = true;
+      
       MainComment comment = MainComment(
         id: "",
         contents: commentController.text.trim(),
         profile_uid: profile.value.uid,
         profile_name: profile.value.name,
         profile_photo_url: profile.value.photo_url,
-        created_at: DateTime.now(),
         is_sub: false,
         parents_key: "",
       );
@@ -167,6 +172,15 @@ class ArticleDetailController extends GetxController {
       );
     } catch (e) {
       logger.e(e);
+      Get.snackbar(
+        '오류',
+        '댓글 작성에 실패했습니다.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isCommentLoading.value = false;
     }
   }
 
@@ -234,15 +248,27 @@ class ArticleDetailController extends GetxController {
   void addEmojiToComment(String emoji) {
     final currentText = commentController.text;
     final selection = commentController.selection;
-    final newText = currentText.replaceRange(
-      selection.start,
-      selection.end,
-      emoji,
-    );
-    commentController.text = newText;
-    commentController.selection = TextSelection.collapsed(
-      offset: selection.start + emoji.length,
-    );
+    
+    // 선택 영역이 유효하지 않거나 텍스트가 없을 때 처리
+    if (!selection.isValid || selection.start < 0) {
+      // 텍스트 끝에 이모티콘 추가
+      commentController.text = currentText + emoji;
+      commentController.selection = TextSelection.collapsed(
+        offset: currentText.length + emoji.length,
+      );
+    } else {
+      // 기존 로직: 선택된 영역을 이모티콘으로 교체
+      final newText = currentText.replaceRange(
+        selection.start,
+        selection.end,
+        emoji,
+      );
+      commentController.text = newText;
+      commentController.selection = TextSelection.collapsed(
+        offset: selection.start + emoji.length,
+      );
+    }
+    
     commentFocusNode.requestFocus();
   }
 
@@ -274,5 +300,77 @@ class ArticleDetailController extends GetxController {
     commentController.dispose();
     commentFocusNode.dispose();
     super.onClose();
+  }
+
+  void editArticle() {}
+
+  void _sortComments() {
+    final sortedComments = List<MainComment>.from(comments);
+    sortedComments.sort(
+      (a, b) => (a.parents_key.isNotEmpty ? a.parents_key : a.id).compareTo(
+        (b.parents_key.isNotEmpty ? b.parents_key : b.id),
+      ),
+    );
+    comments.value = sortedComments;
+  }
+
+  // 좋아요 토글
+  Future<void> toggleLike() async {
+    try {
+      final db = FirebaseFirestore.instance;
+      final articleRef = db.collection('articles').doc(article.value.id);
+      final likeRef = articleRef.collection('likes').doc(profile.value.uid);
+      
+      if (isLiked.value) {
+        // 좋아요 취소
+        await articleRef.update({
+          'count_like': FieldValue.increment(-1),
+        });
+        await likeRef.delete(); // 좋아요 상태 삭제
+        article.value = article.value.copyWith(
+          count_like: article.value.count_like - 1,
+        );
+        isLiked.value = false;
+      } else {
+        // 좋아요 추가
+        await articleRef.update({
+          'count_like': FieldValue.increment(1),
+        });
+        await likeRef.set({
+          'uid': profile.value.uid,
+          'created_at': FieldValue.serverTimestamp(),
+        }); // 좋아요 상태 저장
+        article.value = article.value.copyWith(
+          count_like: article.value.count_like + 1,
+        );
+        isLiked.value = true;
+      }
+    } catch (e) {
+      logger.e('좋아요 토글 실패: $e');
+      Get.snackbar(
+        '오류',
+        '좋아요 처리 중 오류가 발생했습니다.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  // 좋아요 상태 확인
+  Future<void> checkLikeStatus() async {
+    try {
+      final db = FirebaseFirestore.instance;
+      final likeRef = db
+          .collection('articles')
+          .doc(article.value.id)
+          .collection('likes')
+          .doc(profile.value.uid);
+      
+      final likeDoc = await likeRef.get();
+      isLiked.value = likeDoc.exists;
+    } catch (e) {
+      logger.e('좋아요 상태 확인 실패: $e');
+    }
   }
 }

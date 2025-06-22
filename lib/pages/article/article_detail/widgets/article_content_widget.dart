@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:samusil_addon/components/article_image_widget.dart';
 
 import '../article_detail_controller.dart';
 
@@ -14,12 +15,30 @@ class ArticleContentWidget extends GetView<ArticleDetailController> {
   Widget build(BuildContext context) {
     return Obx(
       () => Column(
-        children: List.generate(controller.article.value.contents.length, (
-          index,
-        ) {
-          final content = controller.article.value.contents[index];
-          return _buildContentItem(content, index);
-        }),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title
+          _buildTitle(),
+          const SizedBox(height: 8),
+          // Contents
+          ...List.generate(controller.article.value.contents.length, (index) {
+            final content = controller.article.value.contents[index];
+            return _buildContentItem(content, index);
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTitle() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: Text(
+        controller.article.value.title,
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -34,58 +53,27 @@ class ArticleContentWidget extends GetView<ArticleDetailController> {
 
   Widget _buildImageContent(content, int index) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: GestureDetector(
-        onLongPress: () => controller.saveImage(content.contents),
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: ArticleImageWidget(
+        imageUrl: content.contents,
         onTap: () => _showImageDialog(content.contents),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: CachedNetworkImage(
-            fit: BoxFit.cover,
-            width: double.infinity,
-            imageUrl: content.contents,
-            progressIndicatorBuilder:
-                (context, url, downloadProgress) => Container(
-                  height: 200,
-                  color: const Color(0xFFF8F9FA),
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      value: downloadProgress.progress,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(0xFF0064FF),
-                      ),
-                    ),
-                  ),
-                ),
-            errorWidget:
-                (context, url, error) => Container(
-                  height: 200,
-                  color: const Color(0xFFF8F9FA),
-                  child: const Center(
-                    child: Icon(Icons.error, color: Colors.grey),
-                  ),
-                ),
-          ),
-        ),
+        onLongPress: () => controller.saveImage(content.contents),
       ),
     );
   }
 
   Widget _buildTextContent(content) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FA),
-        borderRadius: BorderRadius.circular(12),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
       child: Html(
         data: content.contents,
         style: {
           "body": Style(
             fontSize: FontSize(16),
-            color: Colors.black,
+            color: Colors.black87,
             lineHeight: LineHeight(1.6),
+            margin: Margins.zero,
+            padding: HtmlPaddings.zero,
           ),
         },
         onLinkTap: (url, __, ___) async {

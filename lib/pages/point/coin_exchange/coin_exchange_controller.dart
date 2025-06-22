@@ -12,7 +12,12 @@ import '../../../controllers/profile_controller.dart';
 class CoinWithHistory {
   final Coin coin;
   final List<double> lastTwoPrices;
-  CoinWithHistory({required this.coin, required this.lastTwoPrices});
+  final DateTime? lastUpdated;
+  CoinWithHistory({
+    required this.coin, 
+    required this.lastTwoPrices,
+    this.lastUpdated,
+  });
 }
 
 class CoinExchangeController extends GetxController {
@@ -66,16 +71,31 @@ class CoinExchangeController extends GetxController {
                       priceSnap.docs
                           .map((d) => (d.data()['price'] as num).toDouble())
                           .toList();
+                  
+                  // 마지막 갱신 시간 가져오기
+                  DateTime? lastUpdated;
+                  if (priceSnap.docs.isNotEmpty) {
+                    final timestamp = priceSnap.docs.first.data()['timestamp'];
+                    if (timestamp is Timestamp) {
+                      lastUpdated = timestamp.toDate();
+                    }
+                  }
+                  
                   // 기존에 있던 코인 정보 갱신
                   int idx = tempList.indexWhere((c) => c.coin.id == coin.id);
                   if (idx >= 0) {
                     tempList[idx] = CoinWithHistory(
                       coin: coin,
                       lastTwoPrices: lastTwoPrices,
+                      lastUpdated: lastUpdated,
                     );
                   } else {
                     tempList.add(
-                      CoinWithHistory(coin: coin, lastTwoPrices: lastTwoPrices),
+                      CoinWithHistory(
+                        coin: coin, 
+                        lastTwoPrices: lastTwoPrices,
+                        lastUpdated: lastUpdated,
+                      ),
                     );
                   }
                   coinList.value = List.from(tempList);
@@ -159,5 +179,13 @@ class CoinExchangeController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  // 첫 번째 코인의 마지막 갱신 시간 가져오기
+  DateTime? getFirstCoinLastUpdated() {
+    if (coinList.isEmpty) return null;
+    final sortedList = coinList.toList();
+    sortedList.sort((a, b) => a.coin.rank.compareTo(b.coin.rank));
+    return sortedList.first.lastUpdated;
   }
 }

@@ -279,11 +279,11 @@ class HttpService {
           fromJson: (json) => json as Map<String, dynamic>,
         );
 
-    logger.d(
-      "getArticleList response: $response\n"
-      "getArticleList response.isSuccess: ${response.isSuccess}\n"
-      "getArticleList response.data: ${response.data}",
-    );
+    // logger.d(
+    //   "getArticleList response: $response\n"
+    //   "getArticleList response.isSuccess: ${response.isSuccess}\n"
+    //   "getArticleList response.data: ${response.data}",
+    // );
 
     return response;
   }
@@ -354,6 +354,16 @@ class HttpService {
         '/createWish',
         data: {'comment': comment},
       );
+      return CloudFunctionResponse(success: true, data: response.data);
+    } catch (e) {
+      return CloudFunctionResponse(success: false, error: e.toString());
+    }
+  }
+
+  /// 소원 목록 조회
+  Future<CloudFunctionResponse> getWish() async {
+    try {
+      final response = await _dio.get('/getWish');
       return CloudFunctionResponse(success: true, data: response.data);
     } catch (e) {
       return CloudFunctionResponse(success: false, error: e.toString());

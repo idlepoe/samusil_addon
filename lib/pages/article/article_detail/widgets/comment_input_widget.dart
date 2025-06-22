@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:samusil_addon/components/profile_avatar_widget.dart';
+import 'package:samusil_addon/components/appButton.dart';
 
 import '../article_detail_controller.dart';
 
@@ -62,6 +64,12 @@ class CommentInputWidget extends GetView<ArticleDetailController> {
               ),
             Row(
               children: [
+                ProfileAvatarWidget(
+                  photoUrl: controller.profile.value.photo_url,
+                  name: controller.profile.value.name,
+                  size: 36,
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
@@ -86,33 +94,39 @@ class CommentInputWidget extends GetView<ArticleDetailController> {
                       ),
                       maxLines: null,
                       textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => controller.createComment(),
+                      onSubmitted: controller.isCommentLoading.value 
+                          ? null 
+                          : (_) => controller.createComment(),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 GestureDetector(
-                  onTap:
-                      controller.commentController.text.trim().isEmpty
-                          ? null
-                          : controller.createComment,
+                  onTap: controller.isCommentLoading.value 
+                      ? null 
+                      : controller.createComment,
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color:
-                          controller.commentController.text.trim().isEmpty
+                      color: controller.isCommentLoading.value
+                          ? Colors.grey.shade300
+                          : controller.isCommentEmpty.value
                               ? Colors.grey.shade300
                               : const Color(0xFF0064FF),
                       borderRadius: BorderRadius.circular(24),
                     ),
-                    child: Icon(
-                      Icons.send_rounded,
-                      color:
-                          controller.commentController.text.trim().isEmpty
-                              ? Colors.grey.shade500
-                              : Colors.white,
-                      size: 20,
-                    ),
+                    child: controller.isCommentLoading.value
+                        ? const AppLoadingIndicator(
+                            size: 20,
+                            color: Colors.white,
+                          )
+                        : Icon(
+                            Icons.send_rounded,
+                            color: controller.isCommentEmpty.value
+                                ? Colors.grey.shade500
+                                : Colors.white,
+                            size: 20,
+                          ),
                   ),
                 ),
               ],

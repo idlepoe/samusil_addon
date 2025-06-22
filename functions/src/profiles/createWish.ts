@@ -2,6 +2,7 @@ import { onRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { FIRESTORE_COLLECTION_WISH, FIRESTORE_COLLECTION_PROFILE } from '../utils/constants';
 import { verifyAuth } from '../utils/auth';
+import { awardPointsForWish } from '../utils/pointService';
 
 export const createWish = onRequest({ 
   cors: true,
@@ -44,7 +45,6 @@ export const createWish = onRequest({
 
     const profile = profileDoc.data()!;
     const currentStreak = profile.wish_streak || 0;
-    const currentPoint = profile.point || 0;
 
     // 오늘 날짜 확인
     const today = new Date();
@@ -52,7 +52,7 @@ export const createWish = onRequest({
     const lastWishDate = profile.wish_last_date || '';
 
     let newStreak = currentStreak;
-    let pointToAdd = 10 + currentStreak; // 기본 10포인트 + 연속 보너스
+    let pointToAdd = 5; // 기본 5포인트
 
     // 연속 기도 체크
     if (lastWishDate === todayStr) {
@@ -61,11 +61,11 @@ export const createWish = onRequest({
     } else if (lastWishDate === getYesterdayString()) {
       // 연속 기도
       newStreak = currentStreak + 1;
-      pointToAdd = 10 + newStreak; // 기본 10포인트 + 연속 보너스
+      pointToAdd = 5 + newStreak; // 기본 5포인트 + 연속 streak 보너스
     } else {
       // 연속 끊김
       newStreak = 1;
-      pointToAdd = 10;
+      pointToAdd = 5; // 기본 5포인트
     }
 
     // Wish 생성
@@ -91,12 +91,14 @@ export const createWish = onRequest({
       });
     }
 
-    // 프로필 업데이트 (연속 기도, 포인트, 마지막 기도 날짜)
+    // 프로필 업데이트 (연속 기도, 마지막 기도 날짜)
     await profileRef.update({
       wish_streak: newStreak,
       wish_last_date: todayStr,
-      point: currentPoint + pointToAdd
     });
+
+    // 포인트 지급
+    const newPoints = await awardPointsForWish(uid, pointToAdd);
 
     // 업데이트된 Wish 목록 조회
     const updatedWishDoc = await wishRef.get();
@@ -119,7 +121,8 @@ export const createWish = onRequest({
         profile: updatedProfile,
         wishList: indexedWishList,
         pointsEarned: pointToAdd,
-        newStreak: newStreak
+        newStreak: newStreak,
+        newPoints: newPoints
       }
     });
 

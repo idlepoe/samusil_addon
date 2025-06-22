@@ -219,6 +219,7 @@ class WishView extends GetView<WishController> {
                   children: [
                     TextField(
                       controller: controller.commentController,
+                      focusNode: controller.commentFocusNode,
                       inputFormatters: [LengthLimitingTextInputFormatter(20)],
                       decoration: InputDecoration(
                         hintText: "오늘의 소원을 입력하세요",
@@ -229,36 +230,29 @@ class WishView extends GetView<WishController> {
                           borderSide: BorderSide.none,
                         ),
                         contentPadding: const EdgeInsets.all(16),
-                        suffixIcon: IconButton(
-                          onPressed:
-                              controller.canCreateWish
-                                  ? () => controller.createWish(
-                                    controller.commentController.text,
-                                  )
-                                  : null,
-                          icon: const Icon(Icons.send),
-                          color: const Color(0xFF0064FF),
-                        ),
+                        suffixIcon: _buildSendButton(),
                       ),
                       maxLength: 20,
                       textInputAction: TextInputAction.send,
-                      onSubmitted:
-                          controller.canCreateWish
-                              ? (value) => controller.createWish(value)
-                              : null,
+                      onSubmitted: (value) {
+                        if (controller.canCreateWish) {
+                          controller.createWish(value);
+                        }
+                      },
                     ),
                     const SizedBox(height: 12),
-                    SizedBox(
+                    Obx(() => SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed:
-                            controller.canCreateWish
-                                ? () => controller.createWish(
-                                  controller.commentController.text,
-                                )
-                                : null,
+                        onPressed: controller.canCreateWish
+                            ? () => controller.createWish(
+                              controller.commentController.text,
+                            )
+                            : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0064FF),
+                          backgroundColor: controller.canCreateWish
+                              ? const Color(0xFF0064FF)
+                              : Colors.grey,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
@@ -273,11 +267,27 @@ class WishView extends GetView<WishController> {
                           ),
                         ),
                       ),
-                    ),
+                    )),
                   ],
                 ),
               ),
     );
+  }
+
+  Widget _buildSendButton() {
+    return Obx(() => IconButton(
+      onPressed: controller.canCreateWish
+          ? () => controller.createWish(
+                controller.commentController.text,
+              )
+          : null,
+      icon: Icon(
+        Icons.send,
+        color: controller.canCreateWish
+            ? const Color(0xFF0064FF)
+            : Colors.grey,
+      ),
+    ));
   }
 
   Widget _buildWishList() {
@@ -395,37 +405,44 @@ class WishView extends GetView<WishController> {
 
   Widget _buildEmptyWishList() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 20),
-      child: Column(
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(40),
-            ),
-            child: Icon(
-              Icons.favorite_border,
-              size: 40,
-              color: Colors.grey.shade400,
-            ),
+      height: 300,
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(40),
+                ),
+                child: Icon(
+                  Icons.favorite_border,
+                  size: 40,
+                  color: Colors.grey.shade400,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                "아직 다른 사람들의 소원이 없어요",
+                style: TextStyle(
+                  color: Colors.grey.shade700,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "첫 번째 소원을 올려보세요!",
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            "아직 다른 사람들의 소원이 없어요",
-            style: TextStyle(
-              color: Colors.grey.shade700,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "첫 번째 소원을 올려보세요!",
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-          ),
-        ],
+        ),
       ),
     );
   }

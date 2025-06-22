@@ -10,7 +10,7 @@ if (!admin.apps.length) {
 
 // Articles
 export { createArticle } from './articles/createArticle';
-export { getArticleDetail } from './articles/getArticle';
+export { getArticleDetail } from './articles/getArticleDetail';
 export { getArticleList } from './articles/getArticleList';
 
 // Article
@@ -33,6 +33,7 @@ export { scheduledUpdateCoinPrice } from './coins/scheduledUpdateCoinPrice';
 
 // Profiles
 export { createWish } from './profiles/createWish';
+export { getWish } from './profiles/getWish';
 
 // // Alarms
 // export { createAlarm } from './alarms/createAlarm';
@@ -41,4 +42,6 @@ export { createWish } from './profiles/createWish';
 
 // News
 // export { scheduledGameNewsCollection } from './news/scheduledNewsCollection';
-export { manualNewsCollection } from './news/manualNewsCollection'; 
+export { manualNewsCollection } from './news/manualNewsCollection';
+
+export * from './articles/toggleLike'; 

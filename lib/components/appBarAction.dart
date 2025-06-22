@@ -10,6 +10,7 @@ import '../define/enum.dart';
 import '../models/alarm.dart';
 import '../models/profile.dart';
 import 'package:badges/badges.dart' as badges;
+import 'profile_avatar_widget.dart';
 
 import '../utils/app.dart';
 import '../utils/util.dart';
@@ -18,48 +19,45 @@ import '../controllers/profile_controller.dart';
 enum PopupItem { profile, point, option, logout }
 
 List<Widget> AppBarAction(BuildContext context, Profile profile) {
-  int noReadLength = 0;
-  for (Alarm row in profile.alarms) {
-    if (!row.is_read) {
-      noReadLength++;
-    }
-  }
   return [
     Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        badges.Badge(
-          badgeContent: Text(
-            noReadLength.toString(),
-            style: const TextStyle(color: Colors.white),
-          ),
-          badgeStyle: const badges.BadgeStyle(),
-          position: badges.BadgePosition.topEnd(top: 0, end: 0),
-          showBadge: noReadLength > 0,
-          child: IconButton(
-            onPressed: () async {
-              Get.toNamed("/alarm");
-            },
-            icon: const Icon(Icons.notifications_none_outlined),
-          ),
-        ),
+        Obx(() {
+          final profileController = ProfileController.to;
+          int noReadLength = 0;
+          for (Alarm row in profileController.profile.value.alarms) {
+            if (!row.is_read) {
+              noReadLength++;
+            }
+          }
+          
+          return badges.Badge(
+            badgeContent: Text(
+              noReadLength.toString(),
+              style: const TextStyle(color: Colors.white),
+            ),
+            badgeStyle: const badges.BadgeStyle(),
+            position: badges.BadgePosition.topEnd(top: 0, end: 0),
+            showBadge: noReadLength > 0,
+            child: IconButton(
+              onPressed: () async {
+                Get.toNamed("/alarm");
+              },
+              icon: const Icon(Icons.notifications_none_outlined),
+            ),
+          );
+        }),
       ],
     ),
     const SizedBox(width: 10),
     PopupMenuButton<PopupItem>(
       icon: Obx(() {
         final profileController = ProfileController.to;
-        return CircleAvatar(
-          backgroundImage:
-              Utils.isValidNilEmptyStr(profileController.profileImageUrl)
-                  ? NetworkImage(profileController.profileImageUrl)
-                  : null,
-          child:
-              Utils.isValidNilEmptyStr(profileController.profileImageUrl)
-                  ? null
-                  : const CircleAvatar(
-                    backgroundImage: AssetImage('assets/anon_icon.jpg'),
-                  ),
+        return ProfileAvatarWidget(
+          photoUrl: profileController.profileImageUrl,
+          name: profileController.userName,
+          size: 32,
         );
       }),
       onSelected: (PopupItem item) {},
@@ -72,23 +70,10 @@ List<Widget> AppBarAction(BuildContext context, Profile profile) {
                 return Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CircleAvatar(
-                      backgroundImage:
-                          Utils.isValidNilEmptyStr(
-                                profileController.profileImageUrl,
-                              )
-                              ? NetworkImage(profileController.profileImageUrl)
-                              : null,
-                      child:
-                          Utils.isValidNilEmptyStr(
-                                profileController.profileImageUrl,
-                              )
-                              ? null
-                              : const CircleAvatar(
-                                backgroundImage: AssetImage(
-                                  'assets/anon_icon.jpg',
-                                ),
-                              ),
+                    ProfileAvatarWidget(
+                      photoUrl: profileController.profileImageUrl,
+                      name: profileController.userName,
+                      size: 40,
                     ),
                     const SizedBox(width: 10),
                     Column(

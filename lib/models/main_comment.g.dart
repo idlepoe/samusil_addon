@@ -15,6 +15,7 @@ _MainComment _$MainCommentFromJson(Map<String, dynamic> json) => _MainComment(
   created_at: _timestampFromJson(json['created_at']),
   is_sub: _toBool(json['is_sub']),
   parents_key: _toString(json['parents_key']),
+  profile_point: _toInt(json['profile_point']),
 );
 
 Map<String, dynamic> _$MainCommentToJson(_MainComment instance) =>
@@ -27,4 +28,5 @@ Map<String, dynamic> _$MainCommentToJson(_MainComment instance) =>
       'created_at': _timestampToJson(instance.created_at),
       'is_sub': instance.is_sub,
       'parents_key': instance.parents_key,
+      'profile_point': instance.profile_point,
     };

@@ -4,6 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:samusil_addon/utils/app.dart';
 import 'package:samusil_addon/utils/util.dart';
+import 'package:samusil_addon/components/profile_badge_widget.dart';
+import 'package:samusil_addon/components/profile_avatar_widget.dart';
+import 'package:samusil_addon/components/article_image_widget.dart';
 
 import '../../../../models/article.dart';
 
@@ -22,6 +25,26 @@ class ArticleItemWidget extends StatelessWidget {
       articleText += '\n${firstTextContent.contents}';
     }
 
+    // 이미지 정보 계산
+    String image = "";
+    int imageCount = 0;
+    int additionalImageCount = 0;
+    
+    // 이미지 개수 계산
+    for (int i = 0; i < article.contents.length; i++) {
+      if (article.contents[i].isPicture) {
+        imageCount++;
+        if (image.isEmpty) {
+          image = article.contents[i].contents;
+        }
+      }
+    }
+    
+    // 추가 이미지 개수 계산 (첫 번째 이미지 제외)
+    if (imageCount > 1) {
+      additionalImageCount = imageCount - 1;
+    }
+
     return Material(
       color: Colors.white,
       child: InkWell(
@@ -38,6 +61,18 @@ class ArticleItemWidget extends StatelessWidget {
               const SizedBox(height: 12),
               // Content
               Text(articleText, maxLines: 5, overflow: TextOverflow.ellipsis),
+              // Image
+              if (image.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                ArticleImageWidget(
+                  imageUrl: image,
+                  width: double.infinity,
+                  height: 300,
+                  borderRadius: BorderRadius.circular(8),
+                  showLoadingIndicator: false,
+                  additionalImageCount: additionalImageCount > 0 ? additionalImageCount : null,
+                ),
+              ],
               const SizedBox(height: 12),
               // Actions
               _buildActions(),
@@ -52,9 +87,10 @@ class ArticleItemWidget extends StatelessWidget {
     return Row(
       children: [
         // Profile Image
-        CircleAvatar(
-          radius: 20,
-          child: App.buildCoinIcon(article.profile_name, size: 40),
+        ProfileAvatarWidget(
+          photoUrl: article.profile_photo_url,
+          name: article.profile_name,
+          size: 40,
         ),
         const SizedBox(width: 8),
         // Name and Time
@@ -68,7 +104,7 @@ class ArticleItemWidget extends StatelessWidget {
                     article.profile_name,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  _buildBadge("인플루언서"),
+                  ProfileBadgeWidget(point: article.profile_point ?? 0),
                 ],
               ),
               Text(
@@ -172,25 +208,6 @@ class ArticleItemWidget extends StatelessWidget {
       snackPosition: SnackPosition.TOP,
       backgroundColor: Colors.red,
       colorText: Colors.white,
-    );
-  }
-
-  Widget _buildBadge(String text) {
-    return Container(
-      margin: const EdgeInsets.only(left: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: Colors.amber[100],
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: Colors.amber[800],
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
     );
   }
 

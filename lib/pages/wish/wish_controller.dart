@@ -24,56 +24,22 @@ class WishController extends GetxController {
 
   // 텍스트 컨트롤러
   final TextEditingController commentController = TextEditingController();
-
-  // Wish 스트림 구독을 위한 변수
-  StreamSubscription<QuerySnapshot>? _wishStreamSubscription;
+  
+  // Focus 관리
+  final FocusNode commentFocusNode = FocusNode();
 
   @override
   void onInit() {
     super.onInit();
+    
     init();
-    _initWishStream();
   }
 
   @override
   void onClose() {
-    _wishStreamSubscription?.cancel();
     commentController.dispose();
+    commentFocusNode.dispose();
     super.onClose();
-  }
-
-  // Wish 스트림 초기화
-  void _initWishStream() {
-    try {
-      final collectionRef = FirebaseFirestore.instance.collection(
-        Define.FIRESTORE_COLLECTION_WISH,
-      );
-
-      _wishStreamSubscription = collectionRef
-          .orderBy('created_at', descending: true)
-          .snapshots()
-          .listen(
-            (QuerySnapshot snapshot) async {
-              List<Wish> wishes = [];
-
-              for (var doc in snapshot.docs) {
-                try {
-                  Wish wish = Wish.fromJson(doc.data() as Map<String, dynamic>);
-                  wishes.add(wish);
-                } catch (e) {
-                  logger.e("Error parsing wish data: $e");
-                }
-              }
-
-              wishList.value = wishes;
-            },
-            onError: (error) {
-              logger.e("Wish stream error: $error");
-            },
-          );
-    } catch (e) {
-      logger.e("Error initializing wish stream: $e");
-    }
   }
 
   Future<void> init() async {
@@ -83,6 +49,10 @@ class WishController extends GetxController {
       await App.checkUser();
       profile.value = await App.getProfile();
       alreadyWished.value = await Utils.getAlreadyWish();
+      
+      // Wish 목록 조회
+      final wishes = await App.getWish();
+      wishList.value = wishes;
     } catch (e) {
       logger.e("Error in init: $e");
     } finally {
@@ -96,6 +66,10 @@ class WishController extends GetxController {
     try {
       profile.value = await App.getProfile();
       alreadyWished.value = await Utils.getAlreadyWish();
+      
+      // Wish 목록 새로고침
+      final wishes = await App.getWish();
+      wishList.value = wishes;
     } catch (e) {
       logger.e("Error in refresh: $e");
     } finally {
@@ -127,38 +101,15 @@ class WishController extends GetxController {
           profile.value = await App.getProfile();
         }
 
-        // Cloud Function 응답에서 wishList 업데이트
-        if (result['data'] != null && result['data']['wishList'] != null) {
-          List<Wish> newWishList = [];
-          List<dynamic> wishDataList = result['data']['wishList'];
-
-          for (var wishData in wishDataList) {
-            try {
-              // Cloud Functions 응답 구조를 클라이언트 모델에 맞게 변환
-              Map<String, dynamic> convertedWishData = {
-                'index': wishData['index'] ?? 1,
-                'uid': wishData['profile_uid'] ?? '',
-                'comments': wishData['comment'] ?? '',
-                'nick_name': wishData['profile_name'] ?? '',
-                'streak': wishData['streak'] ?? 1,
-                'created_at':
-                    wishData['created_at'] != null
-                        ? _formatTimestamp(wishData['created_at'])
-                        : DateFormat("yyyy-MM-dd").format(DateTime.now()),
-              };
-
-              Wish wish = Wish.fromJson(convertedWishData);
-              newWishList.add(wish);
-            } catch (e) {
-              logger.e("Error converting wish data: $e");
-            }
-          }
-
-          wishList.value = newWishList;
-        }
+        // Wish 목록 새로고침
+        final wishes = await App.getWish();
+        wishList.value = wishes;
 
         // 입력 필드 초기화
         commentController.clear();
+        
+        // focus 유지
+        commentFocusNode.requestFocus();
 
         // 성공 메시지 표시
         Get.snackbar(
@@ -197,25 +148,4 @@ class WishController extends GetxController {
       !alreadyWished.value &&
       commentController.text.isNotEmpty &&
       !isPressed.value;
-
-  // Firestore Timestamp를 문자열로 변환하는 헬퍼 메서드
-  String _formatTimestamp(dynamic timestamp) {
-    try {
-      if (timestamp is Map<String, dynamic> && timestamp['_seconds'] != null) {
-        // Firestore Timestamp 객체인 경우
-        int seconds = timestamp['_seconds'];
-        DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
-        return DateFormat("yyyy-MM-dd").format(dateTime);
-      } else if (timestamp is String) {
-        // 이미 문자열인 경우
-        return timestamp;
-      } else {
-        // 기타 경우 현재 날짜 반환
-        return DateFormat("yyyy-MM-dd").format(DateTime.now());
-      }
-    } catch (e) {
-      logger.e("Error formatting timestamp: $e");
-      return DateFormat("yyyy-MM-dd").format(DateTime.now());
-    }
-  }
 }

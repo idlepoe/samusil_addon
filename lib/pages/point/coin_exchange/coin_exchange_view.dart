@@ -80,6 +80,41 @@ class CoinExchangeView extends GetView<CoinExchangeController> {
               ),
               const SizedBox(height: 20),
 
+              // 마지막 갱신 시간 표시
+              Obx(() {
+                final lastUpdated = controller.getFirstCoinLastUpdated();
+                if (lastUpdated == null) return const SizedBox.shrink();
+                
+                return Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.access_time,
+                        size: 16,
+                        color: Colors.grey[600],
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        "마지막 갱신: ${Utils.formatDateTime(lastUpdated)}",
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+              const SizedBox(height: 20),
+
               // Toss 스타일 코인 리스트 (stream 기반, rank 오름차순 정렬)
               ...(() {
                 final sortedList = controller.coinList.toList();

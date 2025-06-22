@@ -2,6 +2,7 @@ import * as admin from 'firebase-admin';
 import { FIRESTORE_COLLECTION_ARTICLE } from '../utils/constants';
 import { onRequest } from 'firebase-functions/v2/https';
 import { verifyAuth } from '../utils/auth';
+import { awardPointsForArticle } from '../utils/pointService';
 
 export const createArticle = onRequest({ 
   cors: true,
@@ -46,6 +47,16 @@ export const createArticle = onRequest({
     const db = admin.firestore();
     const articleRef = db.collection(FIRESTORE_COLLECTION_ARTICLE).doc();
 
+    // 작성자의 프로필 정보 조회 (포인트 포함)
+    const profileRef = db.collection('profiles').doc(uid);
+    const profileDoc = await profileRef.get();
+    let profilePoint = 0;
+    
+    if (profileDoc.exists) {
+      const profileData = profileDoc.data();
+      profilePoint = profileData?.point || 0;
+    }
+
     // Firestore에 저장 (docId는 자동 생성됨)
     await articleRef.set({
       id: articleRef.id,
@@ -53,6 +64,7 @@ export const createArticle = onRequest({
       profile_uid: uid, // 토큰에서 추출한 uid 사용
       profile_name: articleData.profile_name,
       profile_photo_url: articleData.profile_photo_url,
+      profile_point: profilePoint,
       count_view: articleData.count_view,
       count_like: articleData.count_like,
       count_unlike: articleData.count_unlike,
@@ -64,10 +76,17 @@ export const createArticle = onRequest({
       thumbnail: articleData.thumbnail,
     });
 
+    // 포인트 지급
+    const newPoints = await awardPointsForArticle(uid, articleRef.id);
+
     res.status(200).json({
       success: true,
       message: 'Article created successfully',
-      data: { id: articleRef.id }
+      data: { 
+        id: articleRef.id,
+        pointsEarned: 10,
+        newPoints: newPoints
+      }
     });
 
   } catch (error) {

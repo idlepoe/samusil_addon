@@ -106,4 +106,22 @@ export interface ApiResponse<T> {
   data?: T;
   error?: string;
   message?: string;
+}
+
+export interface PointHistory {
+  id?: string;
+  profile_uid: string;
+  action_type: 'wish' | 'article' | 'comment' | 'first_comment' | 'like_received';
+  points_earned: number;
+  description: string;
+  related_id?: string; // 게시글 ID, 댓글 ID 등
+  created_at: admin.firestore.Timestamp;
+}
+
+export interface PointAction {
+  profile_uid: string;
+  action_type: PointHistory['action_type'];
+  points_earned: number;
+  description: string;
+  related_id?: string;
 } 

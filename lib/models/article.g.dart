@@ -22,8 +22,14 @@ _Article _$ArticleFromJson(Map<String, dynamic> json) => _Article(
           .map((e) => ArticleContent.fromJson(e as Map<String, dynamic>))
           .toList(),
   created_at: _timestampFromJson(json['created_at']),
+  updated_at: _timestampFromJson(json['updated_at']),
+  profile_point: _toInt(json['profile_point']),
   is_notice: json['is_notice'] as bool,
   thumbnail: json['thumbnail'] as String?,
+  comments:
+      (json['comments'] as List<dynamic>?)
+          ?.map((e) => MainComment.fromJson(e as Map<String, dynamic>))
+          .toList(),
 );
 
 Map<String, dynamic> _$ArticleToJson(_Article instance) => <String, dynamic>{
@@ -39,6 +45,9 @@ Map<String, dynamic> _$ArticleToJson(_Article instance) => <String, dynamic>{
   'title': instance.title,
   'contents': instance.contents,
   'created_at': _timestampToJson(instance.created_at),
+  'updated_at': _timestampToJsonNullable(instance.updated_at),
+  'profile_point': instance.profile_point,
   'is_notice': instance.is_notice,
   'thumbnail': instance.thumbnail,
+  'comments': instance.comments,
 };

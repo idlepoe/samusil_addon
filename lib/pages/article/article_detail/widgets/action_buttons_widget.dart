@@ -14,10 +14,7 @@ class ActionButtonsWidget extends GetView<ArticleDetailController> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: Row(
           children: [
-            _buildActionIcon(
-              LineIcons.heart,
-              controller.article.value.count_like.toString(),
-            ),
+            _buildLikeButton(),
             const SizedBox(width: 16),
             _buildActionIcon(
               LineIcons.comment,
@@ -30,6 +27,29 @@ class ActionButtonsWidget extends GetView<ArticleDetailController> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildLikeButton() {
+    return GestureDetector(
+      onTap: controller.toggleLike,
+      child: Row(
+        children: [
+          Icon(
+            LineIcons.heart,
+            size: 20,
+            color: controller.isLiked.value ? Colors.red : Colors.grey[600],
+          ),
+          const SizedBox(width: 6),
+          Text(
+            controller.article.value.count_like.toString(),
+            style: TextStyle(
+              color: controller.isLiked.value ? Colors.red : Colors.grey[600],
+              fontSize: 14,
+            ),
+          ),
+        ],
       ),
     );
   }
