@@ -194,13 +194,31 @@ class ArticleListView extends GetView<ArticleListController> {
             Get.bottomSheet(
               SafeArea(
                 child: Container(
-                  height: Get.height * 0.8,
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.only(
+                  height: Get.height * 0.9,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(16.0),
                       topRight: Radius.circular(16.0),
                     ),
-                    child: ArticleEditView(controller.boardInfo.value),
+                  ),
+                  child: Column(
+                    children: [
+                      // 드래그 핸들
+                      Container(
+                        margin: const EdgeInsets.only(top: 8),
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      // 게시글 작성 화면
+                      Expanded(
+                        child: ArticleEditView(controller.boardInfo.value),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -208,6 +226,7 @@ class ArticleListView extends GetView<ArticleListController> {
               isScrollControlled: true,
               enableDrag: true,
               isDismissible: true,
+              persistent: false,
             ).whenComplete(() {
               // BottomSheet가 닫힐 때 컨트롤러 삭제
               Get.delete<ArticleEditController>();

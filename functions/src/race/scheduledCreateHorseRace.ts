@@ -16,9 +16,10 @@ export const scheduledCreateHorseRace = functions
       const now = new Date();
       
       // 경주 시작 및 종료 시간 설정
+      const bettingStartTime = now;
       const bettingEndTime = new Date(now.getTime() + 10 * 60 * 1000); // 10분 후
-      const raceStartTime = bettingEndTime;
-      const raceEndTime = new Date(raceStartTime.getTime() + 20 * 60 * 1000); // 20분 후
+      const raceStartTime = new Date(bettingEndTime.getTime() + 30 * 1000); // 베팅 종료 30초 후 시작
+      const raceEndTime = new Date(raceStartTime.getTime() + 19 * 60 * 1000); // 19분 후로 변경
 
       // 중복 생성 방지
       const existingRace = await db.collection('horse_races')
@@ -42,6 +43,7 @@ export const scheduledCreateHorseRace = functions
         coinId: coin.id,
         name: coin.name,
         symbol: coin.symbol.toUpperCase(),
+        image: coin.image,
         currentPosition: 0.0,
         movements: [],
         lastPrice: coin.current_price,
@@ -53,18 +55,24 @@ export const scheduledCreateHorseRace = functions
       const raceRef = db.collection('horse_races').doc();
       const race = {
         id: raceRef.id,
+        bettingStartTime: admin.firestore.Timestamp.fromDate(bettingStartTime),
+        bettingEndTime: admin.firestore.Timestamp.fromDate(bettingEndTime),
         startTime: admin.firestore.Timestamp.fromDate(raceStartTime),
         endTime: admin.firestore.Timestamp.fromDate(raceEndTime),
-        bettingEndTime: admin.firestore.Timestamp.fromDate(bettingEndTime),
         horses: horses,
         isActive: false,
         isFinished: false,
         currentRound: 0,
-        totalRounds: 20, // 20분
+        totalRounds: 19, // 19 라운드로 변경
       };
 
       await raceRef.set(race);
       console.log(`새로운 경마 생성 완료: ${race.id}`);
+
+      // main_stadium 업데이트
+      const stadiumRef = db.collection('horse_race_stadiums').doc('main_stadium');
+      await stadiumRef.set(race);
+      console.log('main_stadium 업데이트 완료');
 
     } catch (error) {
       console.error('경마 생성 중 오류 발생:', error);

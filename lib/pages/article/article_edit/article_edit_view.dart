@@ -21,13 +21,41 @@ class ArticleEditView extends GetView<ArticleEditController> {
       controller.init(boardInfo);
     }
 
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.white,
-      appBar: _buildAppBar(context),
-      body: SafeArea(child: _buildBody(context)),
-      bottomNavigationBar: _buildToolbar(),
-    );
+    // bottom sheet에서 사용되는지 확인 (AppBar가 없는 경우)
+    final isInBottomSheet = context.findAncestorWidgetOfExactType<Scaffold>() == null;
+
+    if (isInBottomSheet) {
+      // bottom sheet에서 사용될 때
+      return Material(
+        color: Colors.white,
+        child: Container(
+          color: Colors.white,
+          child: Column(
+            children: [
+              // 상단 헤더 (AppBar 대신)
+              _buildBottomSheetHeader(),
+              // 본문 (스크롤 가능하도록)
+              Expanded(
+                child: SingleChildScrollView(
+                  child: _buildBody(context),
+                ),
+              ),
+              // 하단 툴바
+              _buildToolbar(),
+            ],
+          ),
+        ),
+      );
+    } else {
+      // 일반 화면에서 사용될 때
+      return Scaffold(
+        resizeToAvoidBottomInset: false,
+        backgroundColor: Colors.white,
+        appBar: _buildAppBar(context),
+        body: SafeArea(child: _buildBody(context)),
+        bottomNavigationBar: _buildToolbar(),
+      );
+    }
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
@@ -82,29 +110,34 @@ class ArticleEditView extends GetView<ArticleEditController> {
   Widget _buildBody(BuildContext context) {
     return Obx(() {
       if (controller.isPressed.value) {
-        return const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AppLoadingIndicator(
-                size: 32,
-                color: Color(0xFF0064FF),
-              ),
-              SizedBox(height: 16),
-              Text(
-                '글을 작성하고 있습니다...',
-                style: TextStyle(color: Colors.grey, fontSize: 14),
-              ),
-            ],
+        return Container(
+          height: 300, // 고정 높이 설정
+          child: const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AppLoadingIndicator(
+                  size: 32,
+                  color: Color(0xFF0064FF),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '글을 작성하고 있습니다...',
+                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+              ],
+            ),
           ),
         );
       }
 
       return Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           _buildTitleSection(),
           _buildDivider(),
-          Expanded(child: _buildContentSection()),
+          SizedBox(height: 10),
+          _buildContentSection(),
         ],
       );
     });
@@ -113,24 +146,27 @@ class ArticleEditView extends GetView<ArticleEditController> {
   Widget _buildTitleSection() {
     return Container(
       padding: const EdgeInsets.all(20),
-      child: TextField(
-        controller: controller.titleController,
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: Colors.black,
-        ),
-        decoration: const InputDecoration(
-          hintText: '(선택) 제목을 입력해주세요',
-          hintStyle: TextStyle(
-            color: Colors.grey,
+      child: Material(
+        color: Colors.transparent,
+        child: TextField(
+          controller: controller.titleController,
+          style: const TextStyle(
             fontSize: 20,
-            fontWeight: FontWeight.w400,
+            fontWeight: FontWeight.w600,
+            color: Colors.black,
           ),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.zero,
+          decoration: const InputDecoration(
+            hintText: '(선택) 제목을 입력해주세요',
+            hintStyle: TextStyle(
+              color: Colors.grey,
+              fontSize: 20,
+              fontWeight: FontWeight.w400,
+            ),
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.zero,
+          ),
+          inputFormatters: [LengthLimitingTextInputFormatter(50)],
         ),
-        inputFormatters: [LengthLimitingTextInputFormatter(50)],
       ),
     );
   }
@@ -141,18 +177,23 @@ class ArticleEditView extends GetView<ArticleEditController> {
 
   Widget _buildContentSection() {
     return Obx(
-      () => ReorderableListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: controller.contentList.length,
-        buildDefaultDragHandles: false,
-        onReorder:
-            controller.isReorderMode.value
-                ? controller.reorderContent
-                : (oldIndex, newIndex) {},
-        itemBuilder: (context, index) {
-          final content = controller.contentList[index];
-          return _buildContentItem(content, index);
-        },
+      () => Container(
+        height: 400, // 고정 높이 설정
+        child: ReorderableListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          itemCount: controller.contentList.length,
+          buildDefaultDragHandles: false,
+          onReorder:
+              controller.isReorderMode.value
+                  ? controller.reorderContent
+                  : (oldIndex, newIndex) {},
+          itemBuilder: (context, index) {
+            final content = controller.contentList[index];
+            return _buildContentItem(content, index);
+          },
+          // 키보드가 표시되었을 때 스크롤 가능하도록 설정
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        ),
       ),
     );
   }
@@ -225,18 +266,21 @@ class ArticleEditView extends GetView<ArticleEditController> {
         color: const Color(0xFFF8F9FA),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: TextField(
-        controller: content.textEditingController,
-        focusNode: content.focusNode,
-        enabled: !controller.isReorderMode.value,
-        style: const TextStyle(fontSize: 16, color: Colors.black, height: 1.5),
-        maxLines: null,
-        keyboardType: TextInputType.multiline,
-        decoration: const InputDecoration(
-          hintText: '내용을 입력하세요...',
-          hintStyle: TextStyle(color: Colors.grey, fontSize: 16),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.all(16),
+      child: Material(
+        color: Colors.transparent,
+        child: TextField(
+          controller: content.textEditingController,
+          focusNode: content.focusNode,
+          enabled: !controller.isReorderMode.value,
+          style: const TextStyle(fontSize: 16, color: Colors.black, height: 1.5),
+          maxLines: null,
+          keyboardType: TextInputType.multiline,
+          decoration: const InputDecoration(
+            hintText: '내용을 입력하세요...',
+            hintStyle: TextStyle(color: Colors.grey, fontSize: 16),
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.all(16),
+          ),
         ),
       ),
     );
@@ -339,6 +383,58 @@ class ArticleEditView extends GetView<ArticleEditController> {
             size: 20,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildBottomSheetHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Color(0xFFF0F0F0))),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.black),
+            onPressed: () => Get.back(),
+          ),
+          Expanded(
+            child: Text(
+              id != null ? '글 수정' : '글쓰기',
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          Obx(
+            () => TextButton(
+              onPressed: controller.isPressed.value
+                  ? null
+                  : () => controller.writeArticle(
+                        onSuccess: () {
+                          // bottom sheet 닫기
+                          Get.back();
+                          // 자유게시판 데이터 새로고침
+                          _refreshFreeBoard();
+                        },
+                      ),
+              child: Text(
+                id != null ? '수정' : '완료',
+                style: TextStyle(
+                  color: controller.isPressed.value
+                      ? Colors.grey
+                      : const Color(0xFF0064FF),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

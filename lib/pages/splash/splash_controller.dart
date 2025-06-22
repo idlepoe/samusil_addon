@@ -6,6 +6,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import '../../models/profile.dart';
 import '../../utils/app.dart';
 import '../../controllers/profile_controller.dart';
+import '../../controllers/horse_race_controller.dart';
 
 class SplashController extends GetxController {
   final logger = Logger();
@@ -71,6 +72,12 @@ class SplashController extends GetxController {
         await profileController.initializeWithProfile(profile.value);
       } else {
         logger.w('ProfileController가 등록되지 않았습니다. 대시보드에서 초기화됩니다.');
+      }
+      
+      // HorseRaceController 초기화
+      if (!Get.isRegistered<HorseRaceController>()) {
+        Get.put(HorseRaceController());
+        logger.i('HorseRaceController 초기화 완료');
       }
     } catch (e) {
       logger.e('ProfileController 초기화 오류: $e');

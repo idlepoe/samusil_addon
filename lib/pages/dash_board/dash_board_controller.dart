@@ -8,7 +8,6 @@ import '../../define/arrays.dart';
 import '../../define/define.dart';
 import '../../define/enum.dart';
 import '../../models/article.dart';
-import '../../models/coin.dart';
 import '../../models/price.dart';
 import '../../utils/app.dart';
 import '../../utils/util.dart';
@@ -32,10 +31,6 @@ class DashBoardController extends GetxController {
   final RxBool isLoadingAllArticles = false.obs;
   final RxBool isLoadingGameNews = false.obs;
 
-  // 코인 데이터 관리
-  final RxList<Coin> coinList = <Coin>[].obs;
-  final RxBool isLoadingCoins = false.obs;
-
   ViewType viewType = ViewType.normal;
 
   @override
@@ -48,9 +43,10 @@ class DashBoardController extends GetxController {
       Get.put(WishController());
     }
     
-    // HorseRaceController 바인딩
+    // HorseRaceController가 없으면 초기화 (Splash에서 초기화되지 않은 경우 대비)
     if (!Get.isRegistered<HorseRaceController>()) {
       Get.put(HorseRaceController());
+      logger.i("HorseRaceController를 DashBoardController에서 초기화");
     }
   }
 
@@ -113,10 +109,6 @@ class DashBoardController extends GetxController {
     logger.i("Loading game news...");
     await loadGameNews();
     
-    // 코인 데이터 로딩
-    logger.i("Loading coin list...");
-    await loadCoinList();
-    
     logger.i("DashBoardController init completed successfully");
   }
 
@@ -171,24 +163,5 @@ class DashBoardController extends GetxController {
     } finally {
       isLoadingGameNews.value = false;
     }
-  }
-
-  Future<void> loadCoinList() async {
-    if (isLoadingCoins.value) return;
-    
-    isLoadingCoins.value = true;
-    try {
-      final coins = await App.getCoinList(withoutNoTrade: true);
-      coinList.value = coins;
-    } catch (e) {
-      logger.e("Error loading coin list: $e");
-    } finally {
-      isLoadingCoins.value = false;
-    }
-  }
-
-  // 코인 데이터 새로고침
-  Future<void> refreshCoins() async {
-    await loadCoinList();
   }
 }

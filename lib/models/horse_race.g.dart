@@ -8,16 +8,13 @@ part of 'horse_race.dart';
 
 _HorseRace _$HorseRaceFromJson(Map<String, dynamic> json) => _HorseRace(
   id: _toString(json['id']),
+  bettingStartTime: _toDateTime(json['bettingStartTime']),
+  bettingEndTime: _toDateTime(json['bettingEndTime']),
   startTime: _toDateTime(json['startTime']),
   endTime: _toDateTime(json['endTime']),
-  bettingEndTime: _toDateTime(json['bettingEndTime']),
   horses:
       (json['horses'] as List<dynamic>)
           .map((e) => Horse.fromJson(e as Map<String, dynamic>))
-          .toList(),
-  bets:
-      (json['bets'] as List<dynamic>)
-          .map((e) => Bet.fromJson(e as Map<String, dynamic>))
           .toList(),
   isActive: _toBool(json['isActive']),
   isFinished: _toBool(json['isFinished']),
@@ -28,11 +25,11 @@ _HorseRace _$HorseRaceFromJson(Map<String, dynamic> json) => _HorseRace(
 Map<String, dynamic> _$HorseRaceToJson(_HorseRace instance) =>
     <String, dynamic>{
       'id': instance.id,
+      'bettingStartTime': instance.bettingStartTime.toIso8601String(),
+      'bettingEndTime': instance.bettingEndTime.toIso8601String(),
       'startTime': instance.startTime.toIso8601String(),
       'endTime': instance.endTime.toIso8601String(),
-      'bettingEndTime': instance.bettingEndTime.toIso8601String(),
       'horses': instance.horses,
-      'bets': instance.bets,
       'isActive': instance.isActive,
       'isFinished': instance.isFinished,
       'currentRound': instance.currentRound,
@@ -43,6 +40,7 @@ _Horse _$HorseFromJson(Map<String, dynamic> json) => _Horse(
   coinId: _toString(json['coinId']),
   name: _toString(json['name']),
   symbol: _toString(json['symbol']),
+  image: _toString(json['image']),
   currentPosition: _toDouble(json['currentPosition']),
   movements:
       (json['movements'] as List<dynamic>)
@@ -50,16 +48,19 @@ _Horse _$HorseFromJson(Map<String, dynamic> json) => _Horse(
           .toList(),
   lastPrice: _toDouble(json['lastPrice']),
   previousPrice: _toDouble(json['previousPrice']),
+  rank: _toInt(json['rank']),
 );
 
 Map<String, dynamic> _$HorseToJson(_Horse instance) => <String, dynamic>{
   'coinId': instance.coinId,
   'name': instance.name,
   'symbol': instance.symbol,
+  'image': instance.image,
   'currentPosition': instance.currentPosition,
   'movements': instance.movements,
   'lastPrice': instance.lastPrice,
   'previousPrice': instance.previousPrice,
+  'rank': instance.rank,
 };
 
 _Bet _$BetFromJson(Map<String, dynamic> json) => _Bet(
@@ -68,8 +69,8 @@ _Bet _$BetFromJson(Map<String, dynamic> json) => _Bet(
   userName: _toString(json['userName']),
   raceId: _toString(json['raceId']),
   betType: _toString(json['betType']),
-  selectedHorseId: _toString(json['selectedHorseId']),
-  betAmount: _toInt(json['betAmount']),
+  horseId: _toString(json['horseId']),
+  amount: _toInt(json['amount']),
   betTime: _toDateTime(json['betTime']),
   isWon: _toBool(json['isWon']),
   wonAmount: _toInt(json['wonAmount']),
@@ -81,8 +82,8 @@ Map<String, dynamic> _$BetToJson(_Bet instance) => <String, dynamic>{
   'userName': instance.userName,
   'raceId': instance.raceId,
   'betType': instance.betType,
-  'selectedHorseId': instance.selectedHorseId,
-  'betAmount': instance.betAmount,
+  'horseId': instance.horseId,
+  'amount': instance.amount,
   'betTime': instance.betTime.toIso8601String(),
   'isWon': instance.isWon,
   'wonAmount': instance.wonAmount,

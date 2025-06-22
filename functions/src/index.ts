@@ -34,15 +34,4 @@ export { manualNewsCollection } from './news/manualNewsCollection';
 // Race
 export { scheduledCreateHorseRace } from './race/scheduledCreateHorseRace';
 export { scheduledUpdateHorseRace } from './race/scheduledUpdateHorseRace';
-export { placeBet } from './race/placeBet';
-
-// // Alarms
-// export { createAlarm } from './alarms/createAlarm';
-// export { getAlarms } from './alarms/getAlarms';
-// export { updateAlarm } from './alarms/updateAlarm';
-
-// News
-// export { scheduledGameNewsCollection } from './news/scheduledNewsCollection';
-// export { manualNewsCollection } from './news/manualNewsCollection';
-
-// export * from './articles/toggleLike'; 
+export { placeBet } from './race/placeBet'; 

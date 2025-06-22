@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { getCoinPrices } from '../utils/coinGeckoApi';
 import { addPoint } from '../utils/pointService';
+import { sendPushNotification } from '../utils/notificationService';
 
 const db = admin.firestore();
 
@@ -25,6 +25,9 @@ export const scheduledUpdateHorseRace = functions
       const racesToStart = await racesToStartQuery.get();
       for (const doc of racesToStart.docs) {
         await doc.ref.update({ isActive: true });
+        // main_stadium 업데이트
+        const stadiumRef = db.collection('horse_race_stadiums').doc('main_stadium');
+        await stadiumRef.update({ isActive: true });
         console.log(`경마 시작: ${doc.id}`);
       }
 
@@ -48,26 +51,32 @@ export const scheduledUpdateHorseRace = functions
           continue;
         }
 
-        // 말 위치 업데이트
-        const coinIds = race.horses.map((h: any) => h.coinId);
-        const prices = await getCoinPrices(coinIds);
-
+        // 말 위치를 임의의 데이터로 업데이트
         const updatedHorses = race.horses.map((horse: any) => {
-          const newPrice = prices[horse.coinId]?.usd;
-          if (newPrice === undefined) return horse;
+          
+          // 레이스 총 거리를 1.0으로 보고, 이번 라운드의 평균 이동 거리를 계산
+          const averageMovement = 1.0 / race.totalRounds;
 
-          const movement = Math.abs((newPrice - horse.lastPrice) / horse.lastPrice) * 100;
-          const newPosition = horse.currentPosition + movement;
+          // 평균 이동 거리의 50% ~ 150% 사이의 임의의 값을 생성
+          const randomMovement = averageMovement * (0.5 + Math.random());
+
+          const newPosition = horse.currentPosition + randomMovement;
 
           return {
             ...horse,
             currentPosition: newPosition,
-            lastPrice: newPrice,
-            movements: [...horse.movements, movement],
+            // lastPrice, previousPrice는 더 이상 업데이트하지 않음
+            movements: [...horse.movements, randomMovement],
           };
         });
 
         await doc.ref.update({
+          horses: updatedHorses,
+          currentRound: admin.firestore.FieldValue.increment(1),
+        });
+        // main_stadium 업데이트
+        const stadiumRef = db.collection('horse_race_stadiums').doc('main_stadium');
+        await stadiumRef.update({
           horses: updatedHorses,
           currentRound: admin.firestore.FieldValue.increment(1),
         });
@@ -93,7 +102,7 @@ async function finishRace(raceRef: admin.firestore.DocumentReference, race: any)
   const betsSnapshot = await raceRef.collection('bets').get();
   for (const betDoc of betsSnapshot.docs) {
     const bet = betDoc.data();
-    const selectedHorse = finalHorses.find((h: any) => h.coinId === bet.selectedHorseId);
+    const selectedHorse = finalHorses.find((h: any) => h.coinId === bet.horseId);
     
     if (!selectedHorse) continue;
 
@@ -109,23 +118,67 @@ async function finishRace(raceRef: admin.firestore.DocumentReference, race: any)
       isWon = true;
     }
 
+    const title = '코인 경마 결과 알림';
+    let body = '';
+
     if (isWon) {
       const multipliers = { winner: 5, top2: 2, top3: 1.5 };
-      wonAmount = bet.betAmount * (multipliers[bet.betType as keyof typeof multipliers] || 1);
+      wonAmount = bet.amount * (multipliers[bet.betType as keyof typeof multipliers] || 1);
       
       // 포인트 지급
       await addPoint(bet.userId, wonAmount, '코인 경마 우승');
       
       await betDoc.ref.update({ isWon: true, wonAmount: wonAmount });
+
+      body = `축하합니다! 베팅에 성공하여 ${wonAmount}P를 획득했습니다!`;
+    } else {
+      body = `아쉽지만 베팅에 실패했습니다. 다음 경마를 기대해주세요!`;
+    }
+
+    // 사용자에게 푸시 알림 발송 및 기록 저장
+    if (bet.userId) {
+      await sendPushNotification(bet.userId, title, body);
     }
   }
 
-  // 경마 상태 업데이트
-  await raceRef.update({
+  // 최종 경주 데이터 객체 생성
+  const finalRaceData = {
+    ...race,
     horses: finalHorses,
+    isActive: false,
+    isFinished: true,
+  };
+
+  // 1. race_histories에 결과 저장
+  await db.collection('race_histories').doc(raceRef.id).set(finalRaceData);
+  console.log(`경마 기록 저장 완료: ${raceRef.id}`);
+
+  // 2. 기존 경주 문서 상태 업데이트
+  await raceRef.update({
     isActive: false,
     isFinished: true,
   });
 
-  console.log(`경마 결과 처리 완료: ${raceRef.id}`);
+  // 3. main_stadium 비우기 (조건부 실행)
+  const stadiumRef = db.collection('horse_race_stadiums').doc('main_stadium');
+  const stadiumDoc = await stadiumRef.get();
+
+  // 현재 경기장에 있는 경주가 지금 막 종료시킨 경주와 동일할 때만 경기장을 비운다.
+  if (stadiumDoc.exists && stadiumDoc.data()?.id === raceRef.id) {
+    await stadiumRef.set({
+      id: null,
+      isFinished: true,
+      isActive: false,
+      horses: [],
+      bettingStartTime: null,
+      bettingEndTime: null,
+      startTime: null,
+      endTime: null,
+      currentRound: 0,
+      totalRounds: 0,
+    });
+    console.log(`경기장 비우기 완료: ${raceRef.id}`);
+  } else {
+    console.log(`현재 경기장이 다른 경주(${stadiumDoc.data()?.id})를 표시하고 있으므로, ${raceRef.id} 종료 시 비우지 않습니다.`);
+  }
 } 
