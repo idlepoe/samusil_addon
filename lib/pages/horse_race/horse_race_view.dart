@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:samusil_addon/utils/app.dart';
 import 'package:intl/intl.dart';
 
+import '../../components/appCircularProgress.dart';
 import '../../define/define.dart';
 import '../../controllers/horse_race_controller.dart';
 import '../../models/horse_race.dart';
@@ -53,7 +54,7 @@ class _HorseRaceViewState extends State<HorseRaceView> {
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: AppCircularProgress.large());
         }
 
         if (controller.currentRace.value == null) {
@@ -292,14 +293,7 @@ class _HorseRaceViewState extends State<HorseRaceView> {
               ),
               child:
                   controller.isBetting.value
-                      ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 3.0,
-                        ),
-                      )
+                      ? const AppButtonProgress(color: Colors.white, size: 24)
                       : const Text(
                         "베팅하기",
                         style: TextStyle(

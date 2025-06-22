@@ -5,6 +5,7 @@ import 'package:logger/logger.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 
+import '../components/appSnackbar.dart';
 import '../models/horse_race.dart';
 import '../models/coin.dart';
 import '../utils/app.dart';
@@ -129,13 +130,13 @@ class HorseRaceController extends GetxController {
   Future<void> placeBet() async {
     if (isBetting.value) return;
     if (currentRace.value == null || selectedHorseId.value.isEmpty) {
-      Get.snackbar('알림', '말을 선택해주세요.');
+      AppSnackbar.warning('말을 선택해주세요.');
       return;
     }
 
     final profileController = ProfileController.to;
     if (profileController.currentPoint < selectedBetAmount.value) {
-      Get.snackbar('알림', '포인트가 부족합니다.');
+      AppSnackbar.warning('포인트가 부족합니다.');
       return;
     }
 
@@ -152,18 +153,18 @@ class HorseRaceController extends GetxController {
       });
 
       if (response.data['success']) {
-        Get.snackbar('성공', '베팅이 완료되었습니다!');
+        AppSnackbar.success('베팅이 완료되었습니다!');
         hasPlacedBet.value = true;
         // 선택된 말 초기화
         selectedHorseId.value = '';
         // 프로필 컨트롤러의 포인트 업데이트
         await ProfileController.to.refreshProfile();
       } else {
-        Get.snackbar('오류', response.data['message'] ?? '베팅 중 오류 발생');
+        AppSnackbar.error(response.data['message'] ?? '베팅 중 오류 발생');
       }
     } catch (e) {
       logger.e('베팅 함수 호출 오류: $e');
-      Get.snackbar('오류', '베팅 중 심각한 오류가 발생했습니다.');
+      AppSnackbar.error('베팅 중 심각한 오류가 발생했습니다.');
     } finally {
       isBetting.value = false;
     }

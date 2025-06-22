@@ -1,5 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+
+import 'appCircularProgress.dart';
 import 'package:get/get.dart';
 
 class ArticleImageWidget extends StatelessWidget {
@@ -38,28 +40,26 @@ class ArticleImageWidget extends StatelessWidget {
               fit: BoxFit.cover,
               width: width ?? double.infinity,
               height: height,
-              placeholder: showLoadingIndicator
-                  ? (context, url) => Container(
-                      width: width ?? double.infinity,
-                      height: height ?? 200,
-                      color: const Color(0xFFF8F9FA),
-                      child: const Center(
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Color(0xFF0064FF),
-                          ),
+              placeholder:
+                  showLoadingIndicator
+                      ? (context, url) => Container(
+                        width: width ?? double.infinity,
+                        height: height ?? 200,
+                        color: const Color(0xFFF8F9FA),
+                        child: const Center(
+                          child: AppCircularProgress(color: Color(0xFF0064FF)),
                         ),
-                      ),
-                    )
-                  : null,
-              errorWidget: (context, url, error) => Container(
-                width: width ?? double.infinity,
-                height: height ?? 200,
-                color: const Color(0xFFF8F9FA),
-                child: const Center(
-                  child: Icon(Icons.error, color: Colors.grey),
-                ),
-              ),
+                      )
+                      : null,
+              errorWidget:
+                  (context, url, error) => Container(
+                    width: width ?? double.infinity,
+                    height: height ?? 200,
+                    color: const Color(0xFFF8F9FA),
+                    child: const Center(
+                      child: Icon(Icons.error, color: Colors.grey),
+                    ),
+                  ),
             ),
           ),
           if (additionalImageCount != null && additionalImageCount! > 0)
@@ -86,4 +86,4 @@ class ArticleImageWidget extends StatelessWidget {
       ),
     );
   }
-} 
+}

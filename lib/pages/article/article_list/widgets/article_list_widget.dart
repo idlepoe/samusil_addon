@@ -20,7 +20,7 @@ class ArticleListWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.separated(
       shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(0),
       itemCount: articles.length,
       itemBuilder: (context, index) {

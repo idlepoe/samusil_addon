@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../components/appCircularProgress.dart';
 import 'splash_controller.dart';
 
 class SplashView extends GetView<SplashController> {
@@ -63,8 +64,9 @@ class SplashView extends GetView<SplashController> {
 
               // 로딩 인디케이터
               if (controller.isLoading.value)
-                const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                const AppCircularProgress(
+                  color: Colors.white,
+                  backgroundColor: Colors.white30,
                   strokeWidth: 3,
                 ),
 

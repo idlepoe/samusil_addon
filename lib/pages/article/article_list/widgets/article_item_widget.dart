@@ -17,33 +17,11 @@ class ArticleItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String articleText = article.title;
-    final firstTextContent = article.contents.firstWhereOrNull(
-      (c) => !c.isPicture,
-    );
-    if (firstTextContent != null) {
-      articleText += '\n${firstTextContent.contents}';
-    }
+    // contents 배열의 순서대로 최대 2건을 가져옴
+    final displayContents = article.contents.take(2).toList();
 
-    // 이미지 정보 계산
-    String image = "";
-    int imageCount = 0;
-    int additionalImageCount = 0;
-    
-    // 이미지 개수 계산
-    for (int i = 0; i < article.contents.length; i++) {
-      if (article.contents[i].isPicture) {
-        imageCount++;
-        if (image.isEmpty) {
-          image = article.contents[i].contents;
-        }
-      }
-    }
-    
-    // 추가 이미지 개수 계산 (첫 번째 이미지 제외)
-    if (imageCount > 1) {
-      additionalImageCount = imageCount - 1;
-    }
+    // 전체 이미지 개수 계산 (추가 이미지 개수 표시용)
+    final totalImageCount = article.contents.where((c) => c.isPicture).length;
 
     return Material(
       color: Colors.white,
@@ -59,20 +37,49 @@ class ArticleItemWidget extends StatelessWidget {
               // Header
               _buildHeader(),
               const SizedBox(height: 12),
-              // Content
-              Text(articleText, maxLines: 5, overflow: TextOverflow.ellipsis),
-              // Image
-              if (image.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                ArticleImageWidget(
-                  imageUrl: image,
-                  width: double.infinity,
-                  height: 300,
-                  borderRadius: BorderRadius.circular(8),
-                  showLoadingIndicator: false,
-                  additionalImageCount: additionalImageCount > 0 ? additionalImageCount : null,
+              // Title
+              Text(
+                article.title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
                 ),
-              ],
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              // Contents (순서대로 1번, 2번 표시)
+              ...displayContents.asMap().entries.map((entry) {
+                final index = entry.key;
+                final content = entry.value;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 12),
+                    if (content.isPicture)
+                      // 이미지 콘텐츠
+                      ArticleImageWidget(
+                        imageUrl: content.contents,
+                        width: double.infinity,
+                        height: 200,
+                        borderRadius: BorderRadius.circular(8),
+                        showLoadingIndicator: false,
+                        additionalImageCount:
+                            index == 0 && totalImageCount > 1
+                                ? totalImageCount - 1
+                                : null,
+                      )
+                    else
+                      // 텍스트 콘텐츠
+                      Text(
+                        content.contents,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                      ),
+                  ],
+                );
+              }).toList(),
               const SizedBox(height: 12),
               // Actions
               _buildActions(),

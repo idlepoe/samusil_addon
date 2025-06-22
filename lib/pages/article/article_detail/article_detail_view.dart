@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../components/appCircularProgress.dart';
 import '../../../define/define.dart';
 import 'article_detail_controller.dart';
 import 'widgets/article_header_widget.dart';
@@ -19,7 +20,7 @@ class ArticleDetailView extends GetView<ArticleDetailController> {
       appBar: _buildAppBar(context),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: AppCircularProgress.large());
         }
         return Column(
           children: [

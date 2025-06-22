@@ -8,6 +8,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../components/appSnackbar.dart';
 import '../../../define/arrays.dart';
 import '../../../define/define.dart';
 import '../../../models/article.dart';
@@ -132,13 +133,7 @@ class ArticleDetailController extends GetxController {
   // 댓글 작성
   Future<void> createComment() async {
     if (commentController.text.trim().isEmpty) {
-      Get.snackbar(
-        '알림',
-        '댓글 내용을 입력해주세요.',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
-      );
+      AppSnackbar.warning('댓글 내용을 입력해주세요.');
       return;
     }
 
@@ -172,13 +167,7 @@ class ArticleDetailController extends GetxController {
       );
     } catch (e) {
       logger.e(e);
-      Get.snackbar(
-        '오류',
-        '댓글 작성에 실패했습니다.',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      AppSnackbar.error('댓글 작성에 실패했습니다.');
     } finally {
       isCommentLoading.value = false;
     }

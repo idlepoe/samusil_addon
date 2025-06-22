@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
 import 'package:samusil_addon/components/article_image_widget.dart';
 
+import '../../../components/appCircularProgress.dart';
 import '../../../define/arrays.dart';
 import '../../../define/define.dart';
 import '../../../models/article.dart';
@@ -36,7 +37,7 @@ class GameNewsListWidget extends StatelessWidget {
           child: Card(
             child: Padding(
               padding: EdgeInsets.all(16.0),
-              child: Center(child: CircularProgressIndicator()),
+              child: Center(child: AppCircularProgress()),
             ),
           ),
         );
@@ -89,38 +90,49 @@ class GameNewsListWidget extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 섹션 헤더
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 4,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0064FF),
-                      borderRadius: BorderRadius.circular(2),
+            // 섹션 헤더 (전체가 클릭 가능)
+            InkWell(
+              onTap: () {
+                Get.toNamed("/list/${Define.BOARD_GAME_NEWS}");
+              },
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0064FF),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    "game_news_board".tr,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF191F28),
+                    const SizedBox(width: 12),
+                    Text(
+                      "game_news_board".tr,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF191F28),
+                      ),
                     ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    "더보기",
-                    style: TextStyle(
-                      fontSize: 14,
+                    const Spacer(),
+                    Text(
+                      "더보기",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 14,
                       color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             Padding(

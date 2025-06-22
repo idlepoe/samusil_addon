@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:samusil_addon/utils/util.dart';
 
+import 'appCircularProgress.dart';
+
 class ProfileAvatarWidget extends StatelessWidget {
   final String? photoUrl;
   final String name;
@@ -24,27 +26,27 @@ class ProfileAvatarWidget extends StatelessWidget {
     return CircleAvatar(
       radius: radius,
       backgroundColor: Colors.grey.shade300,
-      child: Utils.isValidNilEmptyStr(photoUrl)
-          ? ClipOval(
-              child: CachedNetworkImage(
-                imageUrl: photoUrl!,
-                fit: BoxFit.cover,
-                width: size,
-                height: size,
-                placeholder: (context, url) => Container(
+      child:
+          Utils.isValidNilEmptyStr(photoUrl)
+              ? ClipOval(
+                child: CachedNetworkImage(
+                  imageUrl: photoUrl!,
+                  fit: BoxFit.cover,
                   width: size,
                   height: size,
-                  color: Colors.grey.shade200,
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                    ),
-                  ),
+                  placeholder:
+                      (context, url) => Container(
+                        width: size,
+                        height: size,
+                        color: Colors.grey.shade200,
+                        child: const Center(child: AppCircularProgress.small()),
+                      ),
+                  errorWidget:
+                      (context, url, error) =>
+                          _buildInitialAvatar(calculatedFontSize),
                 ),
-                errorWidget: (context, url, error) => _buildInitialAvatar(calculatedFontSize),
-              ),
-            )
-          : _buildInitialAvatar(calculatedFontSize),
+              )
+              : _buildInitialAvatar(calculatedFontSize),
     );
   }
 
@@ -72,7 +74,7 @@ class ProfileAvatarWidget extends StatelessWidget {
 
   String _getInitials(String name) {
     if (name.isEmpty) return '';
-    
+
     final words = name.trim().split(' ');
     if (words.length >= 2) {
       return '${words[0][0]}${words[1][0]}';
@@ -81,4 +83,4 @@ class ProfileAvatarWidget extends StatelessWidget {
     }
     return '';
   }
-} 
+}

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../../components/appButton.dart';
+import '../../components/appCircularProgress.dart';
 import '../../define/arrays.dart';
 import '../../define/define.dart';
 import 'wish_controller.dart';
@@ -34,7 +35,7 @@ class WishView extends GetView<WishController> {
           onRefresh: controller.refresh,
           child:
               controller.isLoading.value
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(child: AppCircularProgress.large())
                   : SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     child: Column(
@@ -241,33 +242,37 @@ class WishView extends GetView<WishController> {
                       },
                     ),
                     const SizedBox(height: 12),
-                    Obx(() => SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: controller.canCreateWish
-                            ? () => controller.createWish(
-                              controller.commentController.text,
-                            )
-                            : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: controller.canCreateWish
-                              ? const Color(0xFF0064FF)
-                              : Colors.grey,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                    Obx(
+                      () => SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed:
+                              controller.canCreateWish
+                                  ? () => controller.createWish(
+                                    controller.commentController.text,
+                                  )
+                                  : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                controller.canCreateWish
+                                    ? const Color(0xFF0064FF)
+                                    : Colors.grey,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
-                        ),
-                        child: const Text(
-                          "기도 올리기",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                          child: const Text(
+                            "기도 올리기",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
-                    )),
+                    ),
                   ],
                 ),
               ),
@@ -275,19 +280,19 @@ class WishView extends GetView<WishController> {
   }
 
   Widget _buildSendButton() {
-    return Obx(() => IconButton(
-      onPressed: controller.canCreateWish
-          ? () => controller.createWish(
-                controller.commentController.text,
-              )
-          : null,
-      icon: Icon(
-        Icons.send,
-        color: controller.canCreateWish
-            ? const Color(0xFF0064FF)
-            : Colors.grey,
+    return Obx(
+      () => IconButton(
+        onPressed:
+            controller.canCreateWish
+                ? () => controller.createWish(controller.commentController.text)
+                : null,
+        icon: Icon(
+          Icons.send,
+          color:
+              controller.canCreateWish ? const Color(0xFF0064FF) : Colors.grey,
+        ),
       ),
-    ));
+    );
   }
 
   Widget _buildWishList() {

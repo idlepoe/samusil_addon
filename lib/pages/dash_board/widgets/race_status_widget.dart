@@ -26,10 +26,10 @@ class _RaceStatusWidgetState extends State<RaceStatusWidget>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(seconds: 2),
+      duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(
+    _animation = Tween<double>(begin: 1.0, end: 1.05).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
 
@@ -86,9 +86,10 @@ class _RaceStatusWidgetState extends State<RaceStatusWidget>
       // 경주 중일 때 애니메이션 시작
       final raceStatus = horseRaceController!.getRaceStatus();
       if (raceStatus == '경주 중') {
-        _animationController.repeat();
+        _animationController.repeat(reverse: true);
       } else {
         _animationController.stop();
+        _animationController.reset();
       }
 
       return Container(
@@ -211,13 +212,7 @@ class _RaceStatusWidgetState extends State<RaceStatusWidget>
       return AnimatedBuilder(
         animation: _animation,
         builder: (context, child) {
-          return Transform.scale(
-            scale: 1.0 + (_animation.value * 0.05),
-            child: Opacity(
-              opacity: 0.8 + (_animation.value * 0.2),
-              child: statusWidget,
-            ),
-          );
+          return Transform.scale(scale: _animation.value, child: statusWidget);
         },
       );
     }

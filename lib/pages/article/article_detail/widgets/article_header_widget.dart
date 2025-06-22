@@ -6,6 +6,7 @@ import 'package:samusil_addon/utils/app.dart';
 import 'package:samusil_addon/components/profile_badge_widget.dart';
 import 'package:samusil_addon/components/profile_avatar_widget.dart';
 
+import '../../../../components/appSnackbar.dart';
 import '../../../../utils/util.dart';
 import '../article_detail_controller.dart';
 
@@ -120,10 +121,10 @@ class ArticleHeaderWidget extends GetView<ArticleDetailController> {
         controller.shareArticle();
         break;
       case 'block':
-        Get.snackbar('알림', '차단 기능은 준비중입니다.');
+        AppSnackbar.info('차단 기능은 준비중입니다.');
         break;
       case 'report':
-        Get.snackbar('알림', '신고 기능은 준비중입니다.');
+        AppSnackbar.info('신고 기능은 준비중입니다.');
         break;
       case 'edit':
         controller.editArticle();

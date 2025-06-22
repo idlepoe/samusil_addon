@@ -31,7 +31,8 @@ class ArticleListView extends GetView<ArticleListController> {
       backgroundColor: Colors.white,
       appBar: _buildAppBar(context),
       body: _buildBody(context),
-      bottomSheet: _buildWriteCommentSheet(context),
+      bottomSheet:
+          _shouldShowWriteButton() ? _buildWriteCommentSheet(context) : null,
     );
   }
 
@@ -67,10 +68,15 @@ class ArticleListView extends GetView<ArticleListController> {
           child: RefreshIndicator(
             onRefresh: controller.onRefresh,
             child: Obx(
-              () => ArticleListWidget(
-                articles: controller.displayArticles,
-                hasPicture: controller.hasPicture,
-                hasNoContents: controller.hasNoContents,
+              () => Padding(
+                padding: EdgeInsets.only(
+                  bottom: _shouldShowWriteButton() ? 80.0 : 0.0,
+                ),
+                child: ArticleListWidget(
+                  articles: controller.displayArticles,
+                  hasPicture: controller.hasPicture,
+                  hasNoContents: controller.hasNoContents,
+                ),
               ),
             ),
           ),
@@ -93,7 +99,9 @@ class ArticleListView extends GetView<ArticleListController> {
               () => Row(
                 children: [
                   Text(
-                    controller.getSortTypeText(controller.currentSortType.value),
+                    controller.getSortTypeText(
+                      controller.currentSortType.value,
+                    ),
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const Icon(Icons.arrow_drop_down, size: 20),
@@ -137,24 +145,24 @@ class ArticleListView extends GetView<ArticleListController> {
             const SizedBox(height: 20),
             Text(
               '정렬',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            ...SortType.values.map((sortType) => ListTile(
-              title: Text(controller.getSortTypeText(sortType)),
-              trailing: Obx(
-                () => controller.currentSortType.value == sortType
-                    ? const Icon(Icons.check, color: Color(0xFF0064FF))
-                    : const SizedBox.shrink(),
+            ...SortType.values.map(
+              (sortType) => ListTile(
+                title: Text(controller.getSortTypeText(sortType)),
+                trailing: Obx(
+                  () =>
+                      controller.currentSortType.value == sortType
+                          ? const Icon(Icons.check, color: Color(0xFF0064FF))
+                          : const SizedBox.shrink(),
+                ),
+                onTap: () {
+                  controller.changeSortType(sortType);
+                  Get.back();
+                },
               ),
-              onTap: () {
-                controller.changeSortType(sortType);
-                Get.back();
-              },
-            )),
+            ),
             const SizedBox(height: 20),
           ],
         ),
@@ -163,6 +171,11 @@ class ArticleListView extends GetView<ArticleListController> {
       enableDrag: true,
       isDismissible: true,
     );
+  }
+
+  bool _shouldShowWriteButton() {
+    // 게임 뉴스 게시판이 아닌 경우에만 글쓰기 버튼을 표시
+    return controller.boardInfo.value.board_name != Define.BOARD_GAME_NEWS;
   }
 
   Widget _buildWriteCommentSheet(BuildContext context) {

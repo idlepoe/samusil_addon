@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
 import 'package:samusil_addon/components/article_image_widget.dart';
 
+import '../../../components/appCircularProgress.dart';
 import '../../../define/arrays.dart';
 import '../../../define/define.dart';
 import '../../../models/article.dart';
@@ -24,7 +25,7 @@ class AllArticlesWidget extends StatelessWidget {
       if (controller.isLoadingAllArticles.value) {
         return const Padding(
           padding: EdgeInsets.all(16.0),
-          child: Center(child: CircularProgressIndicator()),
+          child: Center(child: AppCircularProgress()),
         );
       }
 
@@ -55,7 +56,9 @@ class AllArticlesWidget extends StatelessWidget {
                   ElevatedButton.icon(
                     onPressed: () {
                       // 게시글 목록 화면으로 이동하고 작성 bottom sheet 표시
-                      Get.toNamed("/list/${Define.BOARD_FREE}", arguments: {'showWriteSheet': true}
+                      Get.toNamed(
+                        "/list/${Define.BOARD_FREE}",
+                        arguments: {'showWriteSheet': true},
                       );
                     },
                     icon: const Icon(Icons.edit, size: 18),
@@ -63,7 +66,10 @@ class AllArticlesWidget extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0064FF),
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -149,9 +155,13 @@ class AllArticlesWidget extends StatelessWidget {
                         String image = "";
                         int imageCount = 0;
                         int additionalImageCount = 0;
-                        
+
                         // 이미지 개수 계산
-                        for (int i = 0; i < articleList[index].contents.length; i++) {
+                        for (
+                          int i = 0;
+                          i < articleList[index].contents.length;
+                          i++
+                        ) {
                           if (articleList[index].contents[i].isPicture) {
                             imageCount++;
                             if (image.isEmpty) {
@@ -159,7 +169,7 @@ class AllArticlesWidget extends StatelessWidget {
                             }
                           }
                         }
-                        
+
                         // 추가 이미지 개수 계산 (첫 번째 이미지 제외)
                         if (imageCount > 1) {
                           additionalImageCount = imageCount - 1;
@@ -188,7 +198,10 @@ class AllArticlesWidget extends StatelessWidget {
                                     height: 50,
                                     borderRadius: BorderRadius.circular(6),
                                     showLoadingIndicator: false,
-                                    additionalImageCount: additionalImageCount > 0 ? additionalImageCount : null,
+                                    additionalImageCount:
+                                        additionalImageCount > 0
+                                            ? additionalImageCount
+                                            : null,
                                   )
                                 else
                                   Container(
@@ -208,7 +221,8 @@ class AllArticlesWidget extends StatelessWidget {
                                 // 제목과 정보 (오른쪽)
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         articleList[index].title,
@@ -229,9 +243,11 @@ class AllArticlesWidget extends StatelessWidget {
                                               vertical: 2,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: const Color(0xFF0064FF)
-                                                  .withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(4),
+                                              color: const Color(
+                                                0xFF0064FF,
+                                              ).withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
                                             ),
                                             child: Text(
                                               Arrays.getBoardInfo(

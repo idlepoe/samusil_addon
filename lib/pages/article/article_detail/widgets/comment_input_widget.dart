@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:samusil_addon/components/profile_avatar_widget.dart';
 import 'package:samusil_addon/components/appButton.dart';
+import 'package:samusil_addon/components/appCircularProgress.dart';
 
 import '../article_detail_controller.dart';
 
@@ -94,39 +95,44 @@ class CommentInputWidget extends GetView<ArticleDetailController> {
                       ),
                       maxLines: null,
                       textInputAction: TextInputAction.send,
-                      onSubmitted: controller.isCommentLoading.value 
-                          ? null 
-                          : (_) => controller.createComment(),
+                      onSubmitted:
+                          controller.isCommentLoading.value
+                              ? null
+                              : (_) => controller.createComment(),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 GestureDetector(
-                  onTap: controller.isCommentLoading.value 
-                      ? null 
-                      : controller.createComment,
+                  onTap:
+                      controller.isCommentLoading.value
+                          ? null
+                          : controller.createComment,
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: controller.isCommentLoading.value
-                          ? Colors.grey.shade300
-                          : controller.isCommentEmpty.value
+                      color:
+                          controller.isCommentLoading.value
+                              ? Colors.grey.shade300
+                              : controller.isCommentEmpty.value
                               ? Colors.grey.shade300
                               : const Color(0xFF0064FF),
                       borderRadius: BorderRadius.circular(24),
                     ),
-                    child: controller.isCommentLoading.value
-                        ? const AppLoadingIndicator(
-                            size: 20,
-                            color: Colors.white,
-                          )
-                        : Icon(
-                            Icons.send_rounded,
-                            color: controller.isCommentEmpty.value
-                                ? Colors.grey.shade500
-                                : Colors.white,
-                            size: 20,
-                          ),
+                    child:
+                        controller.isCommentLoading.value
+                            ? const AppButtonProgress(
+                              size: 20,
+                              color: Colors.white,
+                            )
+                            : Icon(
+                              Icons.send_rounded,
+                              color:
+                                  controller.isCommentEmpty.value
+                                      ? Colors.grey.shade500
+                                      : Colors.white,
+                              size: 20,
+                            ),
                   ),
                 ),
               ],

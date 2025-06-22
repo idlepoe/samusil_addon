@@ -6,6 +6,7 @@ import 'package:line_icons/line_icons.dart';
 import '../../../define/define.dart';
 import '../../../models/board_info.dart';
 import '../../../components/appButton.dart';
+import '../../../components/appCircularProgress.dart';
 import 'article_edit_controller.dart';
 
 class ArticleEditView extends GetView<ArticleEditController> {
@@ -22,7 +23,8 @@ class ArticleEditView extends GetView<ArticleEditController> {
     }
 
     // bottom sheet에서 사용되는지 확인 (AppBar가 없는 경우)
-    final isInBottomSheet = context.findAncestorWidgetOfExactType<Scaffold>() == null;
+    final isInBottomSheet =
+        context.findAncestorWidgetOfExactType<Scaffold>() == null;
 
     if (isInBottomSheet) {
       // bottom sheet에서 사용될 때
@@ -36,9 +38,7 @@ class ArticleEditView extends GetView<ArticleEditController> {
               _buildBottomSheetHeader(),
               // 본문 (스크롤 가능하도록)
               Expanded(
-                child: SingleChildScrollView(
-                  child: _buildBody(context),
-                ),
+                child: SingleChildScrollView(child: _buildBody(context)),
               ),
               // 하단 툴바
               _buildToolbar(),
@@ -116,10 +116,7 @@ class ArticleEditView extends GetView<ArticleEditController> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                AppLoadingIndicator(
-                  size: 32,
-                  color: Color(0xFF0064FF),
-                ),
+                AppCircularProgress.large(color: Color(0xFF0064FF)),
                 SizedBox(height: 16),
                 Text(
                   '글을 작성하고 있습니다...',
@@ -272,7 +269,11 @@ class ArticleEditView extends GetView<ArticleEditController> {
           controller: content.textEditingController,
           focusNode: content.focusNode,
           enabled: !controller.isReorderMode.value,
-          style: const TextStyle(fontSize: 16, color: Colors.black, height: 1.5),
+          style: const TextStyle(
+            fontSize: 16,
+            color: Colors.black,
+            height: 1.5,
+          ),
           maxLines: null,
           keyboardType: TextInputType.multiline,
           decoration: const InputDecoration(
@@ -412,9 +413,10 @@ class ArticleEditView extends GetView<ArticleEditController> {
           ),
           Obx(
             () => TextButton(
-              onPressed: controller.isPressed.value
-                  ? null
-                  : () => controller.writeArticle(
+              onPressed:
+                  controller.isPressed.value
+                      ? null
+                      : () => controller.writeArticle(
                         onSuccess: () {
                           // bottom sheet 닫기
                           Get.back();
@@ -425,9 +427,10 @@ class ArticleEditView extends GetView<ArticleEditController> {
               child: Text(
                 id != null ? '수정' : '완료',
                 style: TextStyle(
-                  color: controller.isPressed.value
-                      ? Colors.grey
-                      : const Color(0xFF0064FF),
+                  color:
+                      controller.isPressed.value
+                          ? Colors.grey
+                          : const Color(0xFF0064FF),
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),

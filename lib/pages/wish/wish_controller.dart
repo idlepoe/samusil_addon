@@ -6,6 +6,7 @@ import 'package:logger/logger.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
+import '../../components/appSnackbar.dart';
 import '../../define/define.dart';
 import '../../models/profile.dart';
 import '../../models/wish.dart';
@@ -24,14 +25,14 @@ class WishController extends GetxController {
 
   // 텍스트 컨트롤러
   final TextEditingController commentController = TextEditingController();
-  
+
   // Focus 관리
   final FocusNode commentFocusNode = FocusNode();
 
   @override
   void onInit() {
     super.onInit();
-    
+
     init();
   }
 
@@ -49,7 +50,7 @@ class WishController extends GetxController {
       await App.checkUser();
       profile.value = await App.getProfile();
       alreadyWished.value = await Utils.getAlreadyWish();
-      
+
       // Wish 목록 조회
       final wishes = await App.getWish();
       wishList.value = wishes;
@@ -66,7 +67,7 @@ class WishController extends GetxController {
     try {
       profile.value = await App.getProfile();
       alreadyWished.value = await Utils.getAlreadyWish();
-      
+
       // Wish 목록 새로고침
       final wishes = await App.getWish();
       wishList.value = wishes;
@@ -107,38 +108,22 @@ class WishController extends GetxController {
 
         // 입력 필드 초기화
         commentController.clear();
-        
+
         // focus 유지
         commentFocusNode.requestFocus();
 
         // 성공 메시지 표시
-        Get.snackbar(
-          '성공',
+        AppSnackbar.success(
           '소원이 생성되었습니다! +${result['data']?['pointsEarned'] ?? 0}포인트',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
         );
       } else {
         // 에러 메시지 표시
         String errorMessage = result['error'] ?? '소원 생성에 실패했습니다.';
-        Get.snackbar(
-          '오류',
-          errorMessage,
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
+        AppSnackbar.error(errorMessage);
       }
     } catch (e) {
       logger.e("Error creating wish: $e");
-      Get.snackbar(
-        '오류',
-        '소원 생성 중 오류가 발생했습니다.',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      AppSnackbar.error('소원 생성 중 오류가 발생했습니다.');
     } finally {
       isPressed.value = false;
     }
