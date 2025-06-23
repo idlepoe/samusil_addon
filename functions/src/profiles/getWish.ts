@@ -24,18 +24,24 @@ export const getWish = onRequest({
 
     const db = admin.firestore();
 
-    // Wish 컬렉션에서 최신순으로 조회
+    // 오늘 날짜
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
+    // 오늘 날짜의 Wish만 조회
     const wishSnapshot = await db
       .collection('wish')
+      .where('date', '==', todayStr)
       .orderBy('created_at', 'desc')
-      .limit(50) // 최근 50개만 조회
+      .limit(50)
       .get();
 
     const wishList = [];
+    let index = 1;
     for (const doc of wishSnapshot.docs) {
       const wishData = doc.data();
       wishList.push({
-        index: wishData.index || 1,
+        index: index++,
         profile_uid: wishData.profile_uid || '',
         comment: wishData.comment || '',
         profile_name: wishData.profile_name || '',

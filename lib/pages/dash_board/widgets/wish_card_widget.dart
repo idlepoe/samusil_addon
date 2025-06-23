@@ -47,11 +47,71 @@ class WishCardWidget extends GetView<WishController> {
                         index,
                       ) {
                         final wish = controller.wishList[index];
+                        final isMyWish =
+                            wish.uid == controller.profile.value.uid;
+
                         return ListTile(
-                          leading: Text("${wish.index} ${"place".tr}"),
-                          title: Text(wish.comments),
+                          leading: Container(
+                            width: 30,
+                            height: 30,
+                            decoration: BoxDecoration(
+                              color:
+                                  isMyWish
+                                      ? const Color(0xFF00C851).withOpacity(0.1)
+                                      : const Color(
+                                        0xFF0064FF,
+                                      ).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: Center(
+                              child: Text(
+                                "${wish.index}",
+                                style: TextStyle(
+                                  color:
+                                      isMyWish
+                                          ? const Color(0xFF00C851)
+                                          : const Color(0xFF0064FF),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          title: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  wish.comments,
+                                  style: const TextStyle(fontSize: 14),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (isMyWish)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 1,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFF00C851,
+                                    ).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    "나",
+                                    style: TextStyle(
+                                      color: Color(0xFF00C851),
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
                           subtitle: Text(
                             "${wish.nick_name}(${wish.streak}${"streak".tr})",
+                            style: const TextStyle(fontSize: 12),
                           ),
                         );
                       }),

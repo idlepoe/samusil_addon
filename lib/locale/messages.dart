@@ -4,7 +4,7 @@ class Messages extends Translations {
   @override
   Map<String, Map<String, String>> get keys => {
     "en_US": {
-      "app_name": "ITTraNet",
+      "app_name": "Office Lounge",
       "anon": "Anonymous",
       "developer": "Developer",
       "monday": "Mon",
@@ -41,6 +41,8 @@ class Messages extends Translations {
       "logout": "Sign out",
       "point_information": "Point Information",
       "game_news_board": "Game News",
+      "free_board": "Chat Board",
+      "free_board_description": "Share your thoughts and chat freely",
       "process_start": "Processing Started",
       "process_end": "Processing Completed",
       "coin_market_list_board": "Coin Market List",
@@ -104,7 +106,7 @@ class Messages extends Translations {
       "wish_create_error": "An error occurred while creating wish.",
     },
     "ko_KR": {
-      "app_name": "ITTraNet",
+      "app_name": "오피스 라운지",
       "anon": "익명",
       "developer": "개발자",
       "monday": "월",
@@ -140,6 +142,8 @@ class Messages extends Translations {
       "logout": "로그아웃",
       "point_information": "포인트 정보",
       "game_news_board": "게임뉴스",
+      "free_board": "잡담 게시판",
+      "free_board_description": "자유롭게 이야기를 나누는 공간입니다",
       "process_start": "처리시작",
       "process_end": "처리종료",
       "coin_market_list_board": "코인 시장 목록",
@@ -201,7 +205,7 @@ class Messages extends Translations {
       "wish_create_error": "소원 생성 중 오류가 발생했습니다.",
     },
     "ja_JP": {
-      "app_name": "ITTraNet",
+      "app_name": "オフィスラウンジ",
       "anon": "匿名",
       "developer": "開発者",
       "monday": "月",
@@ -237,6 +241,8 @@ class Messages extends Translations {
       "logout": "ログアウト",
       "point_information": "ポイント情報",
       "game_news_board": "ゲームニュース",
+      "free_board": "雑談掲示板",
+      "free_board_description": "自由に話し合う空間です",
       "process_start": "処理開始",
       "process_end": "処理終了",
       "coin_market_list_board": "コイン市場リスト",

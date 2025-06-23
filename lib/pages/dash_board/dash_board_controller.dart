@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../define/arrays.dart';
 import '../../define/define.dart';
@@ -127,6 +128,35 @@ class DashBoardController extends GetxController {
     await Future.delayed(const Duration(seconds: 1));
   }
 
+  // 대시보드 전체 새로고침
+  Future<void> refreshDashboard() async {
+    logger.i("Dashboard refresh started");
+
+    try {
+      // 게임뉴스와 자유게시판 데이터 동시에 새로고침
+      await Future.wait([loadGameNews(), loadAllArticles()]);
+
+      logger.i("Dashboard refresh completed successfully");
+    } catch (e) {
+      logger.e("Dashboard refresh error: $e");
+    }
+  }
+
+  // 차단된 사용자의 게시글 필터링
+  Future<List<Article>> _filterBlockedUsers(List<Article> articles) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final blockedUsers = prefs.getStringList('blocked_users') ?? [];
+
+      return articles
+          .where((article) => !blockedUsers.contains(article.profile_uid))
+          .toList();
+    } catch (e) {
+      logger.e('차단된 사용자 필터링 중 오류: $e');
+      return articles;
+    }
+  }
+
   // 자유게시판 게시글 로딩
   Future<void> loadAllArticles() async {
     if (isLoadingAllArticles.value) return;
@@ -138,7 +168,10 @@ class DashBoardController extends GetxController {
         search: "",
         limit: Define.DEFAULT_DASH_BOARD_GET_LENGTH,
       );
-      allArticles.value = articles;
+
+      // 차단된 사용자의 게시글 필터링
+      final filteredArticles = await _filterBlockedUsers(articles);
+      allArticles.value = filteredArticles;
     } catch (e) {
       logger.e("Error loading all articles: $e");
     } finally {
@@ -157,7 +190,10 @@ class DashBoardController extends GetxController {
         search: "",
         limit: Define.DEFAULT_DASH_BOARD_GET_LENGTH,
       );
-      gameNews.value = articles;
+
+      // 차단된 사용자의 게시글 필터링
+      final filteredArticles = await _filterBlockedUsers(articles);
+      gameNews.value = filteredArticles;
     } catch (e) {
       logger.e("Error loading game news: $e");
     } finally {

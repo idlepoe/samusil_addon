@@ -360,32 +360,60 @@ class WishView extends GetView<WishController> {
   }
 
   Widget _buildWishItem(dynamic wish, int index) {
+    final isMyWish = controller.isMyWish(wish);
+
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       leading: Container(
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: const Color(0xFF0064FF).withOpacity(0.1),
+          color:
+              isMyWish
+                  ? const Color(0xFF00C851).withOpacity(0.1)
+                  : const Color(0xFF0064FF).withOpacity(0.1),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Center(
           child: Text(
             "${wish.index}",
-            style: const TextStyle(
-              color: Color(0xFF0064FF),
+            style: TextStyle(
+              color:
+                  isMyWish ? const Color(0xFF00C851) : const Color(0xFF0064FF),
               fontWeight: FontWeight.w600,
             ),
           ),
         ),
       ),
-      title: Text(
-        wish.comments,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          color: Color(0xFF191F28),
-        ),
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              wish.comments,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF191F28),
+              ),
+            ),
+          ),
+          if (isMyWish)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFF00C851).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                "나의 소원",
+                style: TextStyle(
+                  color: Color(0xFF00C851),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+        ],
       ),
       subtitle: Text(
         "${wish.nick_name} • ${wish.streak}일째",
@@ -394,13 +422,16 @@ class WishView extends GetView<WishController> {
       trailing: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: const Color(0xFF00C851).withOpacity(0.1),
+          color:
+              isMyWish
+                  ? const Color(0xFF00C851).withOpacity(0.1)
+                  : const Color(0xFF0064FF).withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
           "+${wish.streak * 5}",
-          style: const TextStyle(
-            color: Color(0xFF00C851),
+          style: TextStyle(
+            color: isMyWish ? const Color(0xFF00C851) : const Color(0xFF0064FF),
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),

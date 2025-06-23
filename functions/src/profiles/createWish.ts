@@ -68,28 +68,19 @@ export const createWish = onRequest({
       pointToAdd = 5; // 기본 5포인트
     }
 
-    // Wish 생성
+    // Wish 생성 - 개별 문서로 저장
     const wishData = {
       profile_uid: uid,
       comment: comment,
       profile_name: profile.name || 'Anonymous',
       streak: newStreak,
       created_at: admin.firestore.Timestamp.now(),
+      date: todayStr, // 날짜 필드 추가 (쿼리용)
     };
 
-    // 오늘 Wish 문서에 추가
-    const wishRef = db.collection(FIRESTORE_COLLECTION_WISH).doc(todayStr);
-    
-    try {
-      await wishRef.update({
-        list: admin.firestore.FieldValue.arrayUnion([wishData])
-      });
-    } catch (error) {
-      // 문서가 없으면 생성
-      await wishRef.set({
-        list: [wishData]
-      });
-    }
+    // 개별 Wish 문서 생성
+    const wishRef = db.collection(FIRESTORE_COLLECTION_WISH).doc();
+    await wishRef.set(wishData);
 
     // 프로필 업데이트 (연속 기도, 마지막 기도 날짜)
     await profileRef.update({
@@ -100,16 +91,6 @@ export const createWish = onRequest({
     // 포인트 지급
     const newPoints = await awardPointsForWish(uid, pointToAdd);
 
-    // 업데이트된 Wish 목록 조회
-    const updatedWishDoc = await wishRef.get();
-    const wishList = updatedWishDoc.data()?.list || [];
-    
-    // 인덱스 업데이트
-    const indexedWishList = wishList.map((wish: any, index: number) => ({
-      ...wish,
-      index: index + 1
-    }));
-
     // 업데이트된 프로필 조회
     const updatedProfileDoc = await profileRef.get();
     const updatedProfile = updatedProfileDoc.data()!;
@@ -119,7 +100,6 @@ export const createWish = onRequest({
       message: 'Wish created successfully',
       data: {
         profile: updatedProfile,
-        wishList: indexedWishList,
         pointsEarned: pointToAdd,
         newStreak: newStreak,
         newPoints: newPoints

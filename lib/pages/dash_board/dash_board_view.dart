@@ -34,27 +34,36 @@ class DashBoardView extends GetView<DashBoardController> {
         centerTitle: true,
         actions: AppBarAction(context, Profile.init()),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 코인 가격 스크롤
-            const RaceStatusWidget(),
-            const SizedBox(height: 20),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          // 게임뉴스와 자유게시판 데이터 새로고침
+          await controller.refreshDashboard();
+        },
+        color: const Color(0xFF0064FF),
+        backgroundColor: Colors.white,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 코인 가격 스크롤
+              const RaceStatusWidget(),
+              const SizedBox(height: 20),
 
-            // 오늘 날짜 헤더
-            const DateWishCardWidget(),
-            const SizedBox(height: 20),
+              // 오늘 날짜 헤더
+              const DateWishCardWidget(),
+              const SizedBox(height: 20),
 
-            // 게임 뉴스 섹션
-            GameNewsListWidget(controller: controller),
-            const SizedBox(height: 20),
+              // 게임 뉴스 섹션
+              GameNewsListWidget(controller: controller),
+              const SizedBox(height: 20),
 
-            // 전체 게시글 섹션
-            AllArticlesWidget(controller: controller),
-            const SizedBox(height: 20),
-          ],
+              // 전체 게시글 섹션
+              AllArticlesWidget(controller: controller),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
       drawer: const LeftDrawer(),

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/article.dart';
 import 'appSnackbar.dart';
+import '../pages/dash_board/dash_board_controller.dart';
 
 class BlockBottomSheet extends StatefulWidget {
   final Article article;
@@ -240,6 +241,12 @@ class _BlockBottomSheetState extends State<BlockBottomSheet> {
 
       Get.back();
       AppSnackbar.success('${widget.article.profile_name}님을 차단했습니다.');
+
+      // 대시보드가 현재 화면인 경우 새로고침
+      if (Get.currentRoute == '/') {
+        final dashboardController = Get.find<DashBoardController>();
+        await dashboardController.refreshDashboard();
+      }
     } catch (e) {
       AppSnackbar.error('차단 처리 중 오류가 발생했습니다.');
     } finally {

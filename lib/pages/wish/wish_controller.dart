@@ -136,4 +136,9 @@ class WishController extends GetxController {
   void onTextChanged(String text) {
     hasText.value = text.trim().isNotEmpty;
   }
+
+  // 본인의 소원인지 확인하는 메서드
+  bool isMyWish(Wish wish) {
+    return wish.uid == profile.value.uid;
+  }
 }

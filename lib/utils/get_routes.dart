@@ -31,6 +31,7 @@ import '../pages/notification/notification_history_view.dart';
 import '../pages/notification/notification_history_binding.dart';
 import '../pages/point/point_history_view.dart';
 import '../pages/point/point_history_binding.dart';
+import '../pages/option/03_blocked_users_page.dart';
 
 class GetRoutes {
   static final routes = [
@@ -107,5 +108,6 @@ class GetRoutes {
       page: () => const PointHistoryView(),
       binding: PointHistoryBinding(),
     ),
+    GetPage(name: '/blocked-users', page: () => const BlockedUsersPage()),
   ];
 }

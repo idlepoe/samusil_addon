@@ -119,7 +119,7 @@ class AllArticlesWidget extends StatelessWidget {
                         Get.toNamed("/list/${Define.BOARD_FREE}");
                       },
                       child: Text(
-                        "자유게시판",
+                        "잡담 게시판",
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
