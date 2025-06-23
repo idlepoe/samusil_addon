@@ -51,22 +51,46 @@ export const scheduledUpdateHorseRace = functions
           continue;
         }
 
-        // 말 위치를 임의의 데이터로 업데이트
+        // 말 위치를 시가총액 변동률 기반으로 업데이트
         const updatedHorses = race.horses.map((horse: any) => {
-          
           // 레이스 총 거리를 1.0으로 보고, 이번 라운드의 평균 이동 거리를 계산
           const averageMovement = 1.0 / race.totalRounds;
 
-          // 평균 이동 거리의 80% ~ 180% 사이의 임의의 값을 생성하여 최소 속도 보장
-          const randomMovement = averageMovement * (0.8 + Math.random());
-
-          const newPosition = horse.currentPosition + randomMovement;
+          // 이미 골인한 말은 확률상 최대 movement를 부여
+          if (horse.currentPosition >= 1.0) {
+            const maxMovement = averageMovement * 1.2; // 최대 movement (평균의 120%)
+            return {
+              ...horse,
+              movements: [...horse.movements, maxMovement],
+            };
+          }
+          
+          // 시가총액 변동률을 movement에 반영
+          const marketCapChange = horse.marketCapChangePercentage24h || 0;
+          
+          // -10% ~ +10% 범위로 제한
+          const clampedChange = Math.max(-10, Math.min(10, marketCapChange));
+          
+          // 변동률을 0.8 ~ 1.2 범위로 변환
+          // -10% -> 0.8, 0% -> 1.0, +10% -> 1.2
+          const changeMultiplier = 1.0 + (clampedChange / 100) * 0.4;
+          
+          // 기본 80% ~ 120% 범위에 시가총액 변동률 적용
+          const baseRandomFactor = 0.8 + Math.random() * 0.4; // 0.8 ~ 1.2
+          const finalMultiplier = (baseRandomFactor + changeMultiplier) / 2; // 두 값의 평균
+          
+          const movementWithMarketCap = averageMovement * finalMultiplier;
+          let newPosition = horse.currentPosition + movementWithMarketCap;
+          
+          // 1.0을 넘으면 1.0으로 제한
+          if (newPosition > 1.0) {
+            newPosition = 1.0;
+          }
 
           return {
             ...horse,
             currentPosition: newPosition,
-            // lastPrice, previousPrice는 더 이상 업데이트하지 않음
-            movements: [...horse.movements, randomMovement],
+            movements: [...horse.movements, movementWithMarketCap],
           };
         });
 
@@ -91,8 +115,13 @@ export const scheduledUpdateHorseRace = functions
 async function finishRace(raceRef: admin.firestore.DocumentReference, race: any) {
   console.log(`경마 종료 및 결과 처리 시작: ${raceRef.id}`);
 
-  // 최종 순위 결정
-  const sortedHorses = [...race.horses].sort((a: any, b: any) => b.currentPosition - a.currentPosition);
+  // 최종 순위 결정 - movements 합계 기준
+  const sortedHorses = [...race.horses].sort((a: any, b: any) => {
+    const aTotal = a.movements.reduce((sum: number, move: number) => sum + move, 0);
+    const bTotal = b.movements.reduce((sum: number, move: number) => sum + move, 0);
+    return bTotal - aTotal; // 높은 순서대로 정렬
+  });
+  
   const finalHorses = sortedHorses.map((horse: any, index: number) => ({
     ...horse,
     rank: index + 1,

@@ -65,23 +65,23 @@ class _HorseRaceViewState extends State<HorseRaceView> {
         }
 
         if (controller.currentRace.value == null) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildStatusCard("no_race".tr, null),
-                  const SizedBox(height: 20),
-                  Text(
-                    "wait_next_race".tr,
-                    style: const TextStyle(
-                      color: Color(0xFF6B7684),
-                      fontSize: 16,
-                    ),
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                const SizedBox(height: 100),
+                _buildStatusCard("no_race".tr, null),
+                const SizedBox(height: 20),
+                Text(
+                  "wait_next_race".tr,
+                  style: const TextStyle(
+                    color: Color(0xFF6B7684),
+                    fontSize: 16,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 40),
+                _buildMarketCapNotice(),
+              ],
             ),
           );
         }
@@ -103,6 +103,8 @@ class _HorseRaceViewState extends State<HorseRaceView> {
                   _buildBettingSection(race)
               else
                 _buildRaceSection(race),
+              const SizedBox(height: 20),
+              _buildMarketCapNotice(),
             ],
           ),
         );
@@ -662,6 +664,34 @@ class _HorseRaceViewState extends State<HorseRaceView> {
           Text(
             "wait_race_start".tr,
             style: const TextStyle(fontSize: 15, color: Color(0xFF6B7684)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMarketCapNotice() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.shade200, width: 1),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline, color: Colors.blue.shade600, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              '💡 각 코인의 24시간 시가총액 변동률이 경주 속도에 영향을 미칩니다',
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.blue.shade700,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ],
       ),

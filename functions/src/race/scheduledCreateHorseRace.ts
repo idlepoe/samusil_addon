@@ -48,6 +48,7 @@ export const scheduledCreateHorseRace = functions
         movements: [],
         lastPrice: coin.current_price,
         previousPrice: coin.current_price,
+        marketCapChangePercentage24h: coin.market_cap_change_percentage_24h,
         rank: 0,
       }));
 
