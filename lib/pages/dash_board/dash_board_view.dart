@@ -10,6 +10,7 @@ import 'dash_board_controller.dart';
 import 'widgets/race_status_widget.dart';
 import 'widgets/date_wish_card_widget.dart';
 import 'widgets/game_news_list_widget.dart';
+import 'widgets/entertainment_news_list_widget.dart';
 import 'widgets/all_articles_widget.dart';
 import 'widgets/music_player_widget.dart';
 import 'widgets/music_salon_widget.dart';
@@ -41,7 +42,7 @@ class DashBoardView extends GetView<DashBoardController> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async {
-                // 게임뉴스와 자유게시판 데이터 새로고침
+                // 게임뉴스, 연예뉴스, 자유게시판 데이터 새로고침
                 await controller.refreshDashboard();
               },
               color: const Color(0xFF0064FF),
@@ -73,6 +74,10 @@ class DashBoardView extends GetView<DashBoardController> {
 
                       // 게임 뉴스 섹션
                       GameNewsListWidget(controller: controller),
+                      const SizedBox(height: 20),
+
+                      // 연예 뉴스 섹션
+                      EntertainmentNewsListWidget(controller: controller),
                       const SizedBox(height: 20),
 
                       // 전체 게시글 섹션

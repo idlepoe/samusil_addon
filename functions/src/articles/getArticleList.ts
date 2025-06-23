@@ -40,7 +40,7 @@ export const getArticleList = onRequest({
 
     // 뉴스 제외 필터링
     if (exclude_news === 'true') {
-      query = query.where('board_name', 'not-in', ['game_news', 'it_news']);
+      query = query.where('board_name', 'not-in', ['game_news', 'entertainment_news', 'it_news']);
     }
 
     // 기본 정렬 (최신순)

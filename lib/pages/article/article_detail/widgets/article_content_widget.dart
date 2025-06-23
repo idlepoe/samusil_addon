@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:office_lounge/components/article_image_widget.dart';
 import 'package:office_lounge/components/appSnackbar.dart';
+import 'package:office_lounge/pages/image_viewer/image_viewer_page.dart';
 
 import '../article_detail_controller.dart';
 
@@ -34,9 +35,11 @@ class ArticleContentWidget extends GetView<ArticleDetailController> {
   Widget _buildTitle() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4.0),
-      child: Text(
-        controller.article.value.title,
-        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      child: SelectionArea(
+        child: Text(
+          controller.article.value.title,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
@@ -50,12 +53,17 @@ class ArticleContentWidget extends GetView<ArticleDetailController> {
   }
 
   Widget _buildImageContent(content, int index) {
+    final heroTag = "article_image_${controller.article.value.id}_$index";
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      child: ArticleImageWidget(
-        imageUrl: content.contents,
-        onTap: () => _showImageDialog(content.contents),
-        onLongPress: () => controller.saveImage(content.contents),
+      child: Hero(
+        tag: heroTag,
+        child: ArticleImageWidget(
+          imageUrl: content.contents,
+          onTap: () => _navigateToImageViewer(content.contents, heroTag),
+          onLongPress: () => _showImageOptions(content.contents, heroTag),
+        ),
       ),
     );
   }
@@ -63,25 +71,92 @@ class ArticleContentWidget extends GetView<ArticleDetailController> {
   Widget _buildTextContent(content) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
-      child: Html(
-        data: content.contents,
-        style: {
-          "body": Style(
-            fontSize: FontSize(16),
-            color: Colors.black87,
-            lineHeight: LineHeight(1.6),
-            margin: Margins.zero,
-            padding: HtmlPaddings.zero,
-          ),
-        },
-        onLinkTap: (url, __, ___) async {
-          if (await canLaunchUrlString(url!)) {
-            await launchUrlString(url);
-          } else {
-            AppSnackbar.error('링크를 열 수 없습니다');
-          }
-        },
+      child: SelectionArea(
+        child: Html(
+          data: content.contents,
+          style: {
+            "body": Style(
+              fontSize: FontSize(16),
+              color: Colors.black87,
+              lineHeight: LineHeight(1.6),
+              margin: Margins.zero,
+              padding: HtmlPaddings.zero,
+            ),
+          },
+          onLinkTap: (url, __, ___) async {
+            if (await canLaunchUrlString(url!)) {
+              await launchUrlString(url);
+            } else {
+              AppSnackbar.error('링크를 열 수 없습니다');
+            }
+          },
+        ),
       ),
+    );
+  }
+
+  void _navigateToImageViewer(String imageUrl, String heroTag) {
+    Get.to(
+      () => ImageViewerPage(imageUrl: imageUrl, heroTag: heroTag),
+      transition: Transition.fadeIn,
+      duration: const Duration(milliseconds: 300),
+    );
+  }
+
+  void _showImageOptions(String imageUrl, String heroTag) {
+    showModalBottomSheet(
+      context: Get.context!,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder:
+          (context) => Container(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 핸들 바
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // 이미지 보기 옵션
+                ListTile(
+                  leading: const Icon(Icons.zoom_in, color: Color(0xFF0064FF)),
+                  title: const Text(
+                    '이미지 보기',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _navigateToImageViewer(imageUrl, heroTag);
+                  },
+                ),
+
+                // 이미지 다운로드 옵션
+                ListTile(
+                  leading: const Icon(Icons.download, color: Color(0xFF0064FF)),
+                  title: const Text(
+                    '이미지 다운로드',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    controller.saveImage(imageUrl);
+                  },
+                ),
+
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
     );
   }
 

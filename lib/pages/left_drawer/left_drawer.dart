@@ -86,6 +86,20 @@ class _LeftDrawerState extends State<LeftDrawer> {
               },
             ),
 
+            // 연예 뉴스
+            ListTile(
+              title: Text(
+                Arrays.getBoardInfo(Define.BOARD_ENTERTAINMENT_NEWS).title.tr,
+              ),
+              subtitle: Text("entertainment_news_board_description".tr),
+              leading:
+                  Arrays.getBoardInfo(Define.BOARD_ENTERTAINMENT_NEWS).icon,
+              onTap: () {
+                Navigator.pop(context);
+                Get.toNamed('/list/${Define.BOARD_ENTERTAINMENT_NEWS}');
+              },
+            ),
+
             // 뮤직살롱
             ListTile(
               title: Text("music_salon".tr),

@@ -40,6 +40,7 @@ class Define {
   static const String BOARD_ALL = "all";
   static const String BOARD_FREE = "free";
   static const String BOARD_GAME_NEWS = "game_news";
+  static const String BOARD_ENTERTAINMENT_NEWS = "entertainment_news";
   static const String BOARD_REPORT = "report_suggestion";
 
   // Cloud Functions 설정

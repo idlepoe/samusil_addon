@@ -33,8 +33,10 @@ class DashBoardController extends GetxController {
   // 게시글 데이터 관리
   final RxList<Article> allArticles = <Article>[].obs;
   final RxList<Article> gameNews = <Article>[].obs;
+  final RxList<Article> entertainmentNews = <Article>[].obs;
   final RxBool isLoadingAllArticles = false.obs;
   final RxBool isLoadingGameNews = false.obs;
+  final RxBool isLoadingEntertainmentNews = false.obs;
 
   // 뮤직살롱 데이터 관리
   final RxList<TrackArticle> musicSalonPlaylists = <TrackArticle>[].obs;
@@ -158,6 +160,8 @@ class DashBoardController extends GetxController {
     await loadAllArticles();
     logger.i("Loading game news...");
     await loadGameNews();
+    logger.i("Loading entertainment news...");
+    await loadEntertainmentNews();
     logger.i("Loading music salon...");
     await loadMusicSalon();
 
@@ -184,8 +188,13 @@ class DashBoardController extends GetxController {
     logger.i("Dashboard refresh started");
 
     try {
-      // 게임뉴스, 자유게시판, 뮤직살롱 데이터 동시에 새로고침
-      await Future.wait([loadGameNews(), loadAllArticles(), loadMusicSalon()]);
+      // 게임뉴스, 연예뉴스, 자유게시판, 뮤직살롱 데이터 동시에 새로고침
+      await Future.wait([
+        loadGameNews(),
+        loadEntertainmentNews(),
+        loadAllArticles(),
+        loadMusicSalon(),
+      ]);
 
       logger.i("Dashboard refresh completed successfully");
     } catch (e) {
@@ -249,6 +258,37 @@ class DashBoardController extends GetxController {
       logger.e("Error loading game news: $e");
     } finally {
       isLoadingGameNews.value = false;
+    }
+  }
+
+  // 연예뉴스 로딩
+  Future<void> loadEntertainmentNews() async {
+    if (isLoadingEntertainmentNews.value) return;
+
+    isLoadingEntertainmentNews.value = true;
+    try {
+      logger.i("연예뉴스 로딩 시작 - board_name: ${Define.BOARD_ENTERTAINMENT_NEWS}");
+      final articles = await App.getArticleList(
+        boardInfo: Arrays.getBoardInfo(Define.BOARD_ENTERTAINMENT_NEWS),
+        search: "",
+        limit: Define.DEFAULT_DASH_BOARD_GET_LENGTH,
+      );
+
+      logger.i("연예뉴스 로딩 완료 - 총 ${articles.length}개 게시글");
+
+      // 차단된 사용자의 게시글 필터링
+      final filteredArticles = await _filterBlockedUsers(articles);
+      entertainmentNews.value = filteredArticles;
+
+      logger.i("연예뉴스 필터링 완료 - 표시할 게시글 ${filteredArticles.length}개");
+
+      if (filteredArticles.isNotEmpty) {
+        logger.i("첫 번째 연예뉴스 제목: ${filteredArticles[0].title}");
+      }
+    } catch (e) {
+      logger.e("Error loading entertainment news: $e");
+    } finally {
+      isLoadingEntertainmentNews.value = false;
     }
   }
 

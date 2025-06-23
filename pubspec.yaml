@@ -38,6 +38,7 @@ dependencies:
   firebase_storage: ^12.4.7
   cloud_firestore: ^5.6.9
   image_gallery_saver_plus: ^4.0.1
+  permission_handler: ^11.3.1
   dio: ^5.8.0+1
   package_info_plus: ^8.3.0
   flutter_local_notifications: ^18.0.1

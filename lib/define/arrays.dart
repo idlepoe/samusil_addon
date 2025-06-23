@@ -47,6 +47,14 @@ class Arrays {
           "game_news_board_description",
           false, // 게임뉴스는 읽기 전용
         );
+      case Define.BOARD_ENTERTAINMENT_NEWS:
+        return BoardInfo(
+          Define.BOARD_ENTERTAINMENT_NEWS,
+          const Icon(LineIcons.heart),
+          "entertainment_news_board",
+          "entertainment_news_board_description",
+          false, // 연예뉴스는 읽기 전용
+        );
       case Define.BOARD_REPORT:
         return BoardInfo(
           Define.BOARD_REPORT,

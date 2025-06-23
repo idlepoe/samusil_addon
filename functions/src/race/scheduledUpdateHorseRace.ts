@@ -65,15 +65,16 @@ export const scheduledUpdateHorseRace = functions
             };
           }
           
-          // 시가총액 변동률을 movement에 반영
+          // 시가총액 변동률을 movement에 반영 (5배 증가)
           const marketCapChange = horse.marketCapChangePercentage24h || 0;
           
-          // -10% ~ +10% 범위로 제한
-          const clampedChange = Math.max(-10, Math.min(10, marketCapChange));
+          // 변동률을 5배로 증가시키되, 최대 영향은 ±10%로 제한
+          const enhancedChange = marketCapChange * 5;
+          const clampedChange = Math.max(-10, Math.min(10, enhancedChange));
           
-          // 변동률을 0.8 ~ 1.2 범위로 변환
-          // -10% -> 0.8, 0% -> 1.0, +10% -> 1.2
-          const changeMultiplier = 1.0 + (clampedChange / 100) * 0.4;
+          // 변동률을 0.9 ~ 1.1 범위로 변환 (최대 ±10% 영향)
+          // -10% -> 0.9, 0% -> 1.0, +10% -> 1.1
+          const changeMultiplier = 1.0 + (clampedChange / 100);
           
           // 기본 80% ~ 120% 범위에 시가총액 변동률 적용
           const baseRandomFactor = 0.8 + Math.random() * 0.4; // 0.8 ~ 1.2
