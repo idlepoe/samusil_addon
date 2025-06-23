@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get.dart';
+import 'package:line_icons/line_icons.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import '../../define/arrays.dart';
@@ -62,31 +63,53 @@ class _LeftDrawerState extends State<LeftDrawer> {
               ),
             ),
             Define.APP_DIVIDER,
+
+            // 잡담 게시판
             ListTile(
               title: Text(Arrays.getBoardInfo(Define.BOARD_FREE).title.tr),
+              subtitle: Text("free_board_description".tr),
               leading: Arrays.getBoardInfo(Define.BOARD_FREE).icon,
               onTap: () async {
                 Navigator.pop(context);
                 Get.toNamed('/list/${Define.BOARD_FREE}');
               },
             ),
+
+            // 게임 뉴스
             ListTile(
               title: Text(Arrays.getBoardInfo(Define.BOARD_GAME_NEWS).title.tr),
+              subtitle: Text("game_news_board_description".tr),
               leading: Arrays.getBoardInfo(Define.BOARD_GAME_NEWS).icon,
               onTap: () {
                 Navigator.pop(context);
                 Get.toNamed('/list/${Define.BOARD_GAME_NEWS}');
               },
             ),
+
+            // 뮤직살롱
+            ListTile(
+              title: Text("music_salon".tr),
+              subtitle: Text("music_salon_description".tr),
+              leading: const Icon(LineIcons.music, color: Colors.purple),
+              onTap: () {
+                Navigator.pop(context);
+                Get.toNamed('/office-music-list');
+              },
+            ),
+
             Define.APP_DIVIDER,
+
+            // 코인경마
             ListTile(
               title: const Text("코인경마"),
-              leading: const Icon(Icons.sports_soccer),
+              subtitle: Text("coin_horse_race_description".tr),
+              leading: const Icon(Icons.sports_soccer, color: Colors.orange),
               onTap: () {
                 Navigator.pop(context);
                 Get.toNamed('/horse-race');
               },
             ),
+
             ListTile(
               contentPadding: const EdgeInsets.only(left: 60, right: 60),
               title: Html(

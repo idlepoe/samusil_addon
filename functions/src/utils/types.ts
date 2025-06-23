@@ -81,17 +81,6 @@ export interface PriceHistory {
   timestamp: admin.firestore.Timestamp;
 }
 
-// Alarm 관련 타입
-export interface Alarm {
-  key: string;
-  my_contents: string;
-  is_read: boolean;
-  target_article_key: string;
-  target_contents: string;
-  target_info: string;
-  target_key_type: number;
-}
-
 // Board 관련 타입
 export interface BoardInfo {
   board_name: string;
@@ -144,4 +133,34 @@ export interface UserProfile {
   photo_url: string;
   point: number;
   one_comment: string;
+}
+
+// Track Article 관련 타입
+export interface Track {
+  id: string;
+  videoId: string;
+  title: string;
+  description: string;
+  thumbnail: string;
+  duration: string;
+}
+
+export interface TrackArticle {
+  id?: string;
+  profile_uid: string;
+  profile_name: string;
+  profile_photo_url: string;
+  count_view: number;
+  count_like: number;
+  count_unlike: number;
+  count_comments: number;
+  title: string;
+  tracks: Track[];
+  created_at: admin.firestore.Timestamp;
+  updated_at?: admin.firestore.Timestamp;
+  profile_point?: number;
+  comments?: MainComment[];
+  total_duration: number; // 총 재생시간 (초)
+  track_count: number; // 트랙 개수
+  description: string; // 플레이리스트 설명
 } 

@@ -33,3 +33,5 @@ flutter build windows
 flutter pub run msix:create
 
 dart run change_app_package_name:main com.jylee.office_lounge
+
+flutter pub run build_runner build --delete-conflicting-outputs

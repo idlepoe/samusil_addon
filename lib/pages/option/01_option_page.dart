@@ -40,7 +40,7 @@ class _OptionPageState extends State<OptionPage> {
       scheme: 'mailto',
       path: 'idlepoe@gmail.com',
       query: Uri.encodeFull(
-        'subject=ITTraNet 앱 문의&body=안녕하세요.\n\n문의사항:\n\n\n\n---\n앱 버전: $_appVersion\n기기 정보: ${Theme.of(context).platform}',
+        'subject=OfficeLounge 앱 문의&body=안녕하세요.\n\n문의사항:\n\n\n\n---\n앱 버전: $_appVersion\n기기 정보: ${Theme.of(context).platform}',
       ),
     );
 

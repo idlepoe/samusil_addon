@@ -10,6 +10,9 @@ import '../../../models/board_info.dart';
 import '../../../models/profile.dart';
 import '../../../utils/app.dart';
 import '../../../main.dart';
+import '../article_edit/article_edit_binding.dart';
+import '../article_edit/article_edit_view.dart';
+import '../article_edit/article_edit_controller.dart';
 
 enum SortType { latest, popular }
 
@@ -49,7 +52,7 @@ class ArticleListController extends GetxController {
     if (arguments != null && arguments['showWriteSheet'] == true) {
       // 약간의 지연 후 작성 bottom sheet 표시
       Future.delayed(const Duration(milliseconds: 500), () {
-        navigateToEdit();
+        showWriteBottomSheet();
       });
     }
   }
@@ -202,5 +205,54 @@ class ArticleListController extends GetxController {
 
   void goToEdit(Article article) {
     Get.toNamed('/edit/${article.id}');
+  }
+
+  // 글쓰기 bottomSheet 표시
+  void showWriteBottomSheet() {
+    // ArticleEditBinding의 의존성을 수동으로 주입
+    final ArticleEditBinding binding = ArticleEditBinding(
+      boardInfo: boardInfo.value,
+      articleId: null,
+    );
+    binding.dependencies();
+
+    Get.bottomSheet(
+      SafeArea(
+        child: Container(
+          height: Get.height * 0.9,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(16.0),
+              topRight: Radius.circular(16.0),
+            ),
+          ),
+          child: Column(
+            children: [
+              // 드래그 핸들
+              Container(
+                margin: const EdgeInsets.only(top: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // 게시글 작성 화면
+              Expanded(child: ArticleEditView(boardInfo.value)),
+            ],
+          ),
+        ),
+      ),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      enableDrag: true,
+      isDismissible: true,
+      persistent: false,
+    ).whenComplete(() {
+      // BottomSheet가 닫힐 때 컨트롤러 삭제
+      Get.delete<ArticleEditController>();
+    });
   }
 }

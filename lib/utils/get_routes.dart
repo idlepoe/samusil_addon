@@ -32,6 +32,14 @@ import '../pages/notification/notification_history_binding.dart';
 import '../pages/point/point_history_view.dart';
 import '../pages/point/point_history_binding.dart';
 import '../pages/option/03_blocked_users_page.dart';
+import '../pages/office_music/office_music_list/office_music_list_view.dart';
+import '../pages/office_music/office_music_list/office_music_list_binding.dart';
+import '../pages/office_music/office_music_edit/office_music_edit_view.dart';
+import '../pages/office_music/office_music_edit/office_music_edit_binding.dart';
+import '../pages/office_music/youtube_search/youtube_search_view.dart';
+import '../pages/office_music/youtube_search/youtube_search_binding.dart';
+import '../pages/office_music/office_music_detail/office_music_detail_view.dart';
+import '../pages/office_music/office_music_detail/office_music_detail_binding.dart';
 
 class GetRoutes {
   static final routes = [
@@ -109,5 +117,30 @@ class GetRoutes {
       binding: PointHistoryBinding(),
     ),
     GetPage(name: '/blocked-users', page: () => const BlockedUsersPage()),
+    GetPage(
+      name: '/office-music-list',
+      page: () => const OfficeMusicListView(),
+      binding: OfficeMusicListBinding(),
+    ),
+    GetPage(
+      name: '/office-music-edit',
+      page: () => const OfficeMusicEditView(),
+      binding: OfficeMusicEditBinding(),
+    ),
+    GetPage(
+      name: '/office-music-create',
+      page: () => const OfficeMusicEditView(),
+      binding: OfficeMusicEditBinding(),
+    ),
+    GetPage(
+      name: '/youtube-search',
+      page: () => const YouTubeSearchView(),
+      binding: YouTubeSearchBinding(),
+    ),
+    GetPage(
+      name: '/track-article-detail',
+      page: () => const OfficeMusicDetailView(),
+      binding: OfficeMusicDetailBinding(),
+    ),
   ];
 }

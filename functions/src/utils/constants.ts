@@ -2,8 +2,8 @@
 export const FIRESTORE_COLLECTION_ARTICLE = 'article';
 export const FIRESTORE_COLLECTION_PROFILE = 'profile';
 export const FIRESTORE_COLLECTION_COIN = 'coin';
-export const FIRESTORE_COLLECTION_ALARM = 'alarm';
 export const FIRESTORE_COLLECTION_WISH = 'wish';
+export const FIRESTORE_COLLECTION_TRACK_ARTICLE = 'track_article';
 
 // Firestore 필드명
 export const FIRESTORE_FIELD_COMMENTS = 'comments';

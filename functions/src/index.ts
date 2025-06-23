@@ -18,14 +18,16 @@ export { createComment } from './articles/createComment';
 export { deleteComment } from './articles/deleteComment';
 export { toggleLike } from './articles/toggleLike';
 
+// Track Articles
+export { createTrackArticle } from './trackArticles/createTrackArticle';
+export { getTrackArticleList } from './trackArticles/getTrackArticleList';
+export { getTrackArticleDetail } from './trackArticles/getTrackArticleDetail';
+export { updateTrackArticle } from './trackArticles/updateTrackArticle';
+export { deleteTrackArticle } from './trackArticles/deleteTrackArticle';
+
 // Profiles
 export { createWish } from './profiles/createWish';
 export { getWish } from './profiles/getWish';
-
-// Alarms
-export { createAlarm } from './alarms/createAlarm';
-export { getAlarms } from './alarms/getAlarms';
-export { updateAlarm } from './alarms/updateAlarm';
 
 // News
 export { scheduledGameNewsCollection } from './news/scheduledNewsCollection';
