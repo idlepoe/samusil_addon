@@ -31,8 +31,8 @@ export { createWish } from './profiles/createWish';
 export { getWish } from './profiles/getWish';
 
 // News
-export { scheduledGameNewsCollection } from './news/scheduledNewsCollection';
-export { manualNewsCollection } from './news/manualNewsCollection';
+export { scheduledGameNewsCollection, scheduledEntertainmentNewsCollection } from './news/scheduledNewsCollection';
+export { manualNewsCollection, manualEntertainmentNewsCollection } from './news/manualNewsCollection';
 
 // Race
 export { scheduledCreateHorseRace } from './race/scheduledCreateHorseRace';
