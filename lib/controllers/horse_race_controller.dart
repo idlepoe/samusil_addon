@@ -188,14 +188,34 @@ class HorseRaceController extends GetxController {
 
   /// 현재 경마 상태 확인
   String getRaceStatus() {
-    if (currentRace.value == null) return '경마 없음';
+    if (currentRace.value == null) {
+      final now = DateTime.now();
+      // 59분 ~ 다음 시간 0분까지는 결과 처리 중
+      if (now.minute >= 59) {
+        return '결과 처리 중';
+      }
+      return '경마 없음';
+    }
 
     final now = DateTime.now();
     final race = currentRace.value!;
 
-    if (race.isFinished) return '경주 종료';
+    if (race.isFinished) {
+      // 59분 ~ 다음 시간 0분까지는 결과 처리 중
+      if (now.minute >= 59) {
+        return '결과 처리 중';
+      }
+      return '경주 종료';
+    }
+
     if (now.isBefore(race.bettingEndTime)) return '베팅 중';
     if (race.isActive) return '경주 중';
+
+    // 베팅 종료 후 경주 시작 전 (10분 ~ 11분)
+    if (now.isAfter(race.bettingEndTime) && now.isBefore(race.startTime)) {
+      return '경마장 정리 중';
+    }
+
     return '대기 중';
   }
 
@@ -216,19 +236,12 @@ class HorseRaceController extends GetxController {
     }
 
     // 현재 진행중인 경마가 없거나, 종료된 경우 다음 경마까지 남은 시간 계산
-    final DateTime nextRaceTime;
-    if (now.minute < 30) {
-      // 현재 시간이 30분 미만이면, 다음 경주는 현재 시간의 30분
-      nextRaceTime = DateTime(now.year, now.month, now.day, now.hour, 30);
-    } else {
-      // 현재 시간이 30분 이상이면, 다음 경주는 다음 시간 정각
-      nextRaceTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        now.hour,
-      ).add(const Duration(hours: 1));
-    }
+    final DateTime nextRaceTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      now.hour,
+    ).add(const Duration(hours: 1)); // 다음 정시
 
     return nextRaceTime.difference(now);
   }

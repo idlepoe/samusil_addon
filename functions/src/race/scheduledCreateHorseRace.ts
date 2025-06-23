@@ -4,10 +4,10 @@ import { getTopCoins } from '../utils/coinGeckoApi';
 
 const db = admin.firestore();
 
-// 매시 0분, 30분에 경마 생성
+// 매시 0분에 경마 생성
 export const scheduledCreateHorseRace = functions
   .region('asia-northeast3')
-  .pubsub.schedule('0,30 * * * *')
+  .pubsub.schedule('0 * * * *')
   .timeZone('Asia/Seoul')
   .onRun(async (context) => {
     try {
@@ -18,8 +18,8 @@ export const scheduledCreateHorseRace = functions
       // 경주 시작 및 종료 시간 설정
       const bettingStartTime = now;
       const bettingEndTime = new Date(now.getTime() + 10 * 60 * 1000); // 10분 후
-      const raceStartTime = new Date(bettingEndTime.getTime() + 30 * 1000); // 베팅 종료 30초 후 시작
-      const raceEndTime = new Date(raceStartTime.getTime() + 19 * 60 * 1000); // 19분 후로 변경
+      const raceStartTime = new Date(bettingEndTime.getTime() + 1 * 60 * 1000); // 베팅 종료 1분 후 시작
+      const raceEndTime = new Date(raceStartTime.getTime() + 48 * 60 * 1000); // 48분 후 (11분 시작 → 59분 종료)
 
       // 중복 생성 방지
       const existingRace = await db.collection('horse_races')
@@ -63,7 +63,7 @@ export const scheduledCreateHorseRace = functions
         isActive: false,
         isFinished: false,
         currentRound: 0,
-        totalRounds: 19, // 19 라운드로 변경
+        totalRounds: 48, // 48 라운드로 변경 (48분간 진행)
       };
 
       await raceRef.set(race);

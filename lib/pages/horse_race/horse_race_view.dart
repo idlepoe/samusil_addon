@@ -124,6 +124,12 @@ class _HorseRaceViewState extends State<HorseRaceView> {
       case '대기 중':
         timeLabel = 'until_race_start'.tr;
         break;
+      case '경마장 정리 중':
+        timeLabel = '경주 시작까지';
+        break;
+      case '결과 처리 중':
+        timeLabel = '다음 경마까지';
+        break;
       default: // '경마 없음', '경주 종료' 포함
         timeLabel = 'until_next_race'.tr;
         break;
@@ -191,6 +197,54 @@ class _HorseRaceViewState extends State<HorseRaceView> {
             Text(
               "∙ ${'race_time'.tr}: $raceStart ~ $raceEnd",
               style: TextStyle(color: Color(0xFF4E5968), fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+          ],
+          if (status == '경마장 정리 중') ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.amber.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.cleaning_services, color: Colors.amber, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    '장내 경마장을 정리하고 있습니다',
+                    style: TextStyle(
+                      color: Colors.amber.shade700,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          if (status == '결과 처리 중') ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.purple.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.analytics, color: Colors.purple, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    '경주 결과를 처리하고 있습니다',
+                    style: TextStyle(
+                      color: Colors.purple.shade700,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 16),
           ],
@@ -624,6 +678,10 @@ class _HorseRaceViewState extends State<HorseRaceView> {
         return Colors.grey;
       case '대기 중':
         return Colors.blue;
+      case '경마장 정리 중':
+        return Colors.amber;
+      case '결과 처리 중':
+        return Colors.purple;
       default:
         return Colors.grey;
     }
