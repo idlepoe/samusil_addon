@@ -12,7 +12,7 @@ class PrivacyPolicy extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "privacy_policy".tr,
+          "개인정보처리방침",
           style: const TextStyle(color: Define.APP_BAR_TITLE_TEXT_COLOR),
         ),
         backgroundColor: Define.APP_BAR_BACKGROUND_COLOR,

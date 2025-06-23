@@ -21,7 +21,7 @@ class WishView extends GetView<WishController> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF191F28)),
         title: Text(
-          "wish".tr,
+          "소원빌기",
           style: const TextStyle(
             color: Color(0xFF191F28),
             fontSize: 18,

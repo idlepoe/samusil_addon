@@ -78,7 +78,7 @@ class PointHistoryController extends GetxController {
       }
     } catch (e) {
       logger.e('포인트 히스토리 로드 오류: $e');
-      AppSnackbar.error('load_point_error'.tr);
+      AppSnackbar.error('포인트 내역을 불러오는 중 오류가 발생했습니다.');
     } finally {
       isLoading.value = false;
     }
@@ -111,6 +111,12 @@ class PointHistoryController extends GetxController {
         return {'icon': 'star', 'color': 0xFFFFD93D, 'isPositive': true};
       case '코인 경마 우승':
         return {'icon': 'trophy', 'color': 0xFFFFB84D, 'isPositive': true};
+      case '코인 경마 베팅':
+        return {
+          'icon': 'sports_soccer',
+          'color': 0xFFFF5722,
+          'isPositive': false,
+        };
       case '출석 보너스':
         return {'icon': 'calendar', 'color': 0xFF9775FA, 'isPositive': true};
       default:

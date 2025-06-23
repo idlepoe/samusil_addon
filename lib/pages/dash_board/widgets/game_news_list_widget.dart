@@ -109,7 +109,7 @@ class GameNewsListWidget extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      "game_news_board".tr,
+                      "게임뉴스",
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,

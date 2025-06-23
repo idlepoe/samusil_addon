@@ -18,7 +18,7 @@ class OfficeMusicListView extends GetView<OfficeMusicListController> {
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         title: Text(
-          "music_salon".tr,
+          "뮤직살롱",
           style: const TextStyle(
             color: Colors.black87,
             fontSize: 18,

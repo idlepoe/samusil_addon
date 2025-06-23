@@ -148,7 +148,7 @@ class Utils {
 
     String year = value.substring(0, 4);
     if (year == "0000") {
-      return "developer".tr;
+      return "개발자";
     }
     String month = value.substring(4, 6);
     String day = value.substring(6, 8);
@@ -325,7 +325,7 @@ class Utils {
         if (response.statusCode == 200) {
           final saveResult = await ImageGallerySaverPlus.saveImage(
             Uint8List.fromList(response.data),
-            name: "app_name".tr,
+            name: "오피스 라운지",
           );
           if (saveResult['isSuccess'] == true) {
             result = true;
@@ -378,19 +378,19 @@ class Utils {
   static String weekDayString(int index) {
     switch (index) {
       case 1:
-        return "monday".tr;
+        return "월";
       case 2:
-        return "tuesday".tr;
+        return "화";
       case 3:
-        return "wednesday".tr;
+        return "수";
       case 4:
-        return "thursday".tr;
+        return "목";
       case 5:
-        return "friday".tr;
+        return "금";
       case 6:
-        return "saturday".tr;
+        return "토";
     }
-    return "sunday".tr;
+    return "일";
   }
 
   static Color weekDayColor(int index) {
@@ -436,7 +436,7 @@ class Utils {
     String hh = value.substring(8, 10);
     String mm = value.substring(10, 12);
     if (year == "0000") {
-      return "developer".tr;
+      return "개발자";
     }
 
     if (int.parse(year + month + day) < int.parse(todayYmd)) {

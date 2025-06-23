@@ -42,7 +42,7 @@ class _HorseRaceViewState extends State<HorseRaceView> {
       backgroundColor: const Color(0xFFF4F6F8), // 토스 스타일 배경
       appBar: AppBar(
         title: Text(
-          "coin_horse_race".tr,
+          "코인 경마",
           style: const TextStyle(
             color: Color(0xFF333D4B),
             fontWeight: FontWeight.bold,
@@ -70,10 +70,10 @@ class _HorseRaceViewState extends State<HorseRaceView> {
             child: Column(
               children: [
                 const SizedBox(height: 100),
-                _buildStatusCard("no_race".tr, null),
+                _buildStatusCard("경마 없음", null),
                 const SizedBox(height: 20),
                 Text(
-                  "wait_next_race".tr,
+                  "다음 경마를 기다려주세요.",
                   style: const TextStyle(
                     color: Color(0xFF6B7684),
                     fontSize: 16,
@@ -118,13 +118,13 @@ class _HorseRaceViewState extends State<HorseRaceView> {
     final String timeLabel;
     switch (status) {
       case '베팅 중':
-        timeLabel = 'until_betting_end'.tr;
+        timeLabel = '베팅 마감까지';
         break;
       case '경주 중':
-        timeLabel = 'until_race_end'.tr;
+        timeLabel = '경주 종료까지';
         break;
       case '대기 중':
-        timeLabel = 'until_race_start'.tr;
+        timeLabel = '경주 시작까지';
         break;
       case '경마장 정리 중':
         timeLabel = '경주 시작까지';
@@ -133,7 +133,7 @@ class _HorseRaceViewState extends State<HorseRaceView> {
         timeLabel = '다음 경마까지';
         break;
       default: // '경마 없음', '경주 종료' 포함
-        timeLabel = 'until_next_race'.tr;
+        timeLabel = '다음 경마까지';
         break;
     }
 
@@ -162,7 +162,7 @@ class _HorseRaceViewState extends State<HorseRaceView> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "todays_race".tr,
+                "오늘의 경마",
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,

@@ -22,7 +22,7 @@ class PointHistoryView extends GetView<PointHistoryController> {
           onPressed: () => Get.back(),
         ),
         title: Text(
-          'point_history'.tr,
+          '포인트 내역',
           style: const TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -57,7 +57,7 @@ class PointHistoryView extends GetView<PointHistoryController> {
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        'no_point_history'.tr,
+                        '포인트 내역이 없어요',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
@@ -66,7 +66,7 @@ class PointHistoryView extends GetView<PointHistoryController> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'point_history_empty_message'.tr,
+                        '활동하시면 포인트 내역이 쌓여요',
                         style: TextStyle(fontSize: 16, color: Colors.grey[500]),
                       ),
                     ],
@@ -141,7 +141,7 @@ class PointHistoryView extends GetView<PointHistoryController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'owned_points_title'.tr,
+                      '보유 포인트',
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.grey,
@@ -169,10 +169,7 @@ class PointHistoryView extends GetView<PointHistoryController> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
-                    'this_month_points'.tr.replaceAll(
-                      '{points}',
-                      controller.thisMonthPoints.round().toString(),
-                    ),
+                    '이번 달 +${controller.thisMonthPoints.round().toString()}P',
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -245,12 +242,12 @@ class PointHistoryView extends GetView<PointHistoryController> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${isPositive ? '+' : ''}${pointItem.points_earned}P',
+                  '${pointItem.points_earned >= 0 ? '+' : ''}${pointItem.points_earned}P',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color:
-                        isPositive
+                        pointItem.points_earned >= 0
                             ? const Color(0xFF51CF66)
                             : const Color(0xFFFF6B6B),
                   ),
@@ -285,6 +282,9 @@ class PointHistoryView extends GetView<PointHistoryController> {
       case 'trophy':
         iconData = Icons.emoji_events;
         break;
+      case 'sports_soccer':
+        iconData = Icons.sports_soccer;
+        break;
       case 'calendar':
         iconData = Icons.calendar_today;
         break;
@@ -307,19 +307,21 @@ class PointHistoryView extends GetView<PointHistoryController> {
   String _getTranslatedPointType(String type) {
     switch (type) {
       case '게시글 작성':
-        return 'article_write_point'.tr;
+        return '게시글 작성';
       case '댓글 작성':
-        return 'comment_write_point'.tr;
+        return '댓글 작성';
       case '좋아요 받음':
-        return 'like_received_point'.tr;
+        return '좋아요 받음';
       case '좋아요':
-        return 'like_given_point'.tr;
+        return '좋아요';
       case '소원 작성':
-        return 'wish_write_point'.tr;
+        return '소원 작성';
       case '코인 경마 우승':
-        return 'horse_race_win_point'.tr;
+        return '코인 경마 우승';
+      case '코인 경마 베팅':
+        return '코인 경마 베팅';
       case '출석 보너스':
-        return 'attendance_bonus_point'.tr;
+        return '출석 보너스';
       default:
         return type;
     }
@@ -330,13 +332,13 @@ class PointHistoryView extends GetView<PointHistoryController> {
     final difference = now.difference(dateTime);
 
     if (difference.inMinutes < 1) {
-      return 'just_now'.tr;
+      return '방금 전';
     } else if (difference.inHours < 1) {
-      return '${difference.inMinutes}${'minutes_ago'.tr}';
+      return '${difference.inMinutes}분 전';
     } else if (difference.inDays < 1) {
-      return '${difference.inHours}${'hours_ago'.tr}';
+      return '${difference.inHours}시간 전';
     } else if (difference.inDays < 7) {
-      return '${difference.inDays}${'days_ago'.tr}';
+      return '${difference.inDays}일 전';
     } else {
       return DateFormat('MM/dd').format(dateTime);
     }

@@ -61,7 +61,7 @@ class _OptionPageState extends State<OptionPage> {
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         title: Text(
-          "option".tr,
+          "옵션",
           style: const TextStyle(
             color: Color(0xFF191F28),
             fontSize: 18,
@@ -91,14 +91,14 @@ class _OptionPageState extends State<OptionPage> {
                 ),
                 _buildOptionTile(
                   icon: LineIcons.info,
-                  title: "license".tr,
+                  title: "라이선스",
                   subtitle: "오픈소스 라이선스",
                   onTap: () async {
                     await Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) {
                           return LicensePage(
-                            applicationName: "app_name".tr,
+                            applicationName: "오피스 라운지",
                             applicationVersion: _appVersion,
                             applicationIcon: Image.asset('assets/icon_it.png'),
                             applicationLegalese: "",
@@ -136,7 +136,7 @@ class _OptionPageState extends State<OptionPage> {
               children: [
                 _buildOptionTile(
                   icon: LineIcons.userShield,
-                  title: "privacy_policy".tr,
+                  title: "개인정보처리방침",
                   subtitle: "개인정보 수집 및 이용에 대한 안내",
                   onTap: () {
                     Get.toNamed("/privacy-policy");

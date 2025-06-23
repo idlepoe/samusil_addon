@@ -80,7 +80,7 @@ List<Widget> AppBarAction(BuildContext context, Profile profile) {
                 children: [
                   const Icon(Icons.monetization_on, color: Colors.orange),
                   const SizedBox(width: 8),
-                  Text("point_information".tr),
+                  Text("포인트 정보"),
                 ],
               ),
             ),
@@ -100,7 +100,7 @@ List<Widget> AppBarAction(BuildContext context, Profile profile) {
                 children: [
                   const Icon(Icons.settings, color: Colors.grey),
                   const SizedBox(width: 8),
-                  Text("option".tr),
+                  Text("옵션"),
                 ],
               ),
             ),
@@ -111,7 +111,7 @@ List<Widget> AppBarAction(BuildContext context, Profile profile) {
                 children: [
                   const Icon(Icons.logout, color: Colors.red),
                   const SizedBox(width: 8),
-                  Text("logout".tr),
+                  Text("로그아웃"),
                 ],
               ),
             ),

@@ -40,12 +40,12 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
       // Utils의 saveNetworkImage 함수 사용 (bottom sheet와 동일한 로직)
       bool result = await Utils.saveNetworkImage([widget.imageUrl]);
       if (result) {
-        Fluttertoast.showToast(msg: "success_image_save".tr);
+        Fluttertoast.showToast(msg: "이미지 저장 성공");
       } else {
-        Fluttertoast.showToast(msg: "error_image_save".tr);
+        Fluttertoast.showToast(msg: "이미지 저장 실패");
       }
     } catch (e) {
-      Fluttertoast.showToast(msg: "error_image_save".tr);
+      Fluttertoast.showToast(msg: "이미지 저장 실패");
     } finally {
       setState(() {
         _isDownloading = false;

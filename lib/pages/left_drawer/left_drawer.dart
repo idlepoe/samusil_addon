@@ -46,7 +46,7 @@ class _LeftDrawerState extends State<LeftDrawer> {
                 Navigator.pop(context);
                 Get.toNamed('/');
               },
-              leading: const Icon(Icons.menu),
+              leading: const Icon(Icons.home, color: Color(0xFF0064FF)),
               title: Row(
                 children: [
                   const Image(
@@ -56,7 +56,7 @@ class _LeftDrawerState extends State<LeftDrawer> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    "app_name".tr,
+                    "오피스 라운지",
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -66,9 +66,9 @@ class _LeftDrawerState extends State<LeftDrawer> {
 
             // 잡담 게시판
             ListTile(
-              title: Text(Arrays.getBoardInfo(Define.BOARD_FREE).title.tr),
-              subtitle: Text("free_board_description".tr),
-              leading: Arrays.getBoardInfo(Define.BOARD_FREE).icon,
+              title: Text("잡담 게시판"),
+              subtitle: Text("자유롭게 이야기를 나누는 공간입니다"),
+              leading: const Icon(LineIcons.freebsd, color: Color(0xFF4DABF7)),
               onTap: () async {
                 Navigator.pop(context);
                 Get.toNamed('/list/${Define.BOARD_FREE}');
@@ -77,9 +77,9 @@ class _LeftDrawerState extends State<LeftDrawer> {
 
             // 게임 뉴스
             ListTile(
-              title: Text(Arrays.getBoardInfo(Define.BOARD_GAME_NEWS).title.tr),
-              subtitle: Text("game_news_board_description".tr),
-              leading: Arrays.getBoardInfo(Define.BOARD_GAME_NEWS).icon,
+              title: Text("게임뉴스"),
+              subtitle: Text("최신 게임 뉴스와 업데이트 소식"),
+              leading: const Icon(LineIcons.gamepad, color: Color(0xFF51CF66)),
               onTap: () {
                 Navigator.pop(context);
                 Get.toNamed('/list/${Define.BOARD_GAME_NEWS}');
@@ -88,12 +88,9 @@ class _LeftDrawerState extends State<LeftDrawer> {
 
             // 연예 뉴스
             ListTile(
-              title: Text(
-                Arrays.getBoardInfo(Define.BOARD_ENTERTAINMENT_NEWS).title.tr,
-              ),
-              subtitle: Text("entertainment_news_board_description".tr),
-              leading:
-                  Arrays.getBoardInfo(Define.BOARD_ENTERTAINMENT_NEWS).icon,
+              title: Text("연예뉴스"),
+              subtitle: Text("최신 연예계 소식과 셀럽 업데이트"),
+              leading: const Icon(LineIcons.heart, color: Color(0xFFFF1493)),
               onTap: () {
                 Navigator.pop(context);
                 Get.toNamed('/list/${Define.BOARD_ENTERTAINMENT_NEWS}');
@@ -102,8 +99,8 @@ class _LeftDrawerState extends State<LeftDrawer> {
 
             // 뮤직살롱
             ListTile(
-              title: Text("music_salon".tr),
-              subtitle: Text("music_salon_description".tr),
+              title: Text("뮤직살롱"),
+              subtitle: Text("오피스 플레이리스트를 공유하고 발견하세요"),
               leading: const Icon(LineIcons.music, color: Colors.purple),
               onTap: () {
                 Navigator.pop(context);
@@ -127,7 +124,7 @@ class _LeftDrawerState extends State<LeftDrawer> {
             // 코인경마
             ListTile(
               title: const Text("코인경마"),
-              subtitle: Text("coin_horse_race_description".tr),
+              subtitle: Text("코인에 베팅하고 포인트를 획득하세요"),
               leading: const Icon(Icons.sports_soccer, color: Colors.orange),
               onTap: () {
                 Navigator.pop(context);

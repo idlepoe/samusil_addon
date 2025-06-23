@@ -109,7 +109,7 @@ class EntertainmentNewsListWidget extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      "entertainment_news_board".tr,
+                      "연예뉴스",
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,

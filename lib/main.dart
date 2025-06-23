@@ -21,7 +21,6 @@ import 'package:office_lounge/controllers/profile_controller.dart';
 
 import 'define/define.dart';
 import 'firebase_options.dart';
-import 'locale/messages.dart';
 
 // 전역 logger 인스턴스
 final logger = Logger();
@@ -139,8 +138,7 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/splash',
       getPages: GetRoutes.routes,
-      locale: Get.deviceLocale,
-      translations: Messages(),
+
       unknownRoute: GetPage(name: '/notfound', page: () => const SplashView()),
     );
   }

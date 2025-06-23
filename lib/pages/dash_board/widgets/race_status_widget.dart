@@ -75,7 +75,7 @@ class _RaceStatusWidgetState extends State<RaceStatusWidget>
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Center(
               child: Text(
-                'horse_race_loading'.tr,
+                '경마 정보 로딩 중...',
                 style: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ),
@@ -85,7 +85,7 @@ class _RaceStatusWidgetState extends State<RaceStatusWidget>
 
       // 경주 중일 때 애니메이션 시작
       final raceStatus = horseRaceController!.getRaceStatus();
-      if (raceStatus == 'racing_status'.tr) {
+      if (raceStatus == '경주 중') {
         _animationController.repeat(reverse: true);
       } else {
         _animationController.stop();
@@ -120,7 +120,7 @@ class _RaceStatusWidgetState extends State<RaceStatusWidget>
                 // 경마 설명 텍스트
                 Expanded(
                   child: Text(
-                    'horse_race_description'.tr,
+                    '코인 경마 게임 - 탭하여 참여하세요!',
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 12,
@@ -153,22 +153,22 @@ class _RaceStatusWidgetState extends State<RaceStatusWidget>
       case '베팅 중':
         statusColor = Colors.orange;
         statusIcon = Icons.sports_soccer;
-        statusText = 'betting_status'.tr;
+        statusText = '베팅 중';
         break;
       case '경주 중':
         statusColor = Colors.green;
         statusIcon = Icons.directions_run;
-        statusText = 'racing_status'.tr;
+        statusText = '경주 중';
         break;
       case '경주 종료':
         statusColor = Colors.grey;
         statusIcon = Icons.flag;
-        statusText = 'race_finished'.tr;
+        statusText = '경주 종료';
         break;
       default:
         statusColor = Colors.blue;
         statusIcon = Icons.schedule;
-        statusText = 'waiting_next_race'.tr;
+        statusText = '다음 경마 대기';
         break;
     }
 
@@ -192,8 +192,7 @@ class _RaceStatusWidgetState extends State<RaceStatusWidget>
               fontWeight: FontWeight.w600,
             ),
           ),
-          if (raceStatus != 'race_finished'.tr &&
-              raceStatus != 'waiting_next_race'.tr) ...[
+          if (raceStatus != '경주 종료' && raceStatus != '다음 경마 대기') ...[
             const SizedBox(width: 4),
             Text(
               '${remainingTime.inMinutes.toString().padLeft(2, '0')}:${(remainingTime.inSeconds % 60).toString().padLeft(2, '0')}',
@@ -209,7 +208,7 @@ class _RaceStatusWidgetState extends State<RaceStatusWidget>
     );
 
     // 경주 중일 때 애니메이션 효과 추가
-    if (raceStatus == 'racing_status'.tr) {
+    if (raceStatus == '경주 중') {
       return AnimatedBuilder(
         animation: _animation,
         builder: (context, child) {

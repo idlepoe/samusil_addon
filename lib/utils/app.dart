@@ -67,7 +67,7 @@ class App {
     Profile user = Profile.init();
     user = user.copyWith(
       uid: "", // Firebase Auth UID로 설정될 예정
-      name: "anon".tr + Utils.getRandomString(5),
+      name: "익명" + Utils.getRandomString(5),
     );
     return user;
   }
@@ -404,12 +404,12 @@ class App {
         result = response.data!;
       } else {
         result['success'] = false;
-        result['error'] = response.error ?? 'wish_create_failed'.tr;
+        result['error'] = response.error ?? '소원 생성에 실패했습니다.';
         logger.e("createWish failed: ${response.error}");
       }
     } catch (e) {
       result['success'] = false;
-      result['error'] = 'wish_create_error'.tr;
+      result['error'] = '소원 생성 중 오류가 발생했습니다.';
       logger.e("createWish exception: $e");
     }
 

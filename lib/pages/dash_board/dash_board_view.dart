@@ -27,7 +27,7 @@ class DashBoardView extends GetView<DashBoardController> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF191F28)),
         title: Text(
-          "app_name".tr,
+          "오피스 라운지",
           style: const TextStyle(
             color: Color(0xFF191F28),
             fontSize: 18,

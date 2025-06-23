@@ -44,6 +44,15 @@ export const placeBet = functions
 
         transaction.update(profileRef, { point: admin.firestore.FieldValue.increment(-amount) });
 
+        // 포인트 차감 이력 기록
+        const pointHistoryRef = profileRef.collection('point_history').doc();
+        transaction.set(pointHistoryRef, {
+          id: pointHistoryRef.id,
+          amount: -amount, // 차감이므로 음수
+          reason: '코인 경마 베팅',
+          created_at: admin.firestore.Timestamp.now(),
+        });
+
         const betRef = raceRef.collection('bets').doc(uid);
         transaction.set(betRef, {
           userId: uid,
