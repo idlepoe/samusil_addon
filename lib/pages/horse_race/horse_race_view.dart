@@ -51,6 +51,13 @@ class _HorseRaceViewState extends State<HorseRaceView> {
         backgroundColor: Colors.white,
         elevation: 0, // 깔끔한 디자인을 위해 그림자 제거
         iconTheme: const IconThemeData(color: Color(0xFF333D4B)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () => Get.toNamed('/horse-race-history'),
+            tooltip: '경마 기록',
+          ),
+        ],
       ),
       body: Obx(() {
         if (controller.isLoading.value) {

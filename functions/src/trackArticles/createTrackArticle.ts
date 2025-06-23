@@ -61,6 +61,7 @@ export const createTrackArticle = onRequest({
       count_like: 0,
       count_unlike: 0,
       count_comments: 0,
+
       title: title,
       tracks: tracks,
       created_at: admin.firestore.Timestamp.now(),

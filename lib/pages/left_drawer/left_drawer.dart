@@ -97,6 +97,17 @@ class _LeftDrawerState extends State<LeftDrawer> {
               },
             ),
 
+            // 즐겨찾기
+            ListTile(
+              title: const Text("즐겨찾기"),
+              subtitle: const Text("즐겨찾기한 플레이리스트를 확인하세요"),
+              leading: const Icon(Icons.bookmark, color: Color(0xFF3182F6)),
+              onTap: () {
+                Navigator.pop(context);
+                Get.toNamed('/favorite-playlist');
+              },
+            ),
+
             Define.APP_DIVIDER,
 
             // 코인경마

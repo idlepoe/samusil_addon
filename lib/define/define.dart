@@ -19,16 +19,13 @@ class Define {
   static const double POINT_WRITE_COMMENT = 1;
   static const double POINT_RECEIVE_LIKE = 2;
   static const double POINT_LIKE = 1;
-  static const double COIN_BUY_FEE_PERCENT = 0;
 
   static const String FIRESTORE_COLLECTION_PROFILE = "profile";
   static const String FIRESTORE_COLLECTION_WISH = "wish";
   static const String FIRESTORE_COLLECTION_ARTICLE = "article";
-  static const String FIRESTORE_COLLECTION_COIN = "coin";
+  static const String FIRESTORE_COLLECTION_HORSE_RACE = "horse_races";
   static String FIRESTORE_FIELD_COMMETS = "comments";
   static String FIRESTORE_FIELD_ALARMS = "alarms";
-  static String FIRESTORE_FIELD_PRICE_HISTORY = "price_history";
-  static String FIRESTORE_FIELD_COIN_BALANCE = "coin_balance";
 
   static const int DEFAULT_BOARD_PAGE_LENGTH = 15;
   static const int DEFAULT_DASH_BOARD_GET_LENGTH = 5;

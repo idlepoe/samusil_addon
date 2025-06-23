@@ -16,6 +16,8 @@ _TrackArticle _$TrackArticleFromJson(Map<String, dynamic> json) =>
       count_like: _toInt(json['count_like']),
       count_unlike: _toInt(json['count_unlike']),
       count_comments: _toInt(json['count_comments']),
+      count_favorite:
+          json['count_favorite'] == null ? 0 : _toInt(json['count_favorite']),
       title: _toString(json['title']),
       tracks:
           (json['tracks'] as List<dynamic>?)
@@ -47,6 +49,7 @@ Map<String, dynamic> _$TrackArticleToJson(_TrackArticle instance) =>
       'count_like': instance.count_like,
       'count_unlike': instance.count_unlike,
       'count_comments': instance.count_comments,
+      'count_favorite': instance.count_favorite,
       'title': instance.title,
       'tracks': instance.tracks,
       'created_at': _timestampToJson(instance.created_at),

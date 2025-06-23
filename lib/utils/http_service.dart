@@ -15,12 +15,9 @@ class HttpService {
   HttpService._internal();
 
   late Dio _dio;
-  String? _baseUrl;
 
   /// Dio 인스턴스 초기화
   void initialize({String? baseUrl}) {
-    _baseUrl = baseUrl;
-
     _dio = Dio(
       BaseOptions(
         baseUrl: baseUrl ?? '',
@@ -132,7 +129,6 @@ class HttpService {
 
   /// baseUrl 설정
   void setBaseUrl(String baseUrl) {
-    _baseUrl = baseUrl;
     _dio.options.baseUrl = baseUrl;
   }
 
@@ -239,57 +235,31 @@ class HttpService {
     }
   }
 
-  /// Cloud Functions 응답을 공통 모델로 변환 (단일 객체)
-  Future<CloudFunctionResponse<T>> callCloudFunctionWithResponse<T>(
-    String functionName, {
-    Map<String, dynamic>? data,
-    String method = 'POST',
-    required T Function(dynamic) fromJson,
-  }) async {
-    final response = await callCloudFunction(
-      functionName,
-      data: data,
-      method: method,
-    );
-    return CloudFunctionResponse.fromJson(response, fromJson);
-  }
-
-  /// Cloud Functions 응답을 공통 모델로 변환 (리스트)
-  Future<CloudFunctionResponse<List<T>>> callCloudFunctionWithListResponse<T>(
-    String functionName, {
-    Map<String, dynamic>? data,
-    String method = 'POST',
-    required T Function(dynamic) fromJson,
-  }) async {
-    final response = await callCloudFunction(
-      functionName,
-      data: data,
-      method: method,
-    );
-    return CloudFunctionResponse.fromJsonList(response, fromJson);
-  }
-
   // ===== Cloud Function 전용 메서드들 =====
 
   /// 게시글 목록 조회
   Future<CloudFunctionResponse<List<Map<String, dynamic>>>> getArticleList({
     required Map<String, dynamic> params,
   }) async {
-    final response =
-        await callCloudFunctionWithListResponse<Map<String, dynamic>>(
-          'getArticleList',
-          data: params,
-          method: 'GET',
-          fromJson: (json) => json as Map<String, dynamic>,
-        );
+    final response = await callCloudFunction(
+      'getArticleList',
+      data: params,
+      method: 'GET',
+    );
 
-    // logger.d(
-    //   "getArticleList response: $response\n"
-    //   "getArticleList response.isSuccess: ${response.isSuccess}\n"
-    //   "getArticleList response.data: ${response.data}",
-    // );
+    List<Map<String, dynamic>>? dataList;
+    if (response['data'] != null && response['data'] is List) {
+      dataList =
+          (response['data'] as List)
+              .map((item) => item as Map<String, dynamic>)
+              .toList();
+    }
 
-    return response;
+    return CloudFunctionResponse<List<Map<String, dynamic>>>(
+      success: response['success'] ?? false,
+      data: dataList,
+      error: response['error'],
+    );
   }
 
   /// 게시글 상세 조회
@@ -372,47 +342,6 @@ class HttpService {
     } catch (e) {
       return CloudFunctionResponse(success: false, error: e.toString());
     }
-  }
-
-  /// 코인 목록 조회
-  Future<CloudFunctionResponse<List<Map<String, dynamic>>>> getCoinList({
-    Map<String, dynamic>? params,
-  }) async {
-    return await callCloudFunctionWithListResponse<Map<String, dynamic>>(
-      'getCoinList',
-      data: params,
-      method: 'GET',
-      fromJson: (json) => json as Map<String, dynamic>,
-    );
-  }
-
-  /// 코인 구매
-  Future<CloudFunctionResponse<Map<String, dynamic>>> buyCoin({
-    required String profileKey,
-    required Map<String, dynamic> coinBalanceData,
-  }) async {
-    return await callCloudFunctionWithResponse<Map<String, dynamic>>(
-      'buyCoin',
-      data: {'profile_key': profileKey, 'coin_balance': coinBalanceData},
-      fromJson: (json) => json as Map<String, dynamic>,
-    );
-  }
-
-  /// 코인 판매
-  Future<CloudFunctionResponse<Map<String, dynamic>>> sellCoin({
-    required String profileKey,
-    required Map<String, dynamic> coinBalanceData,
-    required double currentPrice,
-  }) async {
-    return await callCloudFunctionWithResponse<Map<String, dynamic>>(
-      'sellCoin',
-      data: {
-        'profile_key': profileKey,
-        'coin_balance': coinBalanceData,
-        'current_price': currentPrice,
-      },
-      fromJson: (json) => json as Map<String, dynamic>,
-    );
   }
 
   /// 게시글 삭제
@@ -568,7 +497,7 @@ class HttpService {
   }) async {
     try {
       final response = await _dio.post(
-        'https://asia-northeast3-samusil-addon.cloudfunctions.net/createTrackArticle',
+        '/createTrackArticle',
         data: {
           'title': title,
           'tracks': tracks.map((track) => track.toJson()).toList(),
@@ -613,7 +542,7 @@ class HttpService {
   }) async {
     try {
       final response = await _dio.post(
-        'https://asia-northeast3-samusil-addon.cloudfunctions.net/getTrackArticleList',
+        '/getTrackArticleList',
         data: {
           'lastDocumentId': lastDocumentId,
           'limit': limit,
@@ -656,7 +585,7 @@ class HttpService {
   }) async {
     try {
       final response = await _dio.post(
-        'https://asia-northeast3-samusil-addon.cloudfunctions.net/getTrackArticleDetail',
+        '/getTrackArticleDetail',
         data: {'id': id, 'incrementView': incrementView},
       );
 
@@ -702,10 +631,7 @@ class HttpService {
         data['tracks'] = tracks.map((track) => track.toJson()).toList();
       if (description != null) data['description'] = description;
 
-      final response = await _dio.post(
-        'https://asia-northeast3-samusil-addon.cloudfunctions.net/updateTrackArticle',
-        data: data,
-      );
+      final response = await _dio.post('/updateTrackArticle', data: data);
 
       if (response.data['success'] == true) {
         return CloudFunctionResponse(
@@ -737,10 +663,7 @@ class HttpService {
   /// 플레이리스트 삭제
   Future<CloudFunctionResponse> deleteTrackArticle({required String id}) async {
     try {
-      final response = await _dio.post(
-        'https://asia-northeast3-samusil-addon.cloudfunctions.net/deleteTrackArticle',
-        data: {'id': id},
-      );
+      final response = await _dio.post('/deleteTrackArticle', data: {'id': id});
 
       if (response.data['success'] == true) {
         return CloudFunctionResponse(
@@ -763,6 +686,41 @@ class HttpService {
               errorData['error'] ??
               errorData['message'] ??
               '플레이리스트 삭제에 실패했습니다.',
+        );
+      }
+      return CloudFunctionResponse(success: false, error: e.toString());
+    }
+  }
+
+  /// 플레이리스트 좋아요 토글
+  Future<CloudFunctionResponse> toggleTrackArticleLike({
+    required String id,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/toggleTrackArticleLike',
+        data: {'id': id},
+      );
+
+      if (response.data['success'] == true) {
+        return CloudFunctionResponse(
+          success: true,
+          data: response.data['data'],
+        );
+      } else {
+        return CloudFunctionResponse(
+          success: false,
+          error: response.data['error'] ?? response.data['message'],
+        );
+      }
+    } catch (e) {
+      logger.e('toggleTrackArticleLike error: $e');
+      if (e is DioException && e.response != null) {
+        final errorData = e.response!.data;
+        return CloudFunctionResponse(
+          success: false,
+          error:
+              errorData['error'] ?? errorData['message'] ?? '좋아요 처리에 실패했습니다.',
         );
       }
       return CloudFunctionResponse(success: false, error: e.toString());

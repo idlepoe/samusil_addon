@@ -38,42 +38,10 @@ export interface Profile {
   key: string;
   name: string;
   point: number;
-  coin_balance?: CoinBalance[];
+  liked_track_articles?: string[]; // 좋아요한 플레이리스트 ID 목록
 }
 
-// Coin 관련 타입
-export interface Price {
-  price: number;
-  last_updated: string;
-}
 
-export interface CoinPrice {
-  id: string;
-  price: number;
-  volume_24h: number;
-  last_updated: string;
-}
-
-export interface CoinBalance {
-  symbol: string;
-  quantity: number;
-  price: number;
-  sub_list?: CoinBalance[];
-}
-
-export interface Coin {
-  id: string;
-  name: string;
-  symbol: string;
-  rank: number;
-  is_active: boolean;
-  current_price: number;
-  current_volume_24h: number;
-  last_updated: admin.firestore.Timestamp;
-  diffPercentage?: number;
-  diffList?: number[];
-  color?: number;
-}
 
 export interface PriceHistory {
   price: number;

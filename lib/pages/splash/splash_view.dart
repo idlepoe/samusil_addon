@@ -44,7 +44,7 @@ class SplashView extends GetView<SplashController> {
 
               // 앱 이름
               const Text(
-                '사무실 애드온',
+                '오피스 라운지',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 28,

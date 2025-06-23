@@ -27,6 +27,8 @@ import '../pages/wish/wish_view.dart';
 import '../pages/wish/wish_binding.dart';
 import '../pages/horse_race/horse_race_view.dart';
 import '../pages/horse_race/horse_race_binding.dart';
+import '../pages/horse_race/horse_race_history_view.dart';
+import '../pages/horse_race/horse_race_history_binding.dart';
 import '../pages/notification/notification_history_view.dart';
 import '../pages/notification/notification_history_binding.dart';
 import '../pages/point/point_history_view.dart';
@@ -40,6 +42,8 @@ import '../pages/office_music/youtube_search/youtube_search_view.dart';
 import '../pages/office_music/youtube_search/youtube_search_binding.dart';
 import '../pages/office_music/office_music_detail/office_music_detail_view.dart';
 import '../pages/office_music/office_music_detail/office_music_detail_binding.dart';
+import '../pages/office_music/favorite_playlist/favorite_playlist_view.dart';
+import '../pages/office_music/favorite_playlist/favorite_playlist_binding.dart';
 
 class GetRoutes {
   static final routes = [
@@ -107,6 +111,11 @@ class GetRoutes {
       binding: HorseRaceBinding(),
     ),
     GetPage(
+      name: '/horse-race-history',
+      page: () => const HorseRaceHistoryView(),
+      binding: HorseRaceHistoryBinding(),
+    ),
+    GetPage(
       name: '/notifications',
       page: () => const NotificationHistoryView(),
       binding: NotificationHistoryBinding(),
@@ -141,6 +150,11 @@ class GetRoutes {
       name: '/track-article-detail',
       page: () => const OfficeMusicDetailView(),
       binding: OfficeMusicDetailBinding(),
+    ),
+    GetPage(
+      name: '/favorite-playlist',
+      page: () => const FavoritePlaylistView(),
+      binding: FavoritePlaylistBinding(),
     ),
   ];
 }

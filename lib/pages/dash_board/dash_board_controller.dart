@@ -51,6 +51,9 @@ class DashBoardController extends GetxController {
   final isPlayerInitialized = false.obs;
   final playerKey = 0.obs; // YouTube 플레이어 리렌더링을 위한 키
 
+  // 플레이어 상태 모니터링
+  Timer? _playerMonitorTimer;
+
   ViewType viewType = ViewType.normal;
 
   @override
@@ -134,6 +137,7 @@ class DashBoardController extends GetxController {
 
   @override
   void onClose() {
+    _playerMonitorTimer?.cancel();
     _youtubeController?.close();
     super.onClose();
   }
@@ -415,6 +419,9 @@ class DashBoardController extends GetxController {
           }
         });
 
+        // 플레이어 상태 모니터링 시작
+        _startPlayerMonitoring();
+
         logger.i('Playlist loaded successfully');
       } else {
         logger.w('No tracks in playlist');
@@ -479,6 +486,9 @@ class DashBoardController extends GetxController {
           playNext();
         }
       });
+
+      // 플레이어 상태 모니터링 시작
+      _startPlayerMonitoring();
     } catch (e) {
       logger.e('playTrack error: $e');
     }
@@ -583,6 +593,9 @@ class DashBoardController extends GetxController {
       await _youtubeController!.close();
       _youtubeController = null;
     }
+
+    // 플레이어 상태 모니터링 중지
+    _stopPlayerMonitoring();
   }
 
   /// 현재 재생 중인 트랙의 포맷된 제목
@@ -622,6 +635,81 @@ class DashBoardController extends GetxController {
       }
     } catch (e) {
       logger.e('_updateCurrentTrackIndex error: $e');
+    }
+  }
+
+  /// 플레이어 상태 모니터링 시작
+  void _startPlayerMonitoring() {
+    _playerMonitorTimer?.cancel();
+
+    _playerMonitorTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _checkPlayerIndex();
+    });
+
+    logger.i('Player monitoring started');
+  }
+
+  /// 플레이어 상태 모니터링 중지
+  void _stopPlayerMonitoring() {
+    _playerMonitorTimer?.cancel();
+    _playerMonitorTimer = null;
+    logger.i('Player monitoring stopped');
+  }
+
+  /// YouTube 플레이어의 현재 인덱스 확인
+  Future<void> _checkPlayerIndex() async {
+    if (_youtubeController == null || currentTrackArticle.value == null) return;
+
+    try {
+      // YouTube 플레이어의 현재 플레이리스트 인덱스 확인
+      final playlistIndex = await _youtubeController!.playlistIndex;
+
+      if (playlistIndex != null &&
+          playlistIndex != currentTrackIndex.value &&
+          playlistIndex >= 0 &&
+          playlistIndex < currentTrackArticle.value!.tracks.length) {
+        // 인덱스가 변경되었으면 현재 트랙 정보 업데이트
+        final oldIndex = currentTrackIndex.value;
+        final tracks = currentTrackArticle.value!.tracks;
+
+        currentTrackIndex.value = playlistIndex;
+        currentTrack.value = tracks[playlistIndex];
+
+        logger.i(
+          'Track index updated from monitoring: $oldIndex -> $playlistIndex (${currentTrack.value?.title})',
+        );
+      }
+
+      // YouTube 플레이어의 현재 상태 확인
+      final playerState = await _youtubeController!.playerState;
+
+      // 재생 상태에 따라 UI 업데이트
+      switch (playerState) {
+        case PlayerState.playing:
+          if (!isPlaying.value) {
+            isPlaying.value = true;
+            isPaused.value = false;
+            logger.i('Player state synced: playing');
+          }
+          break;
+        case PlayerState.paused:
+          if (!isPaused.value) {
+            isPlaying.value = false;
+            isPaused.value = true;
+            logger.i('Player state synced: paused');
+          }
+          break;
+        case PlayerState.ended:
+          isPlaying.value = false;
+          isPaused.value = false;
+          logger.i('Player state synced: ended');
+          break;
+        default:
+          break;
+      }
+    } catch (e) {
+      // 에러가 발생해도 계속 모니터링
+      logger.w('_checkPlayerIndex error: $e');
     }
   }
 }

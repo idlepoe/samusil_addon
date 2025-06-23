@@ -1,13 +1,13 @@
 // Firestore 컬렉션명
 export const FIRESTORE_COLLECTION_ARTICLE = 'article';
 export const FIRESTORE_COLLECTION_PROFILE = 'profile';
-export const FIRESTORE_COLLECTION_COIN = 'coin';
+
 export const FIRESTORE_COLLECTION_WISH = 'wish';
 export const FIRESTORE_COLLECTION_TRACK_ARTICLE = 'track_article';
 
 // Firestore 필드명
 export const FIRESTORE_FIELD_COMMENTS = 'comments';
-export const FIRESTORE_FIELD_COIN_BALANCE = 'coin_balance';
+
 export const FIRESTORE_FIELD_PRICE_HISTORY = 'price_history';
 
 // 에러 코드

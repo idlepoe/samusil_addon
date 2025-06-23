@@ -143,16 +143,32 @@ class OfficeMusicDetailView extends GetView<OfficeMusicDetailController> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        _buildIconButton(
-                          icon:
-                              controller.isLiked.value
-                                  ? Icons.favorite
-                                  : Icons.favorite_border,
-                          color:
-                              controller.isLiked.value
-                                  ? Colors.red
-                                  : const Color(0xFF8B95A1),
-                          onTap: controller.toggleLike,
+                        Obx(
+                          () => _buildIconButton(
+                            icon:
+                                controller.isLiked.value
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                            color:
+                                controller.isLiked.value
+                                    ? Colors.red
+                                    : const Color(0xFF8B95A1),
+                            onTap: controller.toggleLike,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Obx(
+                          () => _buildIconButton(
+                            icon:
+                                controller.isFavorited.value
+                                    ? Icons.bookmark
+                                    : Icons.bookmark_border,
+                            color:
+                                controller.isFavorited.value
+                                    ? const Color(0xFF3182F6)
+                                    : const Color(0xFF8B95A1),
+                            onTap: controller.toggleFavorite,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         _buildIconButton(

@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../../../models/track_article.dart';
 import '../../../utils/http_service.dart';
 import '../../../components/appSnackbar.dart';
@@ -10,6 +12,7 @@ class OfficeMusicDetailController extends GetxController {
   final trackArticle = Rx<TrackArticle?>(null);
   final isLoading = false.obs;
   final isLiked = false.obs;
+  final isFavorited = false.obs; // 즐겨찾기 상태
   final currentPlayingIndex = Rx<int?>(null);
 
   String? trackArticleId;
@@ -39,6 +42,14 @@ class OfficeMusicDetailController extends GetxController {
 
       if (response.success && response.data != null) {
         trackArticle.value = TrackArticle.fromJson(response.data);
+
+        // 좋아요 상태 초기화 (서버에서 isLiked 정보를 받아오는 경우)
+        if (response.data.containsKey('isLiked')) {
+          isLiked.value = response.data['isLiked'] as bool? ?? false;
+        }
+
+        // 즐겨찾기 상태 확인
+        await _checkFavoriteStatus();
       } else {
         AppSnackbar.error(response.error ?? '플레이리스트를 불러오는데 실패했습니다.');
         Get.back();
@@ -52,23 +63,149 @@ class OfficeMusicDetailController extends GetxController {
     }
   }
 
-  // 좋아요 토글
-  void toggleLike() {
+  // 즐겨찾기 상태 확인
+  Future<void> _checkFavoriteStatus() async {
     if (trackArticle.value == null) return;
 
-    isLiked.value = !isLiked.value;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final favoriteIds = prefs.getStringList('favorite_playlists') ?? [];
+      isFavorited.value = favoriteIds.contains(trackArticle.value!.id);
+    } catch (e) {
+      logger.e('_checkFavoriteStatus error: $e');
+    }
+  }
 
-    // TODO: 실제 좋아요 API 호출
-    if (isLiked.value) {
-      trackArticle.value = trackArticle.value!.copyWith(
-        count_like: trackArticle.value!.count_like + 1,
-      );
+  // 즐겨찾기 토글 (로컬 처리만)
+  Future<void> toggleFavorite() async {
+    if (trackArticle.value == null) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final favoriteIds = prefs.getStringList('favorite_playlists') ?? [];
+      final favoriteData = prefs.getStringList('favorite_playlists_data') ?? [];
+
+      if (isFavorited.value) {
+        // 즐겨찾기 제거
+        final index = favoriteIds.indexOf(trackArticle.value!.id);
+        if (index != -1) {
+          favoriteIds.removeAt(index);
+          favoriteData.removeAt(index);
+        }
+        isFavorited.value = false;
+        AppSnackbar.info('즐겨찾기에서 제거되었습니다.');
+      } else {
+        // 즐겨찾기 추가
+        favoriteIds.add(trackArticle.value!.id);
+        favoriteData.add(jsonEncode(trackArticle.value!.toJson()));
+        isFavorited.value = true;
+        AppSnackbar.success('즐겨찾기에 추가되었습니다.');
+      }
+
+      await prefs.setStringList('favorite_playlists', favoriteIds);
+      await prefs.setStringList('favorite_playlists_data', favoriteData);
+    } catch (e) {
+      logger.e('toggleFavorite error: $e');
+      AppSnackbar.error('즐겨찾기 처리 중 오류가 발생했습니다.');
+    }
+  }
+
+  // 즐겨찾기 목록 가져오기 (static 메서드)
+  static Future<List<TrackArticle>> getFavoritePlaylist() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final favoriteData = prefs.getStringList('favorite_playlists_data') ?? [];
+
+      return favoriteData.map((data) {
+        final json = jsonDecode(data);
+        return TrackArticle.fromJson(json);
+      }).toList();
+    } catch (e) {
+      logger.e('getFavoritePlaylist error: $e');
+      return [];
+    }
+  }
+
+  // 즐겨찾기에서 특정 플레이리스트 제거 (static 메서드)
+  static Future<bool> removeFavoritePlaylist(String playlistId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final favoriteIds = prefs.getStringList('favorite_playlists') ?? [];
+      final favoriteData = prefs.getStringList('favorite_playlists_data') ?? [];
+
+      final index = favoriteIds.indexOf(playlistId);
+      if (index != -1) {
+        favoriteIds.removeAt(index);
+        favoriteData.removeAt(index);
+
+        await prefs.setStringList('favorite_playlists', favoriteIds);
+        await prefs.setStringList('favorite_playlists_data', favoriteData);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      logger.e('removeFavoritePlaylist error: $e');
+      return false;
+    }
+  }
+
+  // 좋아요 토글 (낙관적 업데이트)
+  Future<void> toggleLike() async {
+    if (trackArticle.value == null) return;
+
+    // 현재 상태 백업 (롤백용)
+    final originalIsLiked = isLiked.value;
+    final originalLikeCount = trackArticle.value!.count_like;
+
+    // 즉시 UI 업데이트 (낙관적 업데이트)
+    final newIsLiked = !originalIsLiked;
+    final newLikeCount =
+        newIsLiked ? originalLikeCount + 1 : originalLikeCount - 1;
+
+    isLiked.value = newIsLiked;
+    trackArticle.value = trackArticle.value!.copyWith(count_like: newLikeCount);
+
+    // 즉시 메시지 표시
+    if (newIsLiked) {
       AppSnackbar.success('좋아요를 눌렀습니다.');
     } else {
-      trackArticle.value = trackArticle.value!.copyWith(
-        count_like: trackArticle.value!.count_like - 1,
-      );
       AppSnackbar.info('좋아요를 취소했습니다.');
+    }
+
+    try {
+      // 백그라운드에서 서버 처리
+      final response = await HttpService().toggleTrackArticleLike(
+        id: trackArticle.value!.id,
+      );
+
+      if (response.success && response.data != null) {
+        final data = response.data;
+        final serverIsLiked = data['isLiked'] as bool;
+        final serverLikeCount = data['likeCount'] as int;
+
+        // 서버 응답이 예상과 다른 경우 서버 데이터로 동기화
+        if (serverIsLiked != newIsLiked || serverLikeCount != newLikeCount) {
+          isLiked.value = serverIsLiked;
+          trackArticle.value = trackArticle.value!.copyWith(
+            count_like: serverLikeCount,
+          );
+        }
+      } else {
+        // 서버 오류 시 원래 상태로 롤백
+        isLiked.value = originalIsLiked;
+        trackArticle.value = trackArticle.value!.copyWith(
+          count_like: originalLikeCount,
+        );
+        AppSnackbar.error(response.error ?? '좋아요 처리에 실패했습니다. 다시 시도해주세요.');
+      }
+    } catch (e) {
+      // 네트워크 오류 시 원래 상태로 롤백
+      logger.e('toggleLike error: $e');
+      isLiked.value = originalIsLiked;
+      trackArticle.value = trackArticle.value!.copyWith(
+        count_like: originalLikeCount,
+      );
+      AppSnackbar.error('네트워크 오류로 좋아요 처리에 실패했습니다. 다시 시도해주세요.');
     }
   }
 

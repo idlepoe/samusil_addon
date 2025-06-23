@@ -10,275 +10,311 @@ class MusicSalonWidget extends GetView<DashBoardController> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // 섹션 헤더
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 4,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF3182F6),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  '🎵 뮤직살롱',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF191F28),
-                  ),
-                ),
-              ],
-            ),
-            GestureDetector(
-              onTap: () {
-                Get.toNamed('/office-music-list');
-              },
-              child: const Text(
-                '더보기',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF8B95A1),
-                  fontWeight: FontWeight.w500,
-                ),
+    return Obx(() {
+      if (controller.isLoadingMusicSalon.value) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        // 플레이리스트 카드들
-        Obx(() {
-          print(
-            'MusicSalon 상태 - loading: ${controller.isLoadingMusicSalon.value}, playlists: ${controller.musicSalonPlaylists.length}',
-          );
-
-          if (controller.musicSalonPlaylists.isNotEmpty) {
-            print('첫 번째 플레이리스트: ${controller.musicSalonPlaylists.first.title}');
-            print(
-              '플레이리스트 트랙 수: ${controller.musicSalonPlaylists.first.tracks.length}',
-            );
-          }
-
-          if (controller.isLoadingMusicSalon.value) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(20),
-                child: CircularProgressIndicator(color: Color(0xFF3182F6)),
-              ),
-            );
-          }
-
-          if (controller.musicSalonPlaylists.isEmpty) {
-            return Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE5E8EB)),
-              ),
-              child: const Center(
-                child: Text(
-                  '아직 등록된 플레이리스트가 없습니다',
-                  style: TextStyle(color: Color(0xFF8B95A1), fontSize: 14),
-                ),
-              ),
-            );
-          }
-
-          return Column(
-            children:
-                controller.musicSalonPlaylists
-                    .take(3)
-                    .map((playlist) => _buildPlaylistCard(playlist))
-                    .toList(),
-          );
-        }),
-      ],
-    );
-  }
-
-  Widget _buildPlaylistCard(TrackArticle playlist) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E8EB)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            ],
           ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () {
-          Get.toNamed('/track-article-detail', arguments: {'id': playlist.id});
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
+          child: const Padding(
+            padding: EdgeInsets.all(20),
+            child: Center(
+              child: CircularProgressIndicator(color: Color(0xFF3182F6)),
+            ),
+          ),
+        );
+      }
+
+      if (controller.musicSalonPlaylists.isEmpty) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 썸네일
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: const Color(0xFFF2F4F6),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child:
-                      playlist.tracks.isNotEmpty &&
-                              playlist.tracks.first.thumbnail.isNotEmpty
-                          ? Image.network(
-                            playlist.tracks.first.thumbnail,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Icon(
-                                Icons.music_note,
-                                color: Color(0xFF8B95A1),
-                                size: 24,
-                              );
-                            },
-                          )
-                          : const Icon(
-                            Icons.music_note,
-                            color: Color(0xFF8B95A1),
-                            size: 24,
-                          ),
+              // 섹션 헤더 (전체가 클릭 가능)
+              InkWell(
+                onTap: () {
+                  Get.toNamed('/office-music-list');
+                },
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 4,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF3182F6),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        '🎵 뮤직살롱',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF191F28),
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '더보기',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(width: 12),
-
-              // 플레이리스트 정보
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 제목
-                    Text(
-                      playlist.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF191F28),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-
-                    // 메타 정보
-                    Text(
-                      '${playlist.track_count}곡 • ${_formatDuration(playlist.total_duration)} • ${playlist.profile_name}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF8B95A1),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-
-                    // 통계 정보
-                    Row(
+              Padding(
+                padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8F9FA),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Center(
+                    child: Column(
                       children: [
                         Icon(
-                          Icons.visibility,
-                          size: 14,
-                          color: const Color(0xFF8B95A1),
+                          Icons.music_note_outlined,
+                          color: Colors.grey[600],
+                          size: 48,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(height: 16),
                         Text(
-                          '${playlist.count_view}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF8B95A1),
+                          '등록된 플레이리스트가 없습니다',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 16,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Icon(
-                          Icons.favorite,
-                          size: 14,
-                          color: const Color(0xFF8B95A1),
-                        ),
-                        const SizedBox(width: 4),
+                        const SizedBox(height: 8),
                         Text(
-                          '${playlist.count_like}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF8B95A1),
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          _formatDate(playlist.created_at),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF8B95A1),
+                          '새로운 플레이리스트를 기다려주세요!',
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 14,
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-
-              // 재생 버튼
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF3182F6),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: IconButton(
-                  onPressed: () async {
-                    try {
-                      print('재생 버튼 클릭됨: ${playlist.title}');
-                      print(
-                        '재생 전 상태 - isPlayerVisible: ${controller.isPlayerVisible.value}, currentTrack: ${controller.currentTrack.value?.title}',
-                      );
-
-                      await controller.playPlaylist(playlist, startIndex: 0);
-
-                      // 약간의 지연 후 상태 확인
-                      await Future.delayed(const Duration(milliseconds: 500));
-                      print(
-                        '재생 후 상태 - isPlayerVisible: ${controller.isPlayerVisible.value}, currentTrack: ${controller.currentTrack.value?.title}',
-                      );
-                      print(
-                        'youtubeController: ${controller.youtubeController != null}',
-                      );
-
-                      // 이미 대시보드에 있으므로 네비게이션하지 않음
-                    } catch (e) {
-                      print('재생 오류: $e');
-                    }
-                  },
-                  icon: const Icon(
-                    Icons.play_arrow,
-                    color: Colors.white,
-                    size: 20,
                   ),
-                  padding: EdgeInsets.zero,
                 ),
               ),
             ],
           ),
+        );
+      }
+
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 섹션 헤더 (전체가 클릭 가능)
+            InkWell(
+              onTap: () {
+                Get.toNamed('/office-music-list');
+              },
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF3182F6),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      '🎵 뮤직살롱',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF191F28),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '더보기',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+              child: Column(
+                children: [
+                  // 모든 플레이리스트들 (간단한 형태로 통일)
+                  ...controller.musicSalonPlaylists
+                      .take(3)
+                      .map((playlist) => _buildSimplePlaylistCard(playlist))
+                      .toList(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  // 간단한 플레이리스트 카드
+  Widget _buildSimplePlaylistCard(TrackArticle playlist) {
+    return InkWell(
+      onTap: () {
+        Get.toNamed('/track-article-detail', arguments: {'id': playlist.id});
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: const Color(0xFFE5E8EB)),
+        ),
+        child: Row(
+          children: [
+            // 작은 썸네일
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                color: const Color(0xFFF2F4F6),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child:
+                    playlist.tracks.isNotEmpty &&
+                            playlist.tracks.first.thumbnail.isNotEmpty
+                        ? Image.network(
+                          playlist.tracks.first.thumbnail,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.music_note,
+                              color: Color(0xFF8B95A1),
+                              size: 16,
+                            );
+                          },
+                        )
+                        : const Icon(
+                          Icons.music_note,
+                          color: Color(0xFF8B95A1),
+                          size: 16,
+                        ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // 제목과 메타 정보
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    playlist.title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF191F28),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${playlist.track_count}곡 • ${playlist.profile_name}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF8B95A1),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            // 재생 버튼
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: const Color(0xFF3182F6),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: IconButton(
+                onPressed: () async {
+                  try {
+                    await controller.playPlaylist(playlist, startIndex: 0);
+                  } catch (e) {
+                    print('재생 오류: $e');
+                  }
+                },
+                icon: const Icon(
+                  Icons.play_arrow,
+                  color: Colors.white,
+                  size: 16,
+                ),
+                padding: EdgeInsets.zero,
+              ),
+            ),
+          ],
         ),
       ),
     );

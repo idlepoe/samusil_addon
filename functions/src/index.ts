@@ -24,6 +24,7 @@ export { getTrackArticleList } from './trackArticles/getTrackArticleList';
 export { getTrackArticleDetail } from './trackArticles/getTrackArticleDetail';
 export { updateTrackArticle } from './trackArticles/updateTrackArticle';
 export { deleteTrackArticle } from './trackArticles/deleteTrackArticle';
+export { toggleTrackArticleLike } from './trackArticles/toggleTrackArticleLike';
 
 // Profiles
 export { createWish } from './profiles/createWish';

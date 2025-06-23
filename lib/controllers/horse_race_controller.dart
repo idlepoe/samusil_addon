@@ -7,7 +7,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 
 import '../components/appSnackbar.dart';
 import '../models/horse_race.dart';
-import '../models/coin.dart';
+
 import '../utils/app.dart';
 import '../define/define.dart';
 import 'profile_controller.dart';
@@ -106,7 +106,7 @@ class HorseRaceController extends GetxController {
     try {
       final betDoc =
           await FirebaseFirestore.instance
-              .collection('horse_races')
+              .collection(Define.FIRESTORE_COLLECTION_HORSE_RACE)
               .doc(raceId)
               .collection('bets')
               .doc(uid)
