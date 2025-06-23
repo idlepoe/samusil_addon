@@ -55,8 +55,8 @@ class DashBoardView extends GetView<DashBoardController> {
                     20,
                     16,
                     20,
-                    // 음악 플레이어가 있을 때 하단 패딩 추가 (YouTube 플레이어 + 미니 플레이어)
-                    controller.isPlayerVisible.value ? 320 : 20,
+                    // 음악 플레이어가 있을 때 하단 패딩 추가 (미니 플레이어 높이 80px + 여유 공간 10px)
+                    controller.isPlayerVisible.value ? 90 : 20,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

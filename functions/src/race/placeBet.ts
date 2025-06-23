@@ -1,6 +1,6 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { CloudFunctionResponse } from '../utils/types';
+import { CloudFunctionResponse, PointHistory } from '../utils/types';
 import { sendPushNotification } from '../utils/notificationService';
 
 const db = admin.firestore();
@@ -44,14 +44,18 @@ export const placeBet = functions
 
         transaction.update(profileRef, { point: admin.firestore.FieldValue.increment(-amount) });
 
-        // 포인트 차감 이력 기록
+        // 포인트 차감 이력 기록 - PointHistory 인터페이스 구조 사용
         const pointHistoryRef = profileRef.collection('point_history').doc();
-        transaction.set(pointHistoryRef, {
+        const pointHistoryData: PointHistory = {
           id: pointHistoryRef.id,
-          amount: -amount, // 차감이므로 음수
-          reason: '코인 경마 베팅',
+          profile_uid: uid,
+          action_type: '베팅',
+          points_earned: -amount, // 차감이므로 음수
+          description: '코인 경마 베팅',
           created_at: admin.firestore.Timestamp.now(),
-        });
+        };
+        
+        transaction.set(pointHistoryRef, pointHistoryData);
 
         const betRef = raceRef.collection('bets').doc(uid);
         transaction.set(betRef, {

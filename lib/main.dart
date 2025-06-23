@@ -80,7 +80,7 @@ Future<void> _initializeFirebaseMessaging() async {
           sound: true,
         );
 
-    logger.i('FCM 권한 상태: ${settings.authorizationStatus}');
+    logger.i('FCM 권한 상태: [32m[1m[4m${settings.authorizationStatus}[0m');
 
     // 포그라운드 메시지 핸들러
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
@@ -95,21 +95,37 @@ Future<void> _initializeFirebaseMessaging() async {
     });
 
     // 알림 클릭 핸들러
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
       logger.i('알림 클릭: ${message.messageId}');
-
-      // 알림 데이터에서 게시글 ID 추출
       final data = message.data;
-      if (data['type'] == 'comment' || data['type'] == 'like') {
+      final type = data['type'];
+      if (type == 'comment' || type == 'like' || type == 'sub_comment') {
         final articleId = data['article_id'];
         if (articleId != null) {
-          // 해당 게시글로 이동
-          Get.toNamed('/detail/$articleId');
+          await navigateAfterPush('/detail/$articleId');
+          return;
         }
+      } else if (type == 'horse_race') {
+        await navigateAfterPush('/horse-race-history');
+        return;
+      } else if (type == 'system') {
+        await navigateAfterPush('/notifications');
+        return;
       }
+      await navigateAfterPush('/');
     });
   } catch (e) {
     logger.e('FCM 초기화 오류: $e');
+  }
+}
+
+Future<void> navigateAfterPush(String route) async {
+  Get.offAllNamed('/splash');
+  await Future.delayed(const Duration(milliseconds: 100));
+  Get.offAllNamed('/');
+  await Future.delayed(const Duration(milliseconds: 100));
+  if (route != '/' && route != '/splash') {
+    Get.toNamed(route);
   }
 }
 

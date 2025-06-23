@@ -137,7 +137,7 @@ class FavoritePlaylistsWidget extends StatelessWidget {
             ),
             // 플레이리스트 목록
             Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+              padding: const EdgeInsets.only(left: 20, right: 20, bottom: 16),
               child: Column(
                 children:
                     controller.favoritePlaylists
@@ -152,82 +152,58 @@ class FavoritePlaylistsWidget extends StatelessWidget {
   }
 
   Widget _buildPlaylistItem(TrackArticle playlist) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: () {
-          Get.toNamed('/office-music-detail/${playlist.id}');
-        },
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8F9FA),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.withOpacity(0.1), width: 1),
-          ),
-          child: Row(
-            children: [
-              // 플레이리스트 아이콘
-              Container(
-                width: 40,
-                height: 40,
+    return InkWell(
+      onTap: () {
+        Get.toNamed('/track-article-detail', arguments: {'id': playlist.id});
+      },
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        child: Row(
+          children: [
+            // 간단한 음악 아이콘
+            Icon(Icons.music_note, color: const Color(0xFFE91E63), size: 18),
+            const SizedBox(width: 8),
+            // 플레이리스트 정보
+            Expanded(
+              child: Text(
+                playlist.title,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF191F28),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            // 곡 수
+            Text(
+              '${playlist.tracks.length}곡',
+              style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+            ),
+            const SizedBox(width: 8),
+            // 간단한 재생 버튼
+            InkWell(
+              onTap: () {
+                controller.playPlaylist(playlist);
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: 24,
+                height: 24,
                 decoration: BoxDecoration(
                   color: const Color(0xFFE91E63).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
-                  Icons.queue_music,
+                  Icons.play_arrow,
                   color: Color(0xFFE91E63),
-                  size: 20,
+                  size: 14,
                 ),
               ),
-              const SizedBox(width: 12),
-              // 플레이리스트 정보
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      playlist.title,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF191F28),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${playlist.tracks.length}곡',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              ),
-              // 재생 버튼
-              InkWell(
-                onTap: () {
-                  controller.playPlaylist(playlist);
-                },
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE91E63),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(
-                    Icons.play_arrow,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

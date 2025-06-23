@@ -1,7 +1,8 @@
 import * as admin from 'firebase-admin';
 import { onRequest } from 'firebase-functions/v2/https';
 import { verifyAuth } from '../utils/auth';
-import { FIRESTORE_COLLECTION_TRACK_ARTICLE, FIRESTORE_COLLECTION_PROFILE } from '../utils/constants';
+import { FIRESTORE_COLLECTION_TRACK_ARTICLE } from '../utils/constants';
+import { awardPointsForLike } from '../utils/pointService';
 
 export const toggleTrackArticleLike = onRequest({ 
   cors: true,
@@ -36,71 +37,64 @@ export const toggleTrackArticleLike = onRequest({
     }
 
     const db = admin.firestore();
+    const trackArticleRef = db.collection(FIRESTORE_COLLECTION_TRACK_ARTICLE).doc(id);
+    const trackArticleDoc = await trackArticleRef.get();
 
-    // 트랜잭션으로 처리
-    const result = await db.runTransaction(async (transaction) => {
-      // trackArticle 문서 가져오기
-      const trackArticleRef = db.collection(FIRESTORE_COLLECTION_TRACK_ARTICLE).doc(id);
-      const trackArticleDoc = await transaction.get(trackArticleRef);
+    if (!trackArticleDoc.exists) {
+      res.status(404).json({ success: false, error: 'TrackArticle not found' });
+      return;
+    }
 
-      if (!trackArticleDoc.exists) {
-        throw new Error('TrackArticle not found');
-      }
+    const trackArticleData = trackArticleDoc.data()!;
+    const authorUid = trackArticleData.profile_uid;
 
-      // 사용자 프로필 문서 가져오기
-      const profileRef = db.collection(FIRESTORE_COLLECTION_PROFILE).doc(uid);
-      const profileDoc = await transaction.get(profileRef);
+    const likeRef = trackArticleRef.collection('likes').doc(uid);
+    const likeDoc = await likeRef.get();
 
-      if (!profileDoc.exists) {
-        throw new Error('Profile not found');
-      }
+    let isLiked = false;
+    let pointsEarned = 0;
+    let newPoints = 0;
 
-      const profileData = profileDoc.data();
-      const likedTrackArticles = profileData?.liked_track_articles || [];
-      const trackArticleData = trackArticleDoc.data();
-      const currentLikeCount = trackArticleData?.count_like || 0;
-
-      let isLiked = false;
-      let newLikeCount = currentLikeCount;
-
-      // 좋아요 상태 확인 및 토글
-      const likeIndex = likedTrackArticles.indexOf(id);
+    if (likeDoc.exists) {
+      // 좋아요 취소
+      await likeRef.delete();
       
-      if (likeIndex > -1) {
-        // 좋아요 제거
-        likedTrackArticles.splice(likeIndex, 1);
-        newLikeCount = Math.max(0, currentLikeCount - 1);
-        isLiked = false;
-      } else {
-        // 좋아요 추가
-        likedTrackArticles.push(id);
-        newLikeCount = currentLikeCount + 1;
-        isLiked = true;
+      // 플레이리스트의 좋아요 수 감소
+      await trackArticleRef.update({
+        count_like: admin.firestore.FieldValue.increment(-1)
+      });
+    } else {
+      // 좋아요 추가
+      await likeRef.set({
+        user_uid: uid,
+        created_at: new Date()
+      });
+      
+      // 플레이리스트의 좋아요 수 증가
+      await trackArticleRef.update({
+        count_like: admin.firestore.FieldValue.increment(1)
+      });
+
+      isLiked = true;
+
+      // 좋아요 시 포인트 지급 (작성자에게)
+      if (uid !== authorUid && authorUid && authorUid.trim()) {
+        newPoints = await awardPointsForLike(authorUid, id);
+        pointsEarned = 1;
       }
+    }
 
-      // 프로필의 좋아요 목록 업데이트
-      transaction.update(profileRef, {
-        liked_track_articles: likedTrackArticles,
-        updated_at: admin.firestore.FieldValue.serverTimestamp()
-      });
-
-      // trackArticle 좋아요 수 업데이트
-      transaction.update(trackArticleRef, {
-        count_like: newLikeCount,
-        updated_at: admin.firestore.FieldValue.serverTimestamp()
-      });
-
-      return {
-        isLiked,
-        likeCount: newLikeCount
-      };
-    });
+    // 업데이트된 좋아요 수 반환
+    const updatedTrackArticleDoc = await trackArticleRef.get();
+    const updatedCountLike = updatedTrackArticleDoc.data()?.count_like || 0;
 
     res.status(200).json({
       success: true,
       data: {
-        isLiked: result.isLiked,
-        likeCount: result.likeCount
+        isLiked: isLiked,
+        countLike: updatedCountLike,
+        pointsEarned: pointsEarned,
+        newPoints: newPoints
       }
     });
 

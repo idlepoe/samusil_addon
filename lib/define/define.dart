@@ -23,6 +23,7 @@ class Define {
   static const String FIRESTORE_COLLECTION_PROFILE = "profile";
   static const String FIRESTORE_COLLECTION_WISH = "wish";
   static const String FIRESTORE_COLLECTION_ARTICLE = "article";
+  static const String FIRESTORE_COLLECTION_TRACK_ARTICLE = "track_articles";
   static const String FIRESTORE_COLLECTION_HORSE_RACE = "horse_races";
   static String FIRESTORE_FIELD_COMMETS = "comments";
   static String FIRESTORE_FIELD_ALARMS = "alarms";

@@ -36,6 +36,7 @@ abstract class MainComment with _$MainComment {
     @JsonKey(fromJson: _toBool) required bool is_sub,
     @JsonKey(fromJson: _toString) required String parents_key,
     @JsonKey(fromJson: _toInt) int? profile_point,
+    @JsonKey(fromJson: _toInt) @Default(0) int count_report,
   }) = _MainComment;
 
   factory MainComment.fromJson(Map<String, dynamic> json) =>

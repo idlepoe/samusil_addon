@@ -105,36 +105,45 @@ class NotificationService {
   }
 
   /// 알림 클릭 이벤트를 처리합니다.
-  void _onNotificationTapped(NotificationResponse response) {
+  void _onNotificationTapped(NotificationResponse response) async {
     _logger.i('알림 클릭: ${response.payload}');
 
-    // 페이로드에서 데이터 추출
     if (response.payload != null) {
       try {
-        // 페이로드 문자열을 파싱 (간단한 형태)
         final payload = response.payload!;
+        String? type;
+        String? articleId;
+        if (payload.contains('type')) {
+          final typeMatch = RegExp(r'type[":\s]+([^,}]+)').firstMatch(payload);
+          if (typeMatch != null) {
+            type = typeMatch.group(1)?.replaceAll('"', '').trim();
+          }
+        }
         if (payload.contains('article_id')) {
-          // 게시글 ID 추출 (간단한 파싱)
           final articleIdMatch = RegExp(
             r'article_id[":\s]+([^,}]+)',
           ).firstMatch(payload);
           if (articleIdMatch != null) {
-            final articleId =
-                articleIdMatch.group(1)?.replaceAll('"', '').trim();
-            if (articleId != null) {
-              // 해당 게시글로 이동
-              Get.toNamed('/detail/$articleId');
-              return;
-            }
+            articleId = articleIdMatch.group(1)?.replaceAll('"', '').trim();
           }
+        }
+        if (type == 'comment' || type == 'like' || type == 'sub_comment') {
+          if (articleId != null) {
+            await navigateAfterPush('/detail/$articleId');
+            return;
+          }
+        } else if (type == 'horse_race') {
+          await navigateAfterPush('/horse-race-history');
+          return;
+        } else if (type == 'system') {
+          await navigateAfterPush('/notifications');
+          return;
         }
       } catch (e) {
         _logger.e('알림 페이로드 파싱 오류: $e');
       }
     }
-
-    // 기본적으로 대시보드로 이동
-    Get.toNamed('/');
+    await navigateAfterPush('/');
   }
 
   /// 모든 알림을 제거합니다.
@@ -152,5 +161,15 @@ class NotificationService {
   /// 보류 중인 알림을 가져옵니다.
   Future<List<PendingNotificationRequest>> getPendingNotifications() async {
     return await _notifications.pendingNotificationRequests();
+  }
+
+  Future<void> navigateAfterPush(String route) async {
+    Get.offAllNamed('/splash');
+    await Future.delayed(const Duration(milliseconds: 100));
+    Get.offAllNamed('/');
+    await Future.delayed(const Duration(milliseconds: 100));
+    if (route != '/' && route != '/splash') {
+      Get.toNamed(route);
+    }
   }
 }

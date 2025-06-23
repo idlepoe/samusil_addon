@@ -484,4 +484,26 @@ class Utils {
     }
     return seconds;
   }
+
+  /// 게시판 영어명을 한글명으로 변환
+  static String convertBoardNameToKorean(String boardName) {
+    switch (boardName) {
+      case 'free_board':
+        return '잡담 게시판';
+      case 'game_news':
+        return '게임 뉴스';
+      case 'entertainment_news':
+        return '연예 뉴스';
+      case 'it_news':
+        return 'IT 뉴스';
+      case 'all':
+        return '전체 게시판';
+      case 'wish':
+        return '소원';
+      case 'profile':
+        return '프로필';
+      default:
+        return boardName; // 알 수 없는 게시판명은 그대로 반환
+    }
+  }
 }

@@ -296,7 +296,7 @@ class HttpService {
   }) async {
     final response = await callCloudFunction(
       'updateArticle',
-      data: {'articleData': articleData},
+      data: articleData,
     );
     return CloudFunctionResponse<Map<String, dynamic>>(
       success: response['success'] ?? false,
@@ -686,6 +686,39 @@ class HttpService {
               errorData['error'] ??
               errorData['message'] ??
               '플레이리스트 삭제에 실패했습니다.',
+        );
+      }
+      return CloudFunctionResponse(success: false, error: e.toString());
+    }
+  }
+
+  /// 게시글 좋아요 토글
+  Future<CloudFunctionResponse> toggleLike({required String articleId}) async {
+    try {
+      final response = await _dio.post(
+        '/toggleLike',
+        data: {'articleId': articleId},
+      );
+
+      if (response.data['success'] == true) {
+        return CloudFunctionResponse(
+          success: true,
+          data: response.data['data'],
+        );
+      } else {
+        return CloudFunctionResponse(
+          success: false,
+          error: response.data['error'] ?? response.data['message'],
+        );
+      }
+    } catch (e) {
+      logger.e('toggleLike error: $e');
+      if (e is DioException && e.response != null) {
+        final errorData = e.response!.data;
+        return CloudFunctionResponse(
+          success: false,
+          error:
+              errorData['error'] ?? errorData['message'] ?? '좋아요 처리에 실패했습니다.',
         );
       }
       return CloudFunctionResponse(success: false, error: e.toString());

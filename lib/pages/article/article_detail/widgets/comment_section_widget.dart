@@ -25,7 +25,7 @@ class CommentSectionWidget extends GetView<ArticleDetailController> {
               child: Row(
                 children: [
                   Text(
-                    "${"comment".tr} ${controller.article.value.count_comments}",
+                    "댓글 ${controller.article.value.count_comments}",
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,

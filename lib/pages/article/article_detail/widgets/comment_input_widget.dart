@@ -82,7 +82,10 @@ class CommentInputWidget extends GetView<ArticleDetailController> {
                       controller: controller.commentController,
                       focusNode: controller.commentFocusNode,
                       decoration: InputDecoration(
-                        hintText: "comment_input_hint".tr,
+                        hintText:
+                            controller.subComment.value != null
+                                ? "답글을 입력하세요"
+                                : "댓글을 입력하세요",
                         hintStyle: TextStyle(
                           color: Colors.grey.shade500,
                           fontSize: 16,

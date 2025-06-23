@@ -16,6 +16,7 @@ _MainComment _$MainCommentFromJson(Map<String, dynamic> json) => _MainComment(
   is_sub: _toBool(json['is_sub']),
   parents_key: _toString(json['parents_key']),
   profile_point: _toInt(json['profile_point']),
+  count_report: json['count_report'] == null ? 0 : _toInt(json['count_report']),
 );
 
 Map<String, dynamic> _$MainCommentToJson(_MainComment instance) =>
@@ -29,4 +30,5 @@ Map<String, dynamic> _$MainCommentToJson(_MainComment instance) =>
       'is_sub': instance.is_sub,
       'parents_key': instance.parents_key,
       'profile_point': instance.profile_point,
+      'count_report': instance.count_report,
     };

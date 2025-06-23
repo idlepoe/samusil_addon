@@ -250,9 +250,11 @@ class ArticleListController extends GetxController {
       enableDrag: true,
       isDismissible: true,
       persistent: false,
-    ).whenComplete(() {
-      // BottomSheet가 닫힐 때 컨트롤러 삭제
-      Get.delete<ArticleEditController>();
+    ).then((_) {
+      // Bottom sheet가 완전히 닫힌 후 컨트롤러 삭제
+      if (Get.isRegistered<ArticleEditController>()) {
+        Get.delete<ArticleEditController>();
+      }
     });
   }
 }

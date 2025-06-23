@@ -52,6 +52,7 @@ export const getArticleDetail = onRequest({
         title: articleData.title,
         contents: articleData.contents || [],
         created_at: articleData.created_at,
+        updated_at: articleData.updated_at,
         is_notice: articleData.is_notice || false,
         thumbnail: articleData.thumbnail,
         comments: comments, // 댓글 데이터 포함

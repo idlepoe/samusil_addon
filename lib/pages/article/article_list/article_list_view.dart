@@ -46,7 +46,7 @@ class ArticleListView extends GetView<ArticleListController> {
       ),
       title: Obx(
         () => Text(
-          controller.boardInfo.value.title.tr,
+          controller.boardInfo.value.title,
           style: const TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -70,7 +70,7 @@ class ArticleListView extends GetView<ArticleListController> {
             child: Obx(
               () => Padding(
                 padding: EdgeInsets.only(
-                  bottom: _shouldShowWriteButton() ? 80.0 : 0.0,
+                  bottom: _shouldShowWriteButton() ? 100.0 : 0.0,
                 ),
                 child: ArticleListWidget(
                   articles: controller.displayArticles,
@@ -168,8 +168,8 @@ class ArticleListView extends GetView<ArticleListController> {
   }
 
   bool _shouldShowWriteButton() {
-    // 게임 뉴스 게시판이 아닌 경우에만 글쓰기 버튼을 표시
-    return controller.boardInfo.value.board_name != Define.BOARD_GAME_NEWS;
+    // BoardInfo의 isCanWrite 속성에 따라 글쓰기 버튼 표시 여부 결정
+    return controller.boardInfo.value.isCanWrite;
   }
 
   Widget _buildWriteCommentSheet(BuildContext context) {

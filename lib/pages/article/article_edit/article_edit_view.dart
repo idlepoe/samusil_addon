@@ -8,6 +8,7 @@ import '../../../models/board_info.dart';
 import '../../../components/appButton.dart';
 import '../../../components/appCircularProgress.dart';
 import 'article_edit_controller.dart';
+import '../article_list/article_list_controller.dart';
 
 class ArticleEditView extends GetView<ArticleEditController> {
   final String? id;
@@ -83,8 +84,6 @@ class ArticleEditView extends GetView<ArticleEditController> {
                     ? null
                     : () => controller.writeArticle(
                       onSuccess: () {
-                        // bottom sheet 닫기
-                        Get.back();
                         // 자유게시판 데이터 새로고침
                         _refreshFreeBoard();
                       },
@@ -418,8 +417,6 @@ class ArticleEditView extends GetView<ArticleEditController> {
                       ? null
                       : () => controller.writeArticle(
                         onSuccess: () {
-                          // bottom sheet 닫기
-                          Get.back();
                           // 자유게시판 데이터 새로고침
                           _refreshFreeBoard();
                         },
@@ -444,7 +441,10 @@ class ArticleEditView extends GetView<ArticleEditController> {
 
   // 자유게시판 데이터 새로고침
   void _refreshFreeBoard() {
-    // 대시보드로 이동하여 데이터 새로고침
-    Get.offAllNamed('/');
+    // ArticleListController가 등록되어 있으면 새로고침 호출
+    if (Get.isRegistered<ArticleListController>()) {
+      final articleListController = Get.find<ArticleListController>();
+      articleListController.onRefresh();
+    }
   }
 }

@@ -19,7 +19,7 @@ class ArticleSearchView extends GetView<ArticleSearchController> {
         iconTheme: const IconThemeData(color: Define.APP_BAR_TITLE_TEXT_COLOR),
         elevation: 0,
         title: Text(
-          "search".tr,
+          "검색",
           style: const TextStyle(color: Define.APP_BAR_TITLE_TEXT_COLOR),
         ),
         bottom: PreferredSize(
@@ -77,7 +77,7 @@ class ArticleSearchView extends GetView<ArticleSearchController> {
                                           : "🖼 "
                                       : "") +
                                   article.title +
-                                  (noContents ? " (${"no_contents".tr})" : "") +
+                                  (noContents ? " (내용 없음)" : "") +
                                   (article.count_comments > 0
                                       ? " [${article.count_comments}]"
                                       : ""),
@@ -86,7 +86,7 @@ class ArticleSearchView extends GetView<ArticleSearchController> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  "${controller.boardInfo.value.board_name == Define.BOARD_ALL ? controller.boardInfo.value.title : article.profile_name} | ${"count_view".tr} ${article.count_view} | ${"recommend".tr} ${article.count_like}",
+                                  "${controller.boardInfo.value.board_name == Define.BOARD_ALL ? Utils.convertBoardNameToKorean(controller.boardInfo.value.board_name) : article.profile_name} | 조회수 ${article.count_view} | 추천 ${article.count_like}",
                                 ),
                                 Text(
                                   Utils.toConvertFireDateToCommentTime(

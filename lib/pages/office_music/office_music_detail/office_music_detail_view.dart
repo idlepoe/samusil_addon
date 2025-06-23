@@ -100,13 +100,73 @@ class OfficeMusicDetailView extends GetView<OfficeMusicDetailController> {
                     const SizedBox(height: 8),
 
                     // Subtitle
-                    Text(
-                      '${trackArticle.track_count}곡 • ${controller.getTotalDuration()} • ${trackArticle.profile_name}',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: Color(0xFF8B95A1),
-                        fontWeight: FontWeight.w500,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          '${trackArticle.track_count}곡 • ${controller.getTotalDuration()} • ${trackArticle.profile_name}',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Color(0xFF8B95A1),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const Spacer(),
+                        // 좋아요 수와 조회수 표시
+                        Row(
+                          children: [
+                            Obx(
+                              () => AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 300),
+                                child: Icon(
+                                  controller.isLiked.value
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  key: ValueKey(controller.isLiked.value),
+                                  size: 16,
+                                  color:
+                                      controller.isLiked.value
+                                          ? Colors.red
+                                          : Colors.red.withOpacity(0.7),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Obx(
+                              () => AnimatedDefaultTextStyle(
+                                duration: const Duration(milliseconds: 300),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color:
+                                      controller.isLiked.value
+                                          ? Colors.red
+                                          : const Color(0xFF8B95A1),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                child: Text(
+                                  '${controller.trackArticle.value?.count_like ?? 0}',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Icon(
+                              Icons.visibility,
+                              size: 16,
+                              color: Color(0xFF8B95A1),
+                            ),
+                            const SizedBox(width: 4),
+                            Obx(
+                              () => Text(
+                                '${controller.trackArticle.value?.count_view ?? 0}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF8B95A1),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
 
                     if (trackArticle.description.isNotEmpty) ...[
@@ -143,19 +203,7 @@ class OfficeMusicDetailView extends GetView<OfficeMusicDetailController> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Obx(
-                          () => _buildIconButton(
-                            icon:
-                                controller.isLiked.value
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                            color:
-                                controller.isLiked.value
-                                    ? Colors.red
-                                    : const Color(0xFF8B95A1),
-                            onTap: controller.toggleLike,
-                          ),
-                        ),
+                        Obx(() => _buildAnimatedLikeButton()),
                         const SizedBox(width: 8),
                         Obx(
                           () => _buildIconButton(
@@ -412,6 +460,51 @@ class OfficeMusicDetailView extends GetView<OfficeMusicDetailController> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 애니메이션 좋아요 버튼
+  Widget _buildAnimatedLikeButton() {
+    return Material(
+      color: const Color(0xFFF2F4F6),
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: controller.toggleLike,
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          width: 52,
+          height: 52,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return ScaleTransition(scale: animation, child: child);
+            },
+            child:
+                controller.isLiked.value
+                    ? TweenAnimationBuilder<double>(
+                      key: const ValueKey('filled_heart'),
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      duration: const Duration(milliseconds: 300),
+                      builder: (context, value, child) {
+                        return Transform.scale(
+                          scale: 0.8 + (value * 0.2),
+                          child: Icon(
+                            Icons.favorite,
+                            size: 20,
+                            color: Colors.red.withOpacity(value),
+                          ),
+                        );
+                      },
+                    )
+                    : const Icon(
+                      key: ValueKey('empty_heart'),
+                      Icons.favorite_border,
+                      size: 20,
+                      color: Color(0xFF8B95A1),
+                    ),
           ),
         ),
       ),

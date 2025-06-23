@@ -3,7 +3,7 @@ import * as admin from 'firebase-admin';
 import { FIRESTORE_COLLECTION_ARTICLE } from '../utils/constants';
 import { verifyAuth } from '../utils/auth';
 import { awardPointsForComment } from '../utils/pointService';
-import { sendCommentNotification } from '../utils/notificationService';
+import { sendCommentNotification, sendSubCommentNotification } from '../utils/notificationService';
 
 export const createComment = onRequest({ 
   cors: true,
@@ -53,6 +53,10 @@ export const createComment = onRequest({
       profilePoint = profileData?.point || 0;
     }
 
+    // 대댓글 여부 확인
+    const isSubComment = commentData.is_sub || false;
+    const parentsKey = commentData.parents_key || '';
+
     // 댓글 서브컬렉션에 댓글 추가
     const commentRef = articleRef.collection('comments').doc();
     const comment = {
@@ -63,8 +67,8 @@ export const createComment = onRequest({
       profile_photo_url: commentData.profile_photo_url,
       profile_point: profilePoint,
       created_at: new Date(),
-      is_sub: false,
-      parents_key: '',
+      is_sub: isSubComment,
+      parents_key: parentsKey,
     };
 
     // 첫 번째 댓글인지 확인
@@ -81,20 +85,43 @@ export const createComment = onRequest({
 
     // 포인트 지급
     const pointsEarned = isFirstComment ? 8 : 3;
-    const newPoints = await awardPointsForComment(uid, commentRef.id, isFirstComment);
+    const newPoints = await awardPointsForComment(uid, commentRef.id, isFirstComment, isSubComment);
 
-    // 댓글 알림 발송
+    // 알림 발송
     const articleData = articleDoc.data()!;
-    const authorUid = articleData.author_uid;
     const commenterName = profileData?.name || commentData.profile_name;
 
-    await sendCommentNotification(
-      articleId,
-      articleData.title,
-      authorUid,
-      uid,
-      commenterName
-    );
+    if (isSubComment && parentsKey) {
+      // 대댓글인 경우: 부모 댓글 작성자에게 알림
+      const parentCommentRef = articleRef.collection('comments').doc(parentsKey);
+      const parentCommentDoc = await parentCommentRef.get();
+      
+      if (parentCommentDoc.exists) {
+        const parentCommentData = parentCommentDoc.data()!;
+        const parentCommentAuthorUid = parentCommentData.profile_uid;
+        const parentCommentAuthorName = parentCommentData.profile_name;
+
+        await sendSubCommentNotification(
+          articleId,
+          articleData.title,
+          parentCommentAuthorUid,
+          uid,
+          commenterName,
+          parentCommentAuthorName
+        );
+      }
+    } else {
+      // 일반 댓글인 경우: 게시글 작성자에게 알림
+      const authorUid = articleData.profile_uid;
+      
+      await sendCommentNotification(
+        articleId,
+        articleData.title,
+        authorUid,
+        uid,
+        commenterName
+      );
+    }
 
     // 업데이트된 댓글 목록 반환
     const commentsSnapshot = await articleRef.collection('comments').orderBy('created_at', 'asc').get();

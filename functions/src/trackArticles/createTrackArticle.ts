@@ -52,6 +52,7 @@ export const createTrackArticle = onRequest({
 
     // TrackArticle 문서 생성
     const trackArticleRef = db.collection(FIRESTORE_COLLECTION_TRACK_ARTICLE).doc();
+    const now = admin.firestore.Timestamp.now();
     const trackArticleData: TrackArticle = {
       id: trackArticleRef.id,
       profile_uid: uid,
@@ -64,7 +65,8 @@ export const createTrackArticle = onRequest({
 
       title: title,
       tracks: tracks,
-      created_at: admin.firestore.Timestamp.now(),
+      created_at: now,
+      updated_at: now,
       profile_point: profileData?.point || 0,
       total_duration: totalDuration,
       track_count: tracks.length,
@@ -76,7 +78,7 @@ export const createTrackArticle = onRequest({
     // 플레이리스트 생성 포인트 지급 (50점)
     const newPoints = await awardPointsForAction(
       uid,
-      'article',
+      '플레이리스트',
       50,
       `플레이리스트 "${title}" 생성`,
       trackArticleRef.id

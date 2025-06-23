@@ -27,7 +27,7 @@ class DateHeaderWidget extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    "month".tr,
+                    "월",
                     style: TextStyle(
                       fontWeight: FontWeight.normal,
                       color: Utils.weekDayColor(today.weekday),
@@ -59,7 +59,7 @@ class DateHeaderWidget extends StatelessWidget {
             ],
           ),
           Text(
-            "wish".tr,
+            "소원",
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
           ),
         ],

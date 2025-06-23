@@ -47,9 +47,9 @@ class ArticleEditController extends GetxController {
   final TextEditingController titleController = TextEditingController();
   final ImagePicker picker = ImagePicker();
 
-  final String? articleKey;
+  final String? articleId;
 
-  ArticleEditController({this.articleKey});
+  ArticleEditController({this.articleId});
 
   // 라우트 파라미터에서 boardName 받기
   String get boardNameFromRoute => Get.parameters['boardName'] ?? '';
@@ -65,6 +65,13 @@ class ArticleEditController extends GetxController {
       logger.d(
         "ArticleEditController boardInfoArg: ${boardInfoArg.board_name}",
       );
+
+      // 글쓰기 권한 체크
+      if (!boardInfoArg.isCanWrite) {
+        AppSnackbar.error('이 게시판에서는 글을 작성할 수 없습니다.');
+        Get.back();
+        return;
+      }
       return; // arguments가 있으면 라우트 파라미터는 무시
     }
 
@@ -76,10 +83,17 @@ class ArticleEditController extends GetxController {
       logger.d(
         "ArticleEditController boardName: $boardName, boardInfo: ${board.board_name}",
       );
+
+      // 글쓰기 권한 체크
+      if (!board.isCanWrite) {
+        AppSnackbar.error('이 게시판에서는 글을 작성할 수 없습니다.');
+        Get.back();
+        return;
+      }
     }
 
-    if (articleKey != null) {
-      // loadArticle(articleKey!);
+    if (articleId != null) {
+      // loadArticle(articleId!);
     }
   }
 
@@ -209,10 +223,10 @@ class ArticleEditController extends GetxController {
       // 프로필 정보 가져오기
       Profile profile = await App.getProfile();
 
-      if (articleKey != null) {
+      if (articleId != null) {
         // 게시글 수정
         Article article = Article(
-          id: articleKey!,
+          id: articleId!,
           board_name: boardInfo.value.board_name,
           profile_uid: profile.uid,
           profile_name: profile.name,
@@ -277,7 +291,7 @@ class ArticleEditController extends GetxController {
     } catch (e) {
       logger.e("writeArticle error: $e");
       AppSnackbar.error(
-        articleKey != null ? '게시글 수정 중 오류가 발생했습니다.' : '게시글 작성 중 오류가 발생했습니다.',
+        articleId != null ? '게시글 수정 중 오류가 발생했습니다.' : '게시글 작성 중 오류가 발생했습니다.',
       );
     } finally {
       isPressed.value = false;

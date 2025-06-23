@@ -237,30 +237,6 @@ class AllArticlesWidget extends StatelessWidget {
                                       const SizedBox(height: 4),
                                       Row(
                                         children: [
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 6,
-                                              vertical: 2,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: const Color(
-                                                0xFF0064FF,
-                                              ).withOpacity(0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(4),
-                                            ),
-                                            child: Text(
-                                              Arrays.getBoardInfo(
-                                                articleList[index].board_name,
-                                              ).title.tr,
-                                              style: const TextStyle(
-                                                fontSize: 11,
-                                                color: Color(0xFF0064FF),
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
                                           Text(
                                             articleList[index].profile_name,
                                             style: TextStyle(

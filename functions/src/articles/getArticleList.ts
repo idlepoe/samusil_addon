@@ -66,6 +66,7 @@ export const getArticleList = onRequest({
         title: data.title,
         contents: data.contents || [],
         created_at: data.created_at,
+        updated_at: data.updated_at,
         is_notice: data.is_notice || false,
         thumbnail: data.thumbnail,
       };

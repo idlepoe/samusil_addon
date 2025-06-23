@@ -32,7 +32,7 @@ class WishCardWidget extends GetView<WishController> {
                   ),
                   if (controller.wishList.length > 0)
                     Text(
-                      "${"total_wish".tr} ${Utils.numberFormat(controller.wishList.length)}",
+                      "지금까지 모인 소원 ${Utils.numberFormat(controller.wishList.length)}개",
                       style: const TextStyle(color: Colors.white, fontSize: 15),
                     ),
                 ],
@@ -110,7 +110,7 @@ class WishCardWidget extends GetView<WishController> {
                             ],
                           ),
                           subtitle: Text(
-                            "${wish.nick_name}(${wish.streak}${"streak".tr})",
+                            "${wish.nick_name}(${wish.streak}연속)",
                             style: const TextStyle(fontSize: 12),
                           ),
                         );

@@ -63,7 +63,7 @@ class ArticleDetailView extends GetView<ArticleDetailController> {
         onPressed: () => Get.back(),
       ),
       title: Text(
-        controller.boardInfo.value.title.tr,
+        controller.boardInfo.value.title,
         style: const TextStyle(
           color: Colors.black87,
           fontSize: 18,

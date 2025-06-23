@@ -37,7 +37,7 @@ export const toggleLike = onRequest({
     }
 
     const articleData = articleDoc.data()!;
-    const authorUid = articleData.author_uid;
+    const profileUid = articleData.profile_uid;
 
     const likeRef = articleRef.collection('likes').doc(uid);
     const likeDoc = await likeRef.get();
@@ -69,8 +69,8 @@ export const toggleLike = onRequest({
       isLiked = true;
 
       // 좋아요 시 포인트 지급 (작성자에게)
-      if (uid !== authorUid) {
-        newPoints = await awardPointsForLike(authorUid, articleId);
+      if (uid !== profileUid && profileUid && profileUid.trim()) {
+        newPoints = await awardPointsForLike(profileUid, articleId);
         pointsEarned = 1;
       }
 
@@ -87,7 +87,7 @@ export const toggleLike = onRequest({
       await sendLikeNotification(
         articleId,
         articleData.title,
-        authorUid,
+        profileUid,
         uid,
         likerName
       );

@@ -16,8 +16,27 @@ DateTime _timestampFromJson(dynamic timestamp) {
   if (timestamp is Timestamp) {
     return timestamp.toDate();
   } else if (timestamp is String) {
-    return DateTime.parse(timestamp);
+    try {
+      return DateTime.parse(timestamp);
+    } catch (e) {
+      print('Failed to parse timestamp string: $timestamp, error: $e');
+      return DateTime.now();
+    }
+  } else if (timestamp is Map<String, dynamic>) {
+    // Firestore Timestamp 객체가 Map 형태로 올 때 처리
+    if (timestamp.containsKey('_seconds')) {
+      final seconds = timestamp['_seconds'] as int;
+      final nanoseconds = timestamp['_nanoseconds'] as int? ?? 0;
+      return DateTime.fromMillisecondsSinceEpoch(
+        seconds * 1000 + (nanoseconds / 1000000).round(),
+      );
+    }
+  } else if (timestamp is int) {
+    // Unix timestamp (milliseconds)
+    return DateTime.fromMillisecondsSinceEpoch(timestamp);
   }
+
+  print('Unknown timestamp format: $timestamp (${timestamp.runtimeType})');
   return DateTime.now();
 }
 

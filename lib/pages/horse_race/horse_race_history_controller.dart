@@ -5,6 +5,26 @@ import 'package:logger/logger.dart';
 import '../../models/horse_race.dart';
 import '../../define/define.dart';
 
+class CoinWinStats {
+  final String coinId;
+  final String name;
+  final String symbol;
+  final String image;
+  final int totalRaces;
+  final int wins;
+  final double winRate;
+
+  CoinWinStats({
+    required this.coinId,
+    required this.name,
+    required this.symbol,
+    required this.image,
+    required this.totalRaces,
+    required this.wins,
+    required this.winRate,
+  });
+}
+
 class RaceHistoryItem {
   final String id;
   final String title;
@@ -68,11 +88,14 @@ class HorseRaceHistoryController extends GetxController {
   final logger = Logger();
   final RxList<RaceHistoryItem> raceHistory = <RaceHistoryItem>[].obs;
   final RxBool isLoading = true.obs;
+  final RxList<CoinWinStats> topWinners = <CoinWinStats>[].obs;
+  final RxBool isLoadingStats = true.obs;
 
   @override
   void onInit() {
     super.onInit();
     loadHistory();
+    loadTopWinners();
   }
 
   /// 경마 히스토리 로드
@@ -134,9 +157,132 @@ class HorseRaceHistoryController extends GetxController {
     }
   }
 
+  /// 24시간 동안 가장 많이 승리한 코인들 로드
+  Future<void> loadTopWinners() async {
+    try {
+      isLoadingStats.value = true;
+
+      // 24시간 전 시간 계산
+      final now = DateTime.now();
+      final yesterday = now.subtract(const Duration(hours: 24));
+
+      // 24시간 내 완료된 경마들 가져오기
+      final raceQuery =
+          await FirebaseFirestore.instance
+              .collection(Define.FIRESTORE_COLLECTION_HORSE_RACE)
+              .where('isFinished', isEqualTo: true)
+              .where('endTime', isGreaterThan: Timestamp.fromDate(yesterday))
+              .get();
+
+      logger.i('24시간 내 완료된 경마 수: ${raceQuery.docs.length}');
+
+      // 24시간 내 경마가 없으면 빈 리스트 반환
+      if (raceQuery.docs.isEmpty) {
+        logger.i('24시간 내 완료된 경마가 없습니다');
+        topWinners.value = [];
+        return;
+      }
+
+      // 코인별 승리 통계 계산
+      final Map<String, Map<String, dynamic>> coinStats = {};
+
+      for (final raceDoc in raceQuery.docs) {
+        try {
+          final raceData = raceDoc.data();
+          final race = HorseRace.fromJson(raceData);
+
+          // 각 말의 최종 위치 계산
+          final horsesWithFinalPosition =
+              race.horses.map((horse) {
+                final finalPosition =
+                    horse.movements.isNotEmpty
+                        ? horse.movements.last
+                        : horse.currentPosition;
+                return MapEntry(horse, finalPosition);
+              }).toList();
+
+          // 최종 위치로 정렬 (가장 앞선 말이 1등)
+          horsesWithFinalPosition.sort((a, b) => b.value.compareTo(a.value));
+
+          // 1등 말 찾기
+          if (horsesWithFinalPosition.isNotEmpty) {
+            final winner = horsesWithFinalPosition.first.key;
+
+            if (!coinStats.containsKey(winner.coinId)) {
+              coinStats[winner.coinId] = {
+                'name': winner.name,
+                'symbol': winner.symbol,
+                'image': winner.image,
+                'totalRaces': 0,
+                'wins': 0,
+              };
+            }
+
+            coinStats[winner.coinId]!['wins']++;
+          }
+
+          // 모든 말의 총 경주 수 증가
+          for (final horse in race.horses) {
+            if (!coinStats.containsKey(horse.coinId)) {
+              coinStats[horse.coinId] = {
+                'name': horse.name,
+                'symbol': horse.symbol,
+                'image': horse.image,
+                'totalRaces': 0,
+                'wins': 0,
+              };
+            }
+            coinStats[horse.coinId]!['totalRaces']++;
+          }
+        } catch (e) {
+          logger.e('경마 통계 처리 오류: $e');
+          continue;
+        }
+      }
+
+      // CoinWinStats 객체로 변환 및 정렬
+      final List<CoinWinStats> winStats =
+          coinStats.entries.where((entry) => entry.value['totalRaces'] > 0).map(
+            (entry) {
+              final stats = entry.value;
+              final winRate =
+                  stats['totalRaces'] > 0
+                      ? (stats['wins'] / stats['totalRaces']) * 100
+                      : 0.0;
+
+              return CoinWinStats(
+                coinId: entry.key,
+                name: stats['name'],
+                symbol: stats['symbol'],
+                image: stats['image'],
+                totalRaces: stats['totalRaces'],
+                wins: stats['wins'],
+                winRate: winRate,
+              );
+            },
+          ).toList();
+
+      // 승수로 정렬 후 승률로 정렬
+      winStats.sort((a, b) {
+        if (a.wins != b.wins) {
+          return b.wins.compareTo(a.wins); // 승수 내림차순
+        }
+        return b.winRate.compareTo(a.winRate); // 승률 내림차순
+      });
+
+      // 상위 3개만 저장
+      topWinners.value = winStats.take(3).toList();
+    } catch (e) {
+      logger.e('승리 통계 로딩 오류: $e');
+      topWinners.value = [];
+    } finally {
+      isLoadingStats.value = false;
+    }
+  }
+
   /// 히스토리 새로고침
   Future<void> refreshHistory() async {
-    await loadHistory();
+    await Future.wait([loadHistory(), loadTopWinners()]);
   }
 
   /// 날짜 포맷팅

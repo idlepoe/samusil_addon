@@ -31,4 +31,6 @@ DateTime _toDateTime(dynamic value) {
   }
   return DateTime.now();
 }
-bool _toBool(dynamic value) => value?.toString().toLowerCase() == 'true' || value == true; 
+
+bool _toBool(dynamic value) =>
+    value?.toString().toLowerCase() == 'true' || value == true;

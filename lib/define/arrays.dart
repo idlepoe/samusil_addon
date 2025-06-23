@@ -11,7 +11,7 @@ class Arrays {
         return BoardInfo(
           Define.BOARD_PROFILE,
           const Icon(Icons.person_outline),
-          "profile",
+          "프로필",
           "profile",
           false, // 프로필은 작성 불가
         );
@@ -19,7 +19,7 @@ class Arrays {
         return BoardInfo(
           Define.BOARD_WISH,
           const Icon(LineIcons.magic),
-          "wish",
+          "소원",
           "wish_description",
           true, // 소원은 작성 가능
         );
@@ -27,7 +27,7 @@ class Arrays {
         return BoardInfo(
           Define.BOARD_ALL,
           const Icon(LineIcons.frog),
-          "all_board",
+          "전체 게시판",
           "all_board_description",
           true, // 전체게시판은 작성 가능
         );
@@ -35,7 +35,7 @@ class Arrays {
         return BoardInfo(
           Define.BOARD_FREE,
           const Icon(LineIcons.freebsd),
-          "free_board",
+          "잡담 게시판",
           "free_board_description",
           true, // 자유게시판은 작성 가능
         );
@@ -43,7 +43,7 @@ class Arrays {
         return BoardInfo(
           Define.BOARD_GAME_NEWS,
           const Icon(LineIcons.gamepad),
-          "game_news_board",
+          "게임 뉴스",
           "game_news_board_description",
           false, // 게임뉴스는 읽기 전용
         );
@@ -51,7 +51,7 @@ class Arrays {
         return BoardInfo(
           Define.BOARD_ENTERTAINMENT_NEWS,
           const Icon(LineIcons.heart),
-          "entertainment_news_board",
+          "연예 뉴스",
           "entertainment_news_board_description",
           false, // 연예뉴스는 읽기 전용
         );

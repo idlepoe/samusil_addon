@@ -22,15 +22,15 @@ export const updateArticle = onRequest({
     const decoded = await verifyAuth(req);
     const uid = decoded.uid;
 
-    const { articleKey, contents, title } = req.body;
+    const { articleId, contents, title } = req.body;
     
-    if (!articleKey || !contents || !title) {
-      res.status(400).json({ success: false, error: 'Article key, title and contents are required' });
+    if (!articleId || !contents || !title) {
+      res.status(400).json({ success: false, error: 'Article ID, title and contents are required' });
       return;
     }
 
     const db = admin.firestore();
-    const articleRef = db.collection(FIRESTORE_COLLECTION_ARTICLE).doc(articleKey);
+    const articleRef = db.collection(FIRESTORE_COLLECTION_ARTICLE).doc(articleId);
 
     // 게시글 존재 여부 및 작성자 확인
     const articleDoc = await articleRef.get();
@@ -51,10 +51,11 @@ export const updateArticle = onRequest({
       return;
     }
 
-    // 본문만 업데이트
+    // 게시글 업데이트 (created_at은 유지, updated_at만 갱신)
     await articleRef.update({
+      title: title,
       contents: contents,
-      last_updated: admin.firestore.FieldValue.serverTimestamp(),
+      updated_at: admin.firestore.FieldValue.serverTimestamp(),
     });
 
     res.status(200).json({

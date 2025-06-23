@@ -1,9 +1,13 @@
 import 'package:get/get.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 import '../../../models/track_article.dart';
+import '../../../models/profile.dart';
 import '../../../utils/http_service.dart';
+import '../../../utils/app.dart';
+import '../../../define/define.dart';
 import '../../../components/appSnackbar.dart';
 import '../../../main.dart';
 import '../../dash_board/dash_board_controller.dart';
@@ -43,10 +47,8 @@ class OfficeMusicDetailController extends GetxController {
       if (response.success && response.data != null) {
         trackArticle.value = TrackArticle.fromJson(response.data);
 
-        // 좋아요 상태 초기화 (서버에서 isLiked 정보를 받아오는 경우)
-        if (response.data.containsKey('isLiked')) {
-          isLiked.value = response.data['isLiked'] as bool? ?? false;
-        }
+        // 좋아요 상태 확인
+        await checkLikeStatus();
 
         // 즐겨찾기 상태 확인
         await _checkFavoriteStatus();
@@ -149,6 +151,26 @@ class OfficeMusicDetailController extends GetxController {
     }
   }
 
+  // 좋아요 상태 확인 (Article Detail과 동일한 방식)
+  Future<void> checkLikeStatus() async {
+    if (trackArticle.value == null) return;
+
+    try {
+      final profile = await App.getProfile();
+      final db = FirebaseFirestore.instance;
+      final likeRef = db
+          .collection(Define.FIRESTORE_COLLECTION_TRACK_ARTICLE)
+          .doc(trackArticle.value!.id)
+          .collection('likes')
+          .doc(profile.uid);
+
+      final likeDoc = await likeRef.get();
+      isLiked.value = likeDoc.exists;
+    } catch (e) {
+      logger.e('좋아요 상태 확인 실패: $e');
+    }
+  }
+
   // 좋아요 토글 (낙관적 업데이트)
   Future<void> toggleLike() async {
     if (trackArticle.value == null) return;
@@ -165,7 +187,7 @@ class OfficeMusicDetailController extends GetxController {
     isLiked.value = newIsLiked;
     trackArticle.value = trackArticle.value!.copyWith(count_like: newLikeCount);
 
-    // 즉시 메시지 표시
+    // 즉시 성공 메시지 표시
     if (newIsLiked) {
       AppSnackbar.success('좋아요를 눌렀습니다.');
     } else {
@@ -181,13 +203,13 @@ class OfficeMusicDetailController extends GetxController {
       if (response.success && response.data != null) {
         final data = response.data;
         final serverIsLiked = data['isLiked'] as bool;
-        final serverLikeCount = data['likeCount'] as int;
+        final serverCountLike = data['countLike'] as int;
 
         // 서버 응답이 예상과 다른 경우 서버 데이터로 동기화
-        if (serverIsLiked != newIsLiked || serverLikeCount != newLikeCount) {
+        if (serverIsLiked != newIsLiked || serverCountLike != newLikeCount) {
           isLiked.value = serverIsLiked;
           trackArticle.value = trackArticle.value!.copyWith(
-            count_like: serverLikeCount,
+            count_like: serverCountLike,
           );
         }
       } else {

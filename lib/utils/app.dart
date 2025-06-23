@@ -438,8 +438,9 @@ class App {
       );
 
       if (response.isSuccess) {
-        // response.data는 { success: true, data: comments } 구조
-        final commentsData = response.data!['data'] as List<dynamic>;
+        // response.data는 { success: true, data: { comments: [...], pointsEarned: 3, ... } } 구조
+        final responseData = response.data!['data'] as Map<String, dynamic>;
+        final commentsData = responseData['comments'] as List<dynamic>;
         result =
             commentsData.map((json) {
               // created_at이 Timestamp 객체인 경우 DateTime으로 변환
@@ -558,7 +559,7 @@ class App {
       );
 
       if (response.isSuccess && response.data != null) {
-        // response.data는 { success: true, data: comments } 구조
+        // response.data는 { success: true, data: comments } 구조 (deleteComment는 직접 배열 반환)
         final commentsData = response.data!['data'] as List<dynamic>;
         result =
             commentsData.map((json) {
@@ -639,7 +640,7 @@ class App {
         );
 
         if (response.isSuccess && response.data != null) {
-          // response.data는 { success: true, data: comments } 구조
+          // response.data는 { success: true, data: comments } 구조 (deleteComment는 직접 배열 반환)
           final commentsData = response.data!['data'] as List<dynamic>;
           result =
               commentsData.map((json) {
@@ -867,18 +868,10 @@ class App {
   static Future<String?> updateArticle({required Article article}) async {
     try {
       final articleData = {
-        'board_name': article.board_name,
-        'profile_uid': article.profile_uid,
-        'profile_name': article.profile_name,
-        'profile_photo_url': article.profile_photo_url,
-        'count_view': article.count_view,
-        'count_like': article.count_like,
-        'count_unlike': article.count_unlike,
+        'articleId': article.id,
         'title': article.title,
         'contents':
             article.contents.map((content) => content.toJson()).toList(),
-        'is_notice': article.is_notice,
-        'thumbnail': article.thumbnail,
       };
 
       logger.d("updateArticle articleData: $articleData");

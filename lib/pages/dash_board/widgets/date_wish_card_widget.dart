@@ -53,7 +53,7 @@ class DateWishCardWidget extends GetView<WishController> {
                             ),
                           ),
                           Text(
-                            "month".tr,
+                            "월",
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
@@ -100,7 +100,7 @@ class DateWishCardWidget extends GetView<WishController> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        "wish".tr,
+                        "소원",
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w700,
@@ -149,7 +149,7 @@ class DateWishCardWidget extends GetView<WishController> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      "${"total_wish".tr} ${Utils.numberFormat(controller.wishList.length)}",
+                      "지금까지 모인 소원 ${Utils.numberFormat(controller.wishList.length)}개",
                       style: const TextStyle(color: Colors.white, fontSize: 15),
                     ),
                   ),
@@ -167,22 +167,26 @@ class DateWishCardWidget extends GetView<WishController> {
                     ) {
                       final wish = controller.wishList[index];
                       final isMyWish = wish.uid == controller.profile.value.uid;
-                      
+
                       return ListTile(
                         leading: Container(
                           width: 30,
                           height: 30,
                           decoration: BoxDecoration(
-                            color: isMyWish 
-                                ? const Color(0xFF00C851).withOpacity(0.1)
-                                : const Color(0xFF0064FF).withOpacity(0.1),
+                            color:
+                                isMyWish
+                                    ? const Color(0xFF00C851).withOpacity(0.1)
+                                    : const Color(0xFF0064FF).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(15),
                           ),
                           child: Center(
                             child: Text(
                               "${wish.index}",
                               style: TextStyle(
-                                color: isMyWish ? const Color(0xFF00C851) : const Color(0xFF0064FF),
+                                color:
+                                    isMyWish
+                                        ? const Color(0xFF00C851)
+                                        : const Color(0xFF0064FF),
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -200,9 +204,14 @@ class DateWishCardWidget extends GetView<WishController> {
                             ),
                             if (isMyWish)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 1,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF00C851).withOpacity(0.1),
+                                  color: const Color(
+                                    0xFF00C851,
+                                  ).withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: const Text(
@@ -217,7 +226,7 @@ class DateWishCardWidget extends GetView<WishController> {
                           ],
                         ),
                         subtitle: Text(
-                          "${wish.nick_name}(${wish.streak}${"streak".tr})",
+                          "${wish.nick_name}(${wish.streak}연속)",
                           style: const TextStyle(fontSize: 12),
                         ),
                       );

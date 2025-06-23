@@ -12,9 +12,9 @@ class ArticleEditBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut<ArticleEditController>(
-      () => ArticleEditController(articleKey: articleId),
+      () => ArticleEditController(articleId: articleId),
     );
-    
+
     // boardInfo가 있으면 컨트롤러에 설정
     if (boardInfo != null) {
       final controller = Get.find<ArticleEditController>();

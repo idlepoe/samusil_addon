@@ -4,7 +4,7 @@ const db = admin.firestore();
 
 export interface NotificationData {
   id?: string;
-  type: 'comment' | 'like';
+  type: 'comment' | 'like' | 'sub_comment';
   title: string;
   body: string;
   article_id: string;
@@ -171,5 +171,52 @@ export async function sendLikeNotification(
     );
   } catch (error) {
     console.error('Error sending like notification:', error);
+  }
+}
+
+/**
+ * 대댓글 알림 처리
+ */
+export async function sendSubCommentNotification(
+  articleId: string,
+  articleTitle: string,
+  parentCommentAuthorUid: string,
+  subCommenterUid: string,
+  subCommenterName: string,
+  parentCommentAuthorName: string
+): Promise<void> {
+  try {
+    // 자신의 댓글에 대댓글을 달면 알림 발송하지 않음
+    if (parentCommentAuthorUid === subCommenterUid) {
+      return;
+    }
+
+    const title = '새로운 답글이 달렸습니다';
+    const body = `${subCommenterName}님이 ${parentCommentAuthorName}님의 댓글에 답글을 달았습니다`;
+
+    // 알림 히스토리에 추가
+    await addNotificationHistory(parentCommentAuthorUid, {
+      type: 'comment',
+      title,
+      body,
+      article_id: articleId,
+      article_title: articleTitle,
+      sender_uid: subCommenterUid,
+      sender_name: subCommenterName,
+    });
+
+    // 푸시 알림 발송 (부모 댓글 작성자의 UID를 토픽으로 사용)
+    await sendPushNotification(
+      parentCommentAuthorUid,
+      title,
+      body,
+      {
+        type: 'sub_comment',
+        article_id: articleId,
+        sender_uid: subCommenterUid,
+      }
+    );
+  } catch (error) {
+    console.error('Error sending sub comment notification:', error);
   }
 } 

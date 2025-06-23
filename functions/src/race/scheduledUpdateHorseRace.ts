@@ -156,7 +156,7 @@ async function finishRace(raceRef: admin.firestore.DocumentReference, race: any)
       wonAmount = bet.amount * (multipliers[bet.betType as keyof typeof multipliers] || 1);
       
       // 포인트 지급
-      await addPoint(bet.userId, wonAmount, '코인 경마 우승');
+      await addPoint(bet.userId, wonAmount, '코인 경마 우승', '베팅');
       
       await betDoc.ref.update({ isWon: true, wonAmount: wonAmount });
 

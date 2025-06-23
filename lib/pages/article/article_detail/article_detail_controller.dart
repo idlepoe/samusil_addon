@@ -15,13 +15,14 @@ import '../../../models/board_info.dart';
 import '../../../models/main_comment.dart';
 import '../../../models/profile.dart';
 import '../../../utils/app.dart';
+import '../../../utils/http_service.dart';
 import '../../../utils/util.dart';
 
 class ArticleDetailController extends GetxController {
   var logger = Logger();
 
   // 상태 관리
-  final RxString articleKey = "".obs;
+  final RxString articleId = "".obs;
   final Rx<BoardInfo> boardInfo = BoardInfo.init().obs;
   final Rx<Article> article =
       Article(
@@ -61,7 +62,7 @@ class ArticleDetailController extends GetxController {
   void onInit() {
     super.onInit();
     // 라우트 파라미터에서 articleId 설정
-    articleKey.value = articleIdFromRoute;
+    articleId.value = articleIdFromRoute;
 
     // 댓글 텍스트 변경 감지
     commentController.addListener(() {
@@ -82,13 +83,13 @@ class ArticleDetailController extends GetxController {
 
   // 데이터 로드
   Future<void> loadData() async {
-    if (articleKey.value.isEmpty) {
-      logger.e('articleKey가 비어있습니다');
+    if (articleId.value.isEmpty) {
+      logger.e('articleId가 비어있습니다');
       return;
     }
 
     try {
-      article.value = await App.getArticle(id: articleKey.value);
+      article.value = await App.getArticle(id: articleId.value);
       boardInfo.value = Arrays.getBoardInfo(article.value.board_name);
       profile.value = await App.getProfile();
       isAlreadyVote.value = await Utils.checkAlreadyVote(article.value.id);
@@ -142,14 +143,18 @@ class ArticleDetailController extends GetxController {
     try {
       isCommentLoading.value = true;
 
+      // 대댓글 여부 확인
+      final isSubComment = subComment.value != null;
+      final parentsKey = isSubComment ? subComment.value!.id : "";
+
       MainComment comment = MainComment(
         id: "",
         contents: commentController.text.trim(),
         profile_uid: profile.value.uid,
         profile_name: profile.value.name,
         profile_photo_url: profile.value.photo_url,
-        is_sub: false,
-        parents_key: "",
+        is_sub: isSubComment,
+        parents_key: parentsKey,
       );
 
       List<MainComment> newComments = await App.createComment(
@@ -161,14 +166,15 @@ class ArticleDetailController extends GetxController {
         comments.value = newComments;
         commentController.clear();
         commentFocusNode.unfocus();
-        AppSnackbar.success('댓글이 작성되었습니다.');
+        clearSubComment(); // 대댓글 상태 초기화
+        AppSnackbar.success(isSubComment ? '답글이 작성되었습니다.' : '댓글이 작성되었습니다.');
 
         // 댓글 수 업데이트
         article.value = article.value.copyWith(
           count_comments: article.value.count_comments + 1,
         );
       } else {
-        AppSnackbar.error('댓글 작성에 실패했습니다.');
+        AppSnackbar.error(isSubComment ? '답글 작성에 실패했습니다.' : '댓글 작성에 실패했습니다.');
       }
     } catch (e) {
       logger.e(e);
@@ -182,7 +188,7 @@ class ArticleDetailController extends GetxController {
   Future<void> deleteComment(MainComment comment) async {
     try {
       List<MainComment> newComments = await App.deleteComment(
-        articleId: articleKey.value,
+        articleId: articleId.value,
         comment: comment,
       );
 
@@ -312,38 +318,55 @@ class ArticleDetailController extends GetxController {
     comments.value = sortedComments;
   }
 
-  // 좋아요 토글
+  // 좋아요 토글 (낙관적 업데이트)
   Future<void> toggleLike() async {
-    try {
-      final db = FirebaseFirestore.instance;
-      final articleRef = db
-          .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
-          .doc(article.value.id);
-      final likeRef = articleRef.collection('likes').doc(profile.value.uid);
+    // 현재 상태 백업 (롤백용)
+    final originalIsLiked = isLiked.value;
+    final originalLikeCount = article.value.count_like;
 
-      if (isLiked.value) {
-        // 좋아요 취소
-        await articleRef.update({'count_like': FieldValue.increment(-1)});
-        await likeRef.delete(); // 좋아요 상태 삭제
-        article.value = article.value.copyWith(
-          count_like: article.value.count_like - 1,
-        );
-        isLiked.value = false;
+    // 즉시 UI 업데이트 (낙관적 업데이트)
+    final newIsLiked = !originalIsLiked;
+    final newLikeCount =
+        newIsLiked ? originalLikeCount + 1 : originalLikeCount - 1;
+
+    isLiked.value = newIsLiked;
+    article.value = article.value.copyWith(count_like: newLikeCount);
+
+    // 즉시 성공 메시지 표시
+    if (newIsLiked) {
+      AppSnackbar.success('좋아요를 눌렀습니다.');
+    } else {
+      AppSnackbar.info('좋아요를 취소했습니다.');
+    }
+
+    try {
+      // 백그라운드에서 서버 처리
+      final response = await HttpService().toggleLike(
+        articleId: article.value.id,
+      );
+
+      if (response.success && response.data != null) {
+        final data = response.data;
+        final serverIsLiked = data['isLiked'] as bool;
+        final serverCountLike = data['countLike'] as int;
+
+        // 서버 응답이 예상과 다른 경우 서버 데이터로 동기화
+        if (serverIsLiked != newIsLiked || serverCountLike != newLikeCount) {
+          isLiked.value = serverIsLiked;
+          article.value = article.value.copyWith(count_like: serverCountLike);
+        }
       } else {
-        // 좋아요 추가
-        await articleRef.update({'count_like': FieldValue.increment(1)});
-        await likeRef.set({
-          'uid': profile.value.uid,
-          'created_at': FieldValue.serverTimestamp(),
-        }); // 좋아요 상태 저장
-        article.value = article.value.copyWith(
-          count_like: article.value.count_like + 1,
-        );
-        isLiked.value = true;
+        // 서버 오류 시 원래 상태로 롤백
+        isLiked.value = originalIsLiked;
+        article.value = article.value.copyWith(count_like: originalLikeCount);
+        AppSnackbar.error(response.error ?? '좋아요 처리에 실패했습니다. 다시 시도해주세요.');
       }
     } catch (e) {
+      // 네트워크 오류 시 원래 상태로 롤백
       logger.e('좋아요 토글 실패: $e');
-      AppSnackbar.error('좋아요 처리 중 오류가 발생했습니다.');
+      isLiked.value = originalIsLiked;
+      article.value = article.value.copyWith(count_like: originalLikeCount);
+      AppSnackbar.error('네트워크 오류로 좋아요 처리에 실패했습니다. 다시 시도해주세요.');
     }
   }
 
@@ -352,7 +375,7 @@ class ArticleDetailController extends GetxController {
     try {
       final db = FirebaseFirestore.instance;
       final likeRef = db
-          .collection('articles')
+          .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
           .doc(article.value.id)
           .collection('likes')
           .doc(profile.value.uid);
