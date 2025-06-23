@@ -14,6 +14,7 @@ import 'widgets/entertainment_news_list_widget.dart';
 import 'widgets/all_articles_widget.dart';
 import 'widgets/music_player_widget.dart';
 import 'widgets/music_salon_widget.dart';
+import 'widgets/favorite_playlists_widget.dart';
 
 class DashBoardView extends GetView<DashBoardController> {
   const DashBoardView({super.key});
@@ -70,6 +71,10 @@ class DashBoardView extends GetView<DashBoardController> {
 
                       // 뮤직살롱 섹션
                       const MusicSalonWidget(),
+                      const SizedBox(height: 20),
+
+                      // 즐겨찾기 플레이리스트 섹션
+                      FavoritePlaylistsWidget(controller: controller),
                       const SizedBox(height: 20),
 
                       // 게임 뉴스 섹션

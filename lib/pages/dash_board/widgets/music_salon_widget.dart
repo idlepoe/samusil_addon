@@ -62,7 +62,7 @@ class MusicSalonWidget extends GetView<DashBoardController> {
                         width: 4,
                         height: 20,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF3182F6),
+                          color: const Color(0xFF9C88FF),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),

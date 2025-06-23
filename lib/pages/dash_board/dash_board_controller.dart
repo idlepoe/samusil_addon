@@ -19,6 +19,7 @@ import '../../utils/util.dart';
 import '../wish/wish_controller.dart';
 import '../../controllers/profile_controller.dart';
 import '../../controllers/horse_race_controller.dart';
+import '../office_music/office_music_detail/office_music_detail_controller.dart';
 import '../../main.dart';
 
 class DashBoardController extends GetxController {
@@ -41,6 +42,10 @@ class DashBoardController extends GetxController {
   // 뮤직살롱 데이터 관리
   final RxList<TrackArticle> musicSalonPlaylists = <TrackArticle>[].obs;
   final RxBool isLoadingMusicSalon = false.obs;
+
+  // 즐겨찾기 플레이리스트 데이터 관리
+  final RxList<TrackArticle> favoritePlaylists = <TrackArticle>[].obs;
+  final RxBool isLoadingFavoritePlaylists = false.obs;
 
   // 음악 플레이어 관리
   YoutubePlayerController? _youtubeController;
@@ -164,6 +169,8 @@ class DashBoardController extends GetxController {
     await loadEntertainmentNews();
     logger.i("Loading music salon...");
     await loadMusicSalon();
+    logger.i("Loading favorite playlists...");
+    await loadFavoritePlaylists();
 
     logger.i("DashBoardController init completed successfully");
   }
@@ -188,12 +195,13 @@ class DashBoardController extends GetxController {
     logger.i("Dashboard refresh started");
 
     try {
-      // 게임뉴스, 연예뉴스, 자유게시판, 뮤직살롱 데이터 동시에 새로고침
+      // 게임뉴스, 연예뉴스, 자유게시판, 뮤직살롱, 즐겨찾기 플레이리스트 데이터 동시에 새로고침
       await Future.wait([
         loadGameNews(),
         loadEntertainmentNews(),
         loadAllArticles(),
         loadMusicSalon(),
+        loadFavoritePlaylists(),
       ]);
 
       logger.i("Dashboard refresh completed successfully");
@@ -359,6 +367,34 @@ class DashBoardController extends GetxController {
       isLoadingMusicSalon.value = false;
       logger.i(
         "loadMusicSalon completed - final count: ${musicSalonPlaylists.length}",
+      );
+    }
+  }
+
+  // 즐겨찾기 플레이리스트 로딩
+  Future<void> loadFavoritePlaylists() async {
+    if (isLoadingFavoritePlaylists.value) return;
+
+    isLoadingFavoritePlaylists.value = true;
+    try {
+      logger.i("Starting loadFavoritePlaylists...");
+
+      // OfficeMusicDetailController의 static 메서드 사용
+      final playlists = await OfficeMusicDetailController.getFavoritePlaylist();
+
+      // 최대 3개만 표시
+      favoritePlaylists.value = playlists.take(3).toList();
+
+      logger.i(
+        "Successfully loaded ${favoritePlaylists.length} favorite playlists",
+      );
+    } catch (e) {
+      logger.e("Error loading favorite playlists: $e");
+      favoritePlaylists.value = [];
+    } finally {
+      isLoadingFavoritePlaylists.value = false;
+      logger.i(
+        "loadFavoritePlaylists completed - final count: ${favoritePlaylists.length}",
       );
     }
   }
