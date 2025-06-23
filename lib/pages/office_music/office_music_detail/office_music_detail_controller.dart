@@ -4,6 +4,7 @@ import '../../../models/track_article.dart';
 import '../../../utils/http_service.dart';
 import '../../../components/appSnackbar.dart';
 import '../../../main.dart';
+import '../../dash_board/dash_board_controller.dart';
 
 class OfficeMusicDetailController extends GetxController {
   final trackArticle = Rx<TrackArticle?>(null);
@@ -71,20 +72,36 @@ class OfficeMusicDetailController extends GetxController {
     }
   }
 
-  // 트랙 재생 (YouTube 앱으로 이동)
+  // 트랙 재생 (Dashboard 플레이어 사용)
   void playTrack(int index) {
     if (trackArticle.value == null ||
         index >= trackArticle.value!.tracks.length)
       return;
 
-    currentPlayingIndex.value = index;
-    final track = trackArticle.value!.tracks[index];
+    try {
+      currentPlayingIndex.value = index;
 
-    // YouTube 링크로 이동
-    final youtubeUrl = 'https://www.youtube.com/watch?v=${track.videoId}';
+      // Dashboard로 이동
+      Get.offAllNamed('/');
 
-    // TODO: URL launcher로 YouTube 앱 실행
-    AppSnackbar.info('${track.title} 재생');
+      // Dashboard 컨트롤러 찾기 (약간의 지연 후)
+      Future.delayed(const Duration(milliseconds: 100), () {
+        try {
+          final dashboardController = Get.find<DashBoardController>();
+          dashboardController.playPlaylist(
+            trackArticle.value!,
+            startIndex: index,
+          );
+          AppSnackbar.info('${trackArticle.value!.tracks[index].title} 재생');
+        } catch (e) {
+          logger.e('playTrack - Dashboard controller error: $e');
+          AppSnackbar.error('재생 중 오류가 발생했습니다.');
+        }
+      });
+    } catch (e) {
+      logger.e('playTrack error: $e');
+      AppSnackbar.error('재생 중 오류가 발생했습니다.');
+    }
   }
 
   // 전체 재생
@@ -92,8 +109,25 @@ class OfficeMusicDetailController extends GetxController {
     if (trackArticle.value == null || trackArticle.value!.tracks.isEmpty)
       return;
 
-    playTrack(0);
-    AppSnackbar.success('전체 재생을 시작합니다.');
+    try {
+      // Dashboard로 이동
+      Get.offAllNamed('/');
+
+      // Dashboard 컨트롤러 찾기 (약간의 지연 후)
+      Future.delayed(const Duration(milliseconds: 100), () {
+        try {
+          final dashboardController = Get.find<DashBoardController>();
+          dashboardController.playPlaylist(trackArticle.value!, startIndex: 0);
+          AppSnackbar.success('전체 재생을 시작합니다.');
+        } catch (e) {
+          logger.e('playAll - Dashboard controller error: $e');
+          AppSnackbar.error('재생 중 오류가 발생했습니다.');
+        }
+      });
+    } catch (e) {
+      logger.e('playAll error: $e');
+      AppSnackbar.error('재생 중 오류가 발생했습니다.');
+    }
   }
 
   // 셔플 재생
@@ -101,13 +135,33 @@ class OfficeMusicDetailController extends GetxController {
     if (trackArticle.value == null || trackArticle.value!.tracks.isEmpty)
       return;
 
-    final tracks = trackArticle.value!.tracks;
-    final randomIndex =
-        (tracks.length * (DateTime.now().millisecondsSinceEpoch % 100) / 100)
-            .floor();
+    try {
+      final tracks = trackArticle.value!.tracks;
+      final randomIndex =
+          (tracks.length * (DateTime.now().millisecondsSinceEpoch % 100) / 100)
+              .floor();
 
-    playTrack(randomIndex);
-    AppSnackbar.success('셔플 재생을 시작합니다.');
+      // Dashboard로 이동
+      Get.offAllNamed('/');
+
+      // Dashboard 컨트롤러 찾기 (약간의 지연 후)
+      Future.delayed(const Duration(milliseconds: 100), () {
+        try {
+          final dashboardController = Get.find<DashBoardController>();
+          dashboardController.playPlaylist(
+            trackArticle.value!,
+            startIndex: randomIndex,
+          );
+          AppSnackbar.success('셔플 재생을 시작합니다.');
+        } catch (e) {
+          logger.e('shufflePlay - Dashboard controller error: $e');
+          AppSnackbar.error('재생 중 오류가 발생했습니다.');
+        }
+      });
+    } catch (e) {
+      logger.e('shufflePlay error: $e');
+      AppSnackbar.error('재생 중 오류가 발생했습니다.');
+    }
   }
 
   // 공유하기

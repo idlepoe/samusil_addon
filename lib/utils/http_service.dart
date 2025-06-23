@@ -37,7 +37,7 @@ class HttpService {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          logger.i("🚀 [REQUEST] ${options.method} ${options.uri}");
+          // logger.i("🚀 [REQUEST] ${options.method} ${options.uri}");
           if (options.data != null) logger.d("Data: ${options.data}");
 
           try {

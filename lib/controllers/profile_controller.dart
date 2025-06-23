@@ -39,13 +39,13 @@ class ProfileController extends GetxController {
   Future<void> initializeWithProfile(Profile initialProfile) async {
     try {
       logger.i('ProfileController 초기화 시작');
-      
+
       // 초기 프로필 설정
       profile.value = initialProfile;
-      
+
       // Firestore 스트림 초기화
       _initProfileStream();
-      
+
       isInitialized.value = true;
       logger.i('ProfileController 초기화 완료: ${initialProfile.name}');
     } catch (e) {
@@ -157,9 +157,7 @@ class ProfileController extends GetxController {
   /// 프로필 이미지를 업데이트합니다.
   Future<bool> updateProfileImage(String imageUrl) async {
     try {
-      final updatedProfile = profile.value.copyWith(
-        photo_url: imageUrl,
-      );
+      final updatedProfile = profile.value.copyWith(photo_url: imageUrl);
       final success = await App.updateProfilePicture(updatedProfile);
       if (success) {
         profile.value = updatedProfile;
