@@ -1,6 +1,11 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import '../pages/splash/splash_view.dart';
+import '../define/define.dart';
+import '../utils/app.dart';
+import '../utils/http_service.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -161,6 +166,86 @@ class NotificationService {
   /// 보류 중인 알림을 가져옵니다.
   Future<List<PendingNotificationRequest>> getPendingNotifications() async {
     return await _notifications.pendingNotificationRequests();
+  }
+
+  /// FCM 백그라운드 메시지 핸들러 (static)
+  @pragma('vm:entry-point')
+  static Future<void> firebaseMessagingBackgroundHandler(
+    RemoteMessage message,
+  ) async {
+    // Firebase.initializeApp이 필요하다면 여기에 추가
+    // await Firebase.initializeApp(options: ...);
+    final service = NotificationService();
+    await service.initialize();
+    await service.showNotification(
+      title: message.notification?.title ?? '새 알림',
+      body: message.notification?.body ?? '',
+      payload: message.data.toString(),
+    );
+    service._logger.i(
+      '백그라운드 메시지 수신: \x1B[36m\x1B[1m${message.messageId}\x1B[0m',
+    );
+  }
+
+  Future<void> initializeFCM() async {
+    try {
+
+      // 백그라운드 메시지 핸들러 등록
+      FirebaseMessaging.onBackgroundMessage(
+        NotificationService.firebaseMessagingBackgroundHandler,
+      );
+
+      // 알림 권한 요청
+      NotificationSettings settings = await FirebaseMessaging.instance
+          .requestPermission(
+            alert: true,
+            announcement: false,
+            badge: true,
+            carPlay: false,
+            criticalAlert: false,
+            provisional: false,
+            sound: true,
+          );
+      _logger.i(
+        'FCM 권한 상태: \x1B[32m\x1B[1m\x1B[4m${settings.authorizationStatus}\x1B[0m',
+      );
+
+      // 포그라운드 메시지 핸들러
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+        _logger.i('포그라운드 메시지 수신: ${message.messageId}');
+        // 포그라운드에서 로컬 알림 표시
+        await showNotification(
+          title: message.notification?.title ?? '새 알림',
+          body: message.notification?.body ?? '',
+          payload: message.data.toString(),
+        );
+      });
+
+      // 알림 클릭 핸들러
+      FirebaseMessaging.onMessageOpenedApp.listen((
+        RemoteMessage message,
+      ) async {
+        _logger.i('알림 클릭: ${message.messageId}');
+        final data = message.data;
+        final type = data['type'];
+        if (type == 'comment' || type == 'like' || type == 'sub_comment') {
+          final articleId = data['article_id'];
+          if (articleId != null) {
+            await navigateAfterPush('/detail/$articleId');
+            return;
+          }
+        } else if (type == 'horse_race') {
+          await navigateAfterPush('/horse-race-history');
+          return;
+        } else if (type == 'system') {
+          await navigateAfterPush('/notifications');
+          return;
+        }
+        await navigateAfterPush('/');
+      });
+    } catch (e) {
+      _logger.e('FCM 초기화 오류: $e');
+    }
   }
 
   Future<void> navigateAfterPush(String route) async {

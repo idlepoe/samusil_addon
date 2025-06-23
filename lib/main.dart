@@ -25,33 +25,12 @@ import 'firebase_options.dart';
 // 전역 logger 인스턴스
 final logger = Logger();
 
-// FCM 백그라운드 메시지 핸들러
-@pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  // 백그라운드에서 로컬 알림 표시
-  final notificationService = NotificationService();
-  await notificationService.initialize();
-
-  await notificationService.showNotification(
-    title: message.notification?.title ?? '새 알림',
-    body: message.notification?.body ?? '',
-    payload: message.data.toString(),
-  );
-
-  logger.i('백그라운드 메시지 수신: ${message.messageId}');
-}
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // 로컬 알림 서비스 초기화
-  await NotificationService().initialize();
-
-  // FCM 초기화
-  await _initializeFirebaseMessaging();
+  await NotificationService().initializeFCM();
 
   // HttpService 초기화 (baseUrl은 나중에 설정)
   HttpService().initialize();
@@ -60,73 +39,6 @@ Future<void> main() async {
   App.setCloudFunctionsBaseUrl(Define.CLOUD_FUNCTIONS_BASE_URL);
 
   runApp(const MyApp());
-}
-
-/// Firebase Messaging 초기화
-Future<void> _initializeFirebaseMessaging() async {
-  try {
-    // 백그라운드 메시지 핸들러 등록
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-    // 알림 권한 요청
-    NotificationSettings settings = await FirebaseMessaging.instance
-        .requestPermission(
-          alert: true,
-          announcement: false,
-          badge: true,
-          carPlay: false,
-          criticalAlert: false,
-          provisional: false,
-          sound: true,
-        );
-
-    logger.i('FCM 권한 상태: [32m[1m[4m${settings.authorizationStatus}[0m');
-
-    // 포그라운드 메시지 핸들러
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      logger.i('포그라운드 메시지 수신: ${message.messageId}');
-
-      // 포그라운드에서 로컬 알림 표시
-      await NotificationService().showNotification(
-        title: message.notification?.title ?? '새 알림',
-        body: message.notification?.body ?? '',
-        payload: message.data.toString(),
-      );
-    });
-
-    // 알림 클릭 핸들러
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
-      logger.i('알림 클릭: ${message.messageId}');
-      final data = message.data;
-      final type = data['type'];
-      if (type == 'comment' || type == 'like' || type == 'sub_comment') {
-        final articleId = data['article_id'];
-        if (articleId != null) {
-          await navigateAfterPush('/detail/$articleId');
-          return;
-        }
-      } else if (type == 'horse_race') {
-        await navigateAfterPush('/horse-race-history');
-        return;
-      } else if (type == 'system') {
-        await navigateAfterPush('/notifications');
-        return;
-      }
-      await navigateAfterPush('/');
-    });
-  } catch (e) {
-    logger.e('FCM 초기화 오류: $e');
-  }
-}
-
-Future<void> navigateAfterPush(String route) async {
-  Get.offAllNamed('/splash');
-  await Future.delayed(const Duration(milliseconds: 100));
-  Get.offAllNamed('/');
-  await Future.delayed(const Duration(milliseconds: 100));
-  if (route != '/' && route != '/splash') {
-    Get.toNamed(route);
-  }
 }
 
 class MyApp extends StatelessWidget {
