@@ -132,6 +132,17 @@ class _LeftDrawerState extends State<LeftDrawer> {
               },
             ),
 
+            // 낚시게임
+            ListTile(
+              title: const Text("낚시게임"),
+              subtitle: Text("물고기를 잡고 포인트를 획득하세요"),
+              leading: const Icon(Icons.phishing, color: Colors.blue),
+              onTap: () {
+                Navigator.pop(context);
+                Get.toNamed('/fishing-game');
+              },
+            ),
+
             ListTile(
               contentPadding: const EdgeInsets.only(left: 60, right: 60),
               title: Html(

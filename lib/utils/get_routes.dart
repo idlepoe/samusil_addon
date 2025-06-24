@@ -46,6 +46,8 @@ import '../pages/office_music/favorite_playlist/favorite_playlist_view.dart';
 import '../pages/office_music/favorite_playlist/favorite_playlist_binding.dart';
 import '../pages/profile/profile_edit_view.dart';
 import '../pages/profile/profile_edit_binding.dart';
+import '../pages/fishing/fishing_game_view.dart';
+import '../pages/fishing/fishing_game_binding.dart';
 
 class GetRoutes {
   static final routes = [
@@ -162,6 +164,11 @@ class GetRoutes {
       name: '/profile-edit',
       page: () => const ProfileEditView(),
       binding: ProfileEditBinding(),
+    ),
+    GetPage(
+      name: '/fishing-game',
+      page: () => const FishingGameView(),
+      binding: FishingGameBinding(),
     ),
   ];
 }
