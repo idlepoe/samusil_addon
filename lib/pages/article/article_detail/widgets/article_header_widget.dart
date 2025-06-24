@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import 'package:office_lounge/utils/app.dart';
 import 'package:office_lounge/components/profile_badge_widget.dart';
 import 'package:office_lounge/components/profile_avatar_widget.dart';
-import 'package:office_lounge/components/article_menu_widget.dart';
 
 import '../../../../utils/util.dart';
 import '../article_detail_controller.dart';
@@ -52,13 +51,6 @@ class ArticleHeaderWidget extends GetView<ArticleDetailController> {
               ),
             ],
           ),
-        ),
-        // 더보기 버튼
-        ArticleMenuWidget(
-          article: controller.article.value,
-          isAuthor: controller.isAuthor,
-          onEdit: () => controller.editArticle(),
-          onDelete: () => controller.deleteArticle(),
         ),
       ],
     );

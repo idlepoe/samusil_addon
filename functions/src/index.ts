@@ -42,5 +42,5 @@ export { scheduledCreateHorseRace } from './race/scheduledCreateHorseRace';
 export { scheduledUpdateHorseRace } from './race/scheduledUpdateHorseRace';
 export { placeBet } from './race/placeBet';
 
-// Fishing
-export { sellFish } from './fishing/sellFish'; 
+// Utils
+export { updatePoints } from './utils/updatePoints'; 

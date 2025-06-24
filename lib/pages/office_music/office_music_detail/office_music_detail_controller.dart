@@ -18,6 +18,7 @@ class OfficeMusicDetailController extends GetxController {
   final isLiked = false.obs;
   final isFavorited = false.obs; // 즐겨찾기 상태
   final currentPlayingIndex = Rx<int?>(null);
+  final isAuthor = false.obs; // 작성자 여부
 
   String? trackArticleId;
 
@@ -52,6 +53,9 @@ class OfficeMusicDetailController extends GetxController {
 
         // 즐겨찾기 상태 확인
         await _checkFavoriteStatus();
+
+        // 작성자 여부 확인
+        await _checkAuthorStatus();
       } else {
         AppSnackbar.error(response.error ?? '플레이리스트를 불러오는데 실패했습니다.');
         Get.back();
@@ -429,6 +433,18 @@ $appLink
       return '${hours}시간 ${minutes}분';
     } else {
       return '${minutes}분';
+    }
+  }
+
+  // 작성자 여부 확인
+  Future<void> _checkAuthorStatus() async {
+    if (trackArticle.value == null) return;
+
+    try {
+      final profile = await App.getProfile();
+      isAuthor.value = profile.uid == trackArticle.value!.profile_uid;
+    } catch (e) {
+      logger.e('isAuthor error: $e');
     }
   }
 }

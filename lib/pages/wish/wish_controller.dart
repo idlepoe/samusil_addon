@@ -114,9 +114,20 @@ class WishController extends GetxController {
         commentFocusNode.requestFocus();
 
         // 성공 메시지 표시
-        AppSnackbar.success(
-          '소원이 생성되었습니다! +${result['data']?['pointsEarned'] ?? 0}포인트',
-        );
+        final pointsEarned = result['data']?['pointsEarned'] ?? 0;
+        final basePoints = result['data']?['basePoints'] ?? 0;
+        final streakBonus = result['data']?['streakBonus'] ?? 0;
+        final newStreak = result['data']?['newStreak'] ?? 1;
+
+        String message = '소원이 생성되었습니다! +${pointsEarned}포인트';
+        if (streakBonus > 0) {
+          message += '\n(기본 ${basePoints}P + 연승보너스 ${streakBonus}P)';
+          message += '\n🔥 ${newStreak}일 연속 소원빌기!';
+        } else {
+          message += '\n✨ 내일도 연속으로 빌면 보너스 포인트!';
+        }
+
+        AppSnackbar.success(message);
       } else {
         // 에러 메시지 표시
         String errorMessage = result['error'] ?? '소원 생성에 실패했습니다.';

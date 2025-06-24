@@ -2,7 +2,7 @@ import { onRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { FIRESTORE_COLLECTION_WISH, FIRESTORE_COLLECTION_PROFILE } from '../utils/constants';
 import { verifyAuth } from '../utils/auth';
-import { awardPointsForWish } from '../utils/pointService';
+import { updatePointsInternal } from '../utils/updatePoints';
 
 export const createWish = onRequest({ 
   cors: true,
@@ -52,7 +52,8 @@ export const createWish = onRequest({
     const lastWishDate = profile.wish_last_date || '';
 
     let newStreak = currentStreak;
-    let pointToAdd = 5; // 기본 5포인트
+    let basePoints = 20; // 기본 20포인트
+    let streakBonus = 0; // 연승 보너스
 
     // 연속 기도 체크
     if (lastWishDate === todayStr) {
@@ -61,12 +62,14 @@ export const createWish = onRequest({
     } else if (lastWishDate === getYesterdayString()) {
       // 연속 기도
       newStreak = currentStreak + 1;
-      pointToAdd = 5 + newStreak; // 기본 5포인트 + 연속 streak 보너스
+      streakBonus = 9 + newStreak; // 첫 연승: +10 (9+1), 둘째: +11 (9+2), 셋째: +12 (9+3)...
     } else {
       // 연속 끊김
       newStreak = 1;
-      pointToAdd = 5; // 기본 5포인트
+      streakBonus = 0; // 첫날은 보너스 없음
     }
+
+    const totalPoints = basePoints + streakBonus;
 
     // Wish 생성 - 개별 문서로 저장
     const wishData = {
@@ -88,8 +91,24 @@ export const createWish = onRequest({
       wish_last_date: todayStr,
     });
 
-    // 포인트 지급
-    const newPoints = await awardPointsForWish(uid, pointToAdd);
+    // 포인트 지급 (updatePoints API 사용)
+    const pointResult = await updatePointsInternal(
+      uid,
+      totalPoints,
+      'wish',
+      `소원빌기 ${newStreak}일차 (기본 ${basePoints}P${streakBonus > 0 ? ` + 연승보너스 ${streakBonus}P` : ''})`,
+      {
+        wishStreak: newStreak,
+        basePoints: basePoints,
+        streakBonus: streakBonus,
+        totalPoints: totalPoints
+      }
+    );
+
+    if (!pointResult.success) {
+      console.error('포인트 지급 실패:', pointResult.error);
+      // 포인트 지급이 실패해도 소원은 생성되었으므로 성공으로 처리
+    }
 
     // 업데이트된 프로필 조회
     const updatedProfileDoc = await profileRef.get();
@@ -100,9 +119,11 @@ export const createWish = onRequest({
       message: 'Wish created successfully',
       data: {
         profile: updatedProfile,
-        pointsEarned: pointToAdd,
+        pointsEarned: totalPoints,
+        basePoints: basePoints,
+        streakBonus: streakBonus,
         newStreak: newStreak,
-        newPoints: newPoints
+        newPoints: pointResult.newPoints
       }
     });
 

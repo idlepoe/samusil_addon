@@ -795,21 +795,24 @@ class HttpService {
 
   // ===== 물고기 관련 기능 =====
 
-  /// 물고기 판매 처리
-  Future<CloudFunctionResponse> sellFish({
-    required String fishId,
-    required String fishName,
-    required int sellCount,
-    required int pointPerFish,
+  // ===== 포인트 관리 공통 기능 =====
+
+  /// 포인트 증감 공통 처리 (point_history 기록 포함)
+  Future<CloudFunctionResponse> updatePoints({
+    required double pointsChange, // 양수: 증가, 음수: 감소
+    required String
+    actionType, // 'fishing_fee', 'fishing_reward', 'wish', 'article', etc.
+    String? description, // 선택적 설명
+    Map<String, dynamic>? metadata, // 추가 메타데이터
   }) async {
     try {
       final response = await _dio.post(
-        '/sellFish',
+        '/updatePoints',
         data: {
-          'fishId': fishId,
-          'fishName': fishName,
-          'sellCount': sellCount,
-          'pointPerFish': pointPerFish,
+          'pointsChange': pointsChange,
+          'actionType': actionType,
+          if (description != null) 'description': description,
+          if (metadata != null) 'metadata': metadata,
         },
       );
 
@@ -825,17 +828,27 @@ class HttpService {
         );
       }
     } catch (e) {
-      logger.e('sellFish error: $e');
+      logger.e('updatePoints error: $e');
       if (e is DioException && e.response != null) {
         final errorData = e.response!.data;
         return CloudFunctionResponse(
           success: false,
           error:
-              errorData['error'] ?? errorData['message'] ?? '물고기 판매에 실패했습니다.',
+              errorData['error'] ?? errorData['message'] ?? '포인트 업데이트에 실패했습니다.',
         );
       }
       return CloudFunctionResponse(success: false, error: e.toString());
     }
+  }
+
+  /// 낚시 게임 참여비 차감 (공통 포인트 API 사용)
+  Future<CloudFunctionResponse> payFishingFee({required int feeAmount}) async {
+    return await updatePoints(
+      pointsChange: -feeAmount.toDouble(),
+      actionType: 'fishing_fee',
+      description: '낚시 게임 참여비',
+      metadata: {'gameType': 'fishing', 'feeAmount': feeAmount},
+    );
   }
 
   // ===== 칭호 관련 기능 =====

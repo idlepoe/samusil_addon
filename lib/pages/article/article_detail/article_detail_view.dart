@@ -72,35 +72,160 @@ class ArticleDetailView extends GetView<ArticleDetailController> {
         overflow: TextOverflow.ellipsis,
       ),
       centerTitle: true,
-      actions: [],
+      actions: [_buildMoreMenuButton()],
+    );
+  }
+
+  Widget _buildMoreMenuButton() {
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.more_vert, color: Colors.black87),
+      onSelected: (value) => _handleMenuAction(value),
+      itemBuilder: (BuildContext context) {
+        final List<PopupMenuItem<String>> items = [];
+
+        // 공통 메뉴 (공유)
+        items.add(_buildPopupMenuItem('share', '공유하기', Icons.share_outlined));
+
+        // 작성자인 경우에만 수정, 삭제 메뉴 추가
+        if (controller.isAuthor) {
+          items.add(_buildPopupMenuItem('edit', '수정하기', Icons.edit_outlined));
+          items.add(
+            _buildPopupMenuItem(
+              'delete',
+              '삭제하기',
+              Icons.delete_outline,
+              isDestructive: true,
+            ),
+          );
+        }
+
+        return items;
+      },
+    );
+  }
+
+  PopupMenuItem<String> _buildPopupMenuItem(
+    String value,
+    String text,
+    IconData icon, {
+    bool isDestructive = false,
+  }) {
+    return PopupMenuItem<String>(
+      value: value,
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 20,
+            color: isDestructive ? Colors.red : Colors.black87,
+          ),
+          const SizedBox(width: 12),
+          Text(
+            text,
+            style: TextStyle(
+              color: isDestructive ? Colors.red : Colors.black87,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleMenuAction(String value) {
+    switch (value) {
+      case 'share':
+        controller.shareArticle();
+        break;
+      case 'edit':
+        controller.editArticle();
+        break;
+      case 'delete':
+        _showDeleteConfirmDialog();
+        break;
+    }
+  }
+
+  void _showDeleteConfirmDialog() {
+    showDialog(
+      context: Get.context!,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Text(
+              '게시글 삭제',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            content: const Text(
+              '정말로 이 게시글을 삭제하시겠습니까?\n삭제된 게시글은 복구할 수 없습니다.',
+              style: TextStyle(fontSize: 14, height: 1.5),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Get.back(),
+                child: const Text(
+                  '취소',
+                  style: TextStyle(color: Color(0xFF8B95A1)),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Get.back();
+                  controller.deleteArticle();
+                },
+                child: const Text('삭제', style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
     );
   }
 
   Widget _buildEmojiBar() {
-    final emojis = ['😊', '👍', '❤️', '😂', '😮', '😢', '😡', '🎉'];
+    final emojis = [
+      '😊',
+      '👍',
+      '❤️',
+      '😂',
+      '😮',
+      '😢',
+      '😡',
+      '🎉',
+      '🔥',
+      '💯',
+      '✨',
+      '🚀',
+      '💪',
+      '👏',
+      '🙌',
+      '💖',
+    ];
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      height: 60,
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: Colors.grey.shade200, width: 1)),
       ),
-      child: Row(
-        children:
-            emojis.map((emoji) {
-              return GestureDetector(
-                onTap: () => controller.addEmojiToComment(emoji),
-                child: Container(
-                  margin: const EdgeInsets.only(right: 12),
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(emoji, style: const TextStyle(fontSize: 20)),
-                ),
-              );
-            }).toList(),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        itemCount: emojis.length,
+        itemBuilder: (context, index) {
+          final emoji = emojis[index];
+          return GestureDetector(
+            onTap: () => controller.addEmojiToComment(emoji),
+            child: Container(
+              margin: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(emoji, style: const TextStyle(fontSize: 20)),
+            ),
+          );
+        },
       ),
     );
   }

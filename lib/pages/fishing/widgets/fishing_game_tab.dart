@@ -310,36 +310,43 @@ class FishingGameTab extends GetView<FishingGameController> {
       final isGameActive = controller.isGameActive.value;
       final isDisabled = controller.isButtonDisabled.value;
       final showResult = controller.showResult.value;
+      final hasInsufficientPoints = controller.hasInsufficientPoints.value;
 
       String buttonText;
       String statusText;
 
-      if (isGameActive) {
+      if (hasInsufficientPoints && !isGameActive) {
+        buttonText = "포인트 부족";
+        statusText = controller.insufficientPointsMessage;
+      } else if (isGameActive) {
         buttonText = "낚싯줄 당기기";
         statusText = "버튼을 누르고 있으면 낚싯줄이 올라갑니다";
       } else if (showResult) {
-        buttonText = "다시 낚시하기";
-        statusText = "결과를 확인하고 다시 도전해보세요";
+        buttonText = hasInsufficientPoints ? "포인트 부족" : "다시 낚시하기";
+        statusText =
+            hasInsufficientPoints
+                ? controller.insufficientPointsMessage
+                : "결과를 확인하고 다시 도전해보세요";
       } else {
-        buttonText = "낚시 시작";
+        buttonText = "낚시 시작 (참여비: 5P)";
         statusText = "게임 영역을 터치하여 낚시를 시작하세요";
       }
 
       return GestureDetector(
         onTap:
-            !isGameActive && !isDisabled
+            !isGameActive && !isDisabled && !hasInsufficientPoints
                 ? (showResult ? controller.restartGame : controller.startGame)
                 : null,
         onTapDown:
-            isGameActive && !isDisabled
+            isGameActive && !isDisabled && !hasInsufficientPoints
                 ? (_) => controller.onButtonPressed()
                 : null,
         onTapUp:
-            isGameActive && !isDisabled
+            isGameActive && !isDisabled && !hasInsufficientPoints
                 ? (_) => controller.onButtonReleased()
                 : null,
         onTapCancel:
-            isGameActive && !isDisabled
+            isGameActive && !isDisabled && !hasInsufficientPoints
                 ? () => controller.onButtonReleased()
                 : null,
         child: Container(
@@ -408,7 +415,7 @@ class FishingGameTab extends GetView<FishingGameController> {
                       ),
                       decoration: BoxDecoration(
                         gradient:
-                            isDisabled
+                            (isDisabled || hasInsufficientPoints)
                                 ? LinearGradient(
                                   colors: [
                                     const Color(0xFF94A3B8),
@@ -425,7 +432,7 @@ class FishingGameTab extends GetView<FishingGameController> {
                         boxShadow: [
                           BoxShadow(
                             color:
-                                isDisabled
+                                (isDisabled || hasInsufficientPoints)
                                     ? const Color(0xFF64748B).withOpacity(0.2)
                                     : const Color(0xFF3B82F6).withOpacity(0.3),
                             blurRadius: 12,

@@ -145,7 +145,8 @@ class WishView extends GetView<WishController> {
           Expanded(
             child: _buildStatItem(
               "기도 포인트",
-              "+${controller.profile.value.wish_streak * 5}",
+              // 기본 20P + 연속일 보너스 (첫날 이후부터 10, 11, 12... 보너스)
+              "+${20 + (controller.profile.value.wish_streak > 1 ? 9 + controller.profile.value.wish_streak : 0)}",
               Icons.stars,
               const Color(0xFFFFD700),
             ),

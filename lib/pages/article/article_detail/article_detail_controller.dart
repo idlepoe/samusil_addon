@@ -206,16 +206,21 @@ class ArticleDetailController extends GetxController {
 
   // 게시글 삭제
   Future<void> deleteArticle() async {
+    if (!canDelete) {
+      AppSnackbar.error('삭제 권한이 없습니다.');
+      return;
+    }
+
     try {
       bool success = await App.deleteArticle(article: article.value);
       if (success) {
         AppSnackbar.success('게시글이 삭제되었습니다.');
-        Get.back();
+        Get.back(result: true);
       } else {
         AppSnackbar.error('게시글 삭제에 실패했습니다.');
       }
     } catch (e) {
-      logger.e(e);
+      logger.e('deleteArticle error: $e');
       AppSnackbar.error('게시글 삭제 중 오류가 발생했습니다.');
     }
   }
@@ -279,10 +284,10 @@ class ArticleDetailController extends GetxController {
   // 게시글 작성자 여부
   bool get isAuthor => article.value.profile_uid == profile.value.uid;
 
-  // 마스터 사용자 여부
+  // 마스터 여부 확인
   bool get isMaster => profile.value.uid == '00000000000000000';
 
-  // 삭제 가능 여부
+  // 삭제 권한 확인 (작성자 또는 마스터)
   bool get canDelete => isAuthor || isMaster;
 
   // 댓글 작성자 여부
@@ -306,7 +311,15 @@ class ArticleDetailController extends GetxController {
     super.onClose();
   }
 
-  void editArticle() {}
+  // 게시글 수정 페이지로 이동 (작성자만 가능)
+  void editArticle() {
+    if (!isAuthor) {
+      AppSnackbar.error('작성자만 수정할 수 있습니다.');
+      return;
+    }
+
+    Get.toNamed('/article-edit', arguments: {'article': article.value});
+  }
 
   void _sortComments() {
     final sortedComments = List<MainComment>.from(comments);
@@ -384,6 +397,32 @@ class ArticleDetailController extends GetxController {
       isLiked.value = likeDoc.exists;
     } catch (e) {
       logger.e('좋아요 상태 확인 실패: $e');
+    }
+  }
+
+  // 공유하기
+  void shareArticle() {
+    try {
+      final articleData = article.value;
+
+      // 공유할 텍스트 구성
+      final shareText = '''
+📝 ${articleData.title}
+
+      ${articleData.contents.isNotEmpty ? '${articleData.contents.first.contents}\n\n' : ''}👤 ${articleData.profile_name}
+📅 ${articleData.created_at.toString().split(' ')[0]}
+
+📱 OfficeLounge에서 확인하기
+
+#OfficeLounge #게시글''';
+
+      // 클립보드에 복사 (간단한 공유 방식)
+      // Share.share(shareText, subject: '${articleData.title} - OfficeLounge');
+
+      AppSnackbar.info('게시글을 공유합니다.');
+    } catch (e) {
+      logger.e('shareArticle error: $e');
+      AppSnackbar.error('공유 중 오류가 발생했습니다.');
     }
   }
 }

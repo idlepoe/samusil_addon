@@ -11,6 +11,7 @@ import '../../models/title_info.dart';
 import '../../utils/fish_collection_service.dart';
 import '../../utils/fish_inventory_service.dart';
 import '../../utils/http_service.dart';
+import '../../controllers/profile_controller.dart';
 
 class FishingGameController extends GetxController
     with GetTickerProviderStateMixin {
@@ -27,6 +28,10 @@ class FishingGameController extends GetxController
   final RxBool showResult = false.obs;
   final RxBool showResultMessage = false.obs; // 결과 메시지 표시 여부
   final RxBool isButtonDisabled = false.obs; // 버튼 비활성화 상태
+
+  // 참여비 관련
+  static const int FISHING_FEE = 5; // 낚시 게임 참여비
+  final RxBool hasInsufficientPoints = false.obs; // 포인트 부족 상태
 
   // 게임 설정
   static const double barSize = 0.08; // 플레이어 바 크기 (모든 물고기보다 작게)
@@ -64,6 +69,26 @@ class FishingGameController extends GetxController
     _selectRandomFish();
     _loadCaughtFish();
     _loadFishInventory();
+    _checkPointsAvailable();
+    _setupPointListener();
+  }
+
+  /// 프로필 포인트 변화 감지 리스너 설정
+  void _setupPointListener() {
+    ever(ProfileController.to.profile, (_) {
+      _checkPointsAvailable();
+    });
+  }
+
+  /// 포인트 부족 상태 체크
+  void _checkPointsAvailable() {
+    if (ProfileController.to.isInitialized.value) {
+      hasInsufficientPoints.value =
+          ProfileController.to.currentPoint < FISHING_FEE;
+    } else {
+      // 프로필이 초기화되지 않았으면 잠시 후 다시 체크
+      Future.delayed(const Duration(milliseconds: 500), _checkPointsAvailable);
+    }
   }
 
   /// 잡은 물고기 목록 로드
@@ -135,6 +160,26 @@ class FishingGameController extends GetxController
   void startGame() {
     if (isGameActive.value) return;
 
+    // 포인트 부족 시 게임 시작 차단
+    if (hasInsufficientPoints.value) {
+      Get.snackbar(
+        '포인트 부족',
+        '낚시 게임 참여비 ${FISHING_FEE}P가 부족합니다.\n현재 포인트: ${ProfileController.to.currentPointRounded}P',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFEF4444),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+        icon: const Icon(Icons.warning, color: Colors.white),
+      );
+      return;
+    }
+
+    // 낙관적 업데이트: 즉시 포인트 차감 (로컬)
+    _deductPointsOptimistically();
+
+    // 백그라운드에서 서버에 참여비 차감 요청
+    _payFishingFeeToServer();
+
     _selectRandomFish();
     isGameActive.value = true;
     showResult.value = false;
@@ -148,6 +193,37 @@ class FishingGameController extends GetxController
 
     _startGameLoop();
     _startFishMovement();
+  }
+
+  /// 낙관적 업데이트로 포인트 차감 (로컬)
+  void _deductPointsOptimistically() {
+    final currentProfile = ProfileController.to.profile.value;
+    final updatedProfile = currentProfile.copyWith(
+      point: currentProfile.point - FISHING_FEE,
+    );
+    ProfileController.to.profile.value = updatedProfile;
+
+    // 포인트 부족 상태 다시 체크
+    _checkPointsAvailable();
+
+    logger.i('낙관적 업데이트: 참여비 ${FISHING_FEE}P 차감');
+  }
+
+  /// 서버에 참여비 차감 요청
+  Future<void> _payFishingFeeToServer() async {
+    try {
+      final response = await _httpService.payFishingFee(feeAmount: FISHING_FEE);
+
+      if (response.success) {
+        logger.i('서버 참여비 차감 성공');
+      } else {
+        logger.w('서버 참여비 차감 실패: ${response.error}');
+        // 실패 시에도 게임은 계속 진행 (낙관적 업데이트)
+      }
+    } catch (e) {
+      logger.e('참여비 차감 요청 중 오류: $e');
+      // 에러 발생 시에도 게임은 계속 진행
+    }
   }
 
   /// 게임 중지
@@ -366,6 +442,10 @@ class FishingGameController extends GetxController
   void restartGame() {
     showResultMessage.value = false;
     isButtonDisabled.value = false;
+
+    // 포인트 상태 다시 체크
+    _checkPointsAvailable();
+
     startGame();
   }
 
@@ -381,7 +461,7 @@ class FishingGameController extends GetxController
       // 칭호 해금 조건 체크
       await _checkTitleUnlockConditions();
 
-      logger.i('물고기 포획 성공: ${fish.name}');
+      logger.i('물고기 포획 성공: ${fish.name} (포인트는 판매 시 지급)');
     } catch (e) {
       logger.e('물고기 포획 처리 중 오류: $e');
     }
@@ -496,7 +576,7 @@ class FishingGameController extends GetxController
     }
   }
 
-  /// 물고기 판매
+  /// 물고기 판매 (공통 포인트 API 사용)
   Future<void> sellFish(Fish fish, int sellCount) async {
     try {
       // 로컬 인벤토리에서 수량 확인
@@ -505,12 +585,20 @@ class FishingGameController extends GetxController
         throw Exception('보유량이 부족합니다.');
       }
 
-      // 서버에 판매 요청
-      final response = await _httpService.sellFish(
-        fishId: fish.id,
-        fishName: fish.name,
-        sellCount: sellCount,
-        pointPerFish: fish.reward,
+      final totalPoints = sellCount * fish.reward;
+
+      // 서버에 포인트 증가 요청 (공통 API 사용)
+      final response = await _httpService.updatePoints(
+        pointsChange: totalPoints.toDouble(),
+        actionType: 'fish_sale',
+        description: '물고기 판매: ${fish.name} x$sellCount',
+        metadata: {
+          'fishId': fish.id,
+          'fishName': fish.name,
+          'sellCount': sellCount,
+          'pointPerFish': fish.reward,
+          'totalPoints': totalPoints,
+        },
       );
 
       if (response.success) {
@@ -521,12 +609,12 @@ class FishingGameController extends GetxController
         // 포인트 백만장자 칭호 체크 (판매로 1000P 달성)
         // TODO: 총 판매 포인트 추적 기능 추가 필요
 
-        logger.i('물고기 판매 성공: ${fish.name} ${sellCount}마리');
+        logger.i('물고기 판매 성공: ${fish.name} ${sellCount}마리, +${totalPoints}P');
 
         // 성공 메시지 표시
         Get.snackbar(
           '판매 완료',
-          response.data?['message'] ?? '물고기를 성공적으로 판매했습니다.',
+          '${fish.name} ${sellCount}마리를 ${totalPoints}P에 판매했습니다!',
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.green,
           colorText: Colors.white,
@@ -568,9 +656,16 @@ class FishingGameController extends GetxController
     if (fish == null) return '';
 
     if (gameResult.value) {
-      return '${fish.catchMessage}\n+${fish.reward}P 획득!';
+      return '${fish.catchMessage}\n${fish.name}을(를) 획득했습니다!\n(판매 시 ${fish.reward}P 획득 가능)\n(참여비: -${FISHING_FEE}P)';
     } else {
-      return '낚시 실패!\n${fish.name}이(가) 도망갔습니다...';
+      return '낚시 실패!\n${fish.name}이(가) 도망갔습니다...\n(참여비: -${FISHING_FEE}P)';
     }
   }
+
+  /// 포인트 부족 상태 확인
+  bool get canPlayGame => !hasInsufficientPoints.value;
+
+  /// 포인트 부족 메시지
+  String get insufficientPointsMessage =>
+      '포인트가 부족합니다!\n참여비: ${FISHING_FEE}P\n현재 포인트: ${ProfileController.to.currentPointRounded}P';
 }

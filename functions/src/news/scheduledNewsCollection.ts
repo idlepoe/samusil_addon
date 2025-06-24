@@ -9,16 +9,6 @@ interface ArticleContent {
   contents: string;
 }
 
-interface MainComment {
-  key: string;
-  contents: string;
-  profile_key: string;
-  profile_name: string;
-  created_at: admin.firestore.Timestamp;
-  is_sub: boolean;
-  parents_key: string;
-}
-
 interface Article {
   key: string;
   board_name: string;
@@ -32,9 +22,8 @@ interface Article {
   count_comments: number;
   is_notice: boolean;
   created_at: admin.firestore.Timestamp;
-  comments: MainComment[];
   thumbnail?: string;
-  last_updated: admin.firestore.Timestamp;
+  updated_at: admin.firestore.Timestamp;
   timestamp: admin.firestore.Timestamp;
 }
 
@@ -97,6 +86,20 @@ async function fetchAndParseGameNews(db: admin.firestore.Firestore) {
             for (let i = 0; i < topLevelDivs.length; i++) {
               const div = topLevelDivs[i];
               const text = div.textContent?.replace(/\s+/g, ' ').trim();
+              
+              // YouTube iframe 체크
+              const iframe = div.querySelector('iframe[src*="youtube.com/embed"]');
+              if (iframe) {
+                const src = iframe.getAttribute('src');
+                if (src) {
+                  // YouTube 임베드 URL을 일반 YouTube URL로 변환
+                  const youtubeUrl = src.replace('youtube.com/embed/', 'youtube.com/watch?v=');
+                  contents.push({ isPicture: false, contents: `YouTube 영상: ${youtubeUrl}` });
+                  console.log(`[${index}] div ${i} YouTube 영상:`, youtubeUrl);
+                }
+              }
+              
+              // 일반 이미지 체크
               const img = div.querySelector('img');
               if (img) {
                 const src = img.getAttribute('src');
@@ -105,7 +108,9 @@ async function fetchAndParseGameNews(db: admin.firestore.Firestore) {
                   console.log(`[${index}] div ${i} 이미지:`, src);
                 }
               }
-              if (text && text.length > 10) {
+              
+              // 텍스트 내용 체크 (YouTube iframe이 없는 경우에만)
+              if (text && text.length > 10 && !iframe) {
                 contents.push({ isPicture: false, contents: text });
                 console.log(`[${index}] div ${i} 텍스트:`, text.substring(0, 100));
               }
@@ -133,8 +138,7 @@ async function fetchAndParseGameNews(db: admin.firestore.Firestore) {
         count_comments: 0,
         is_notice: false,
         created_at: currentTimestamp,
-        comments: [],
-        last_updated: currentTimestamp,
+        updated_at: currentTimestamp,
         timestamp: currentTimestamp,
       };
       await db.collection(FIRESTORE_COLLECTION_ARTICLE).doc(article.key).set(article);
@@ -401,9 +405,8 @@ async function fetchAndParseEntertainmentNews(db: admin.firestore.Firestore) {
         count_view: 0,
         count_comments: 0,
         is_notice: false,
-        created_at: currentTimestamp,
-        comments: [],
-        last_updated: currentTimestamp,
+                  created_at: currentTimestamp,
+          updated_at: currentTimestamp,
         timestamp: currentTimestamp,
       };
 

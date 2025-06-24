@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:line_icons/line_icons.dart';
 
+import '../../../components/appCircularProgress.dart';
 import '../../../models/youtube/track.dart';
 import 'office_music_detail_controller.dart';
 
@@ -14,11 +15,7 @@ class OfficeMusicDetailView extends GetView<OfficeMusicDetailController> {
       backgroundColor: const Color(0xFFF8F9FA),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF3182F6)),
-            ),
-          );
+          return const Center(child: AppCircularProgress.large());
         }
 
         final trackArticle = controller.trackArticle.value;
@@ -183,7 +180,7 @@ class OfficeMusicDetailView extends GetView<OfficeMusicDetailController> {
 
                     const SizedBox(height: 24),
 
-                    // Action Buttons
+                    // Play Action Buttons (전체 재생, 셔플)
                     Row(
                       children: [
                         Expanded(
@@ -202,9 +199,17 @@ class OfficeMusicDetailView extends GetView<OfficeMusicDetailController> {
                             onTap: controller.shufflePlay,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Secondary Action Buttons (좋아요, 북마크, 공유)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
                         Obx(() => _buildAnimatedLikeButton()),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 16),
                         Obx(
                           () => _buildIconButton(
                             icon:
@@ -218,7 +223,7 @@ class OfficeMusicDetailView extends GetView<OfficeMusicDetailController> {
                             onTap: controller.toggleFavorite,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 16),
                         _buildIconButton(
                           icon: Icons.share,
                           color: const Color(0xFF8B95A1),
@@ -243,7 +248,7 @@ class OfficeMusicDetailView extends GetView<OfficeMusicDetailController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Padding(
-                      padding: EdgeInsets.fromLTRB(24, 24, 24, 16),
+                      padding: EdgeInsets.fromLTRB(24, 24, 24, 8),
                       child: Text(
                         '곡 목록',
                         style: TextStyle(
@@ -557,16 +562,18 @@ class OfficeMusicDetailView extends GetView<OfficeMusicDetailController> {
         // 공통 메뉴 (공유)
         items.add(_buildPopupMenuItem('share', '공유하기', Icons.share_outlined));
 
-        // 작성자인 경우 (임시로 모든 사용자에게 표시)
-        items.add(_buildPopupMenuItem('edit', '수정하기', Icons.edit_outlined));
-        items.add(
-          _buildPopupMenuItem(
-            'delete',
-            '삭제하기',
-            Icons.delete_outline,
-            isDestructive: true,
-          ),
-        );
+        // 작성자인 경우에만 수정, 삭제 메뉴 추가
+        if (controller.isAuthor.value) {
+          items.add(_buildPopupMenuItem('edit', '수정하기', Icons.edit_outlined));
+          items.add(
+            _buildPopupMenuItem(
+              'delete',
+              '삭제하기',
+              Icons.delete_outline,
+              isDestructive: true,
+            ),
+          );
+        }
 
         return items;
       },
