@@ -792,4 +792,126 @@ class HttpService {
       return CloudFunctionResponse(success: false, error: e.toString());
     }
   }
+
+  // ===== 물고기 관련 기능 =====
+
+  /// 물고기 판매 처리
+  Future<CloudFunctionResponse> sellFish({
+    required String fishId,
+    required String fishName,
+    required int sellCount,
+    required int pointPerFish,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/sellFish',
+        data: {
+          'fishId': fishId,
+          'fishName': fishName,
+          'sellCount': sellCount,
+          'pointPerFish': pointPerFish,
+        },
+      );
+
+      if (response.data['success'] == true) {
+        return CloudFunctionResponse(
+          success: true,
+          data: response.data['data'],
+        );
+      } else {
+        return CloudFunctionResponse(
+          success: false,
+          error: response.data['error'] ?? response.data['message'],
+        );
+      }
+    } catch (e) {
+      logger.e('sellFish error: $e');
+      if (e is DioException && e.response != null) {
+        final errorData = e.response!.data;
+        return CloudFunctionResponse(
+          success: false,
+          error:
+              errorData['error'] ?? errorData['message'] ?? '물고기 판매에 실패했습니다.',
+        );
+      }
+      return CloudFunctionResponse(success: false, error: e.toString());
+    }
+  }
+
+  // ===== 칭호 관련 기능 =====
+
+  /// 칭호 해금
+  Future<CloudFunctionResponse> unlockTitle({
+    required String titleId,
+    required String titleName,
+    String? description,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/unlockTitle',
+        data: {
+          'titleId': titleId,
+          'titleName': titleName,
+          if (description != null) 'description': description,
+        },
+      );
+
+      if (response.data['success'] == true) {
+        return CloudFunctionResponse(
+          success: true,
+          data: response.data['data'],
+        );
+      } else {
+        return CloudFunctionResponse(
+          success: false,
+          error: response.data['error'] ?? response.data['message'],
+        );
+      }
+    } catch (e) {
+      logger.e('unlockTitle error: $e');
+      if (e is DioException && e.response != null) {
+        final errorData = e.response!.data;
+        return CloudFunctionResponse(
+          success: false,
+          error: errorData['error'] ?? errorData['message'] ?? '칭호 해금에 실패했습니다.',
+        );
+      }
+      return CloudFunctionResponse(success: false, error: e.toString());
+    }
+  }
+
+  /// 대표 칭호 설정
+  Future<CloudFunctionResponse> setSelectedTitle({
+    String? titleId, // null이면 칭호 해제
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/setSelectedTitle',
+        data: {'titleId': titleId},
+      );
+
+      if (response.data['success'] == true) {
+        return CloudFunctionResponse(
+          success: true,
+          data: response.data['data'],
+        );
+      } else {
+        return CloudFunctionResponse(
+          success: false,
+          error: response.data['error'] ?? response.data['message'],
+        );
+      }
+    } catch (e) {
+      logger.e('setSelectedTitle error: $e');
+      if (e is DioException && e.response != null) {
+        final errorData = e.response!.data;
+        return CloudFunctionResponse(
+          success: false,
+          error:
+              errorData['error'] ?? errorData['message'] ?? '대표 칭호 설정에 실패했습니다.',
+        );
+      }
+      return CloudFunctionResponse(success: false, error: e.toString());
+    }
+  }
 }

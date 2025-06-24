@@ -13,6 +13,28 @@ class Fish {
   final String location; // 출현 장소
   final int price; // 판매 가격 (벨)
 
+  /// 요일별 location 매핑 (1: 월요일 ~ 7: 일요일)
+  static const Map<int, String> weekLocationMap = {
+    1: '강', // 월요일
+    2: '연못', // 화요일
+    3: '하구', // 수요일
+    4: '절벽 위', // 목요일
+    5: '바다', // 금요일
+    6: '부둣가', // 토요일
+    7: '바다(잠수)', // 일요일
+  };
+
+  /// 요일별 location 설명
+  static const Map<int, String> weekLocationDescription = {
+    1: '월요일 - 강에서 민물고기를 낚을 수 있습니다',
+    2: '화요일 - 연못에서 작은 물고기들을 만날 수 있습니다',
+    3: '수요일 - 하구에서 특별한 물고기를 낚을 수 있습니다',
+    4: '목요일 - 절벽 위의 맑은 물에서 희귀한 물고기가 나타납니다',
+    5: '금요일 - 바다에서 다양한 바닷물고기를 낚을 수 있습니다',
+    6: '토요일 - 부둣가에서 대형 물고기들이 기다리고 있습니다',
+    7: '일요일 - 바다에 잠수해서 해산물을 채집할 수 있습니다',
+  };
+
   Fish({
     required this.id,
     required this.name,
@@ -34,6 +56,58 @@ class Fish {
     if (appearanceHours.isEmpty) return true; // 24시간 출현
     final now = DateTime.now();
     return appearanceHours.contains(now.hour);
+  }
+
+  /// 오늘 출현 가능한지 확인 (요일별 location 기준)
+  bool isAvailableToday() {
+    final today = DateTime.now();
+    final todayLocation = getTodayLocation();
+    return location == todayLocation && isAvailableNow();
+  }
+
+  /// 오늘의 location 가져오기
+  static String getTodayLocation() {
+    final today = DateTime.now();
+    return weekLocationMap[today.weekday] ?? '강';
+  }
+
+  /// 오늘의 location 설명 가져오기
+  static String getTodayLocationDescription() {
+    final today = DateTime.now();
+    return weekLocationDescription[today.weekday] ??
+        '월요일 - 강에서 민물고기를 낚을 수 있습니다';
+  }
+
+  /// 오늘 출현 가능한 물고기들만 필터링
+  static List<Fish> getTodayAvailableFish() {
+    final todayLocation = getTodayLocation();
+    return allFish
+        .where(
+          (fish) => fish.location == todayLocation && fish.isAvailableNow(),
+        )
+        .toList();
+  }
+
+  /// 요일별 location 이름 (한글)
+  static String getLocationDisplayName(String location) {
+    switch (location) {
+      case '강':
+        return '강가';
+      case '연못':
+        return '연못';
+      case '하구':
+        return '하구';
+      case '절벽 위':
+        return '절벽 위';
+      case '바다':
+        return '바다';
+      case '부둣가':
+        return '부둣가';
+      case '바다(잠수)':
+        return '바다 (잠수)';
+      default:
+        return location;
+    }
   }
 
   /// 출현 시간 텍스트
@@ -78,37 +152,7 @@ class Fish {
     return [
       // === 민물고기 (동물의 숲 실제 데이터) ===
 
-      // 쉬움 (100-500벨)
-      Fish(
-        id: 'tadpole',
-        name: '올챙이',
-        emoji: '🪱',
-        difficulty: 1,
-        speed: 0.15,
-        size: 0.3,
-        reward: 1, // 100벨/100
-        price: 100,
-        description: '3월~7월에 연못에서 볼 수 있는 작은 생물',
-        catchMessage: '올챙이를 잡았다! 언제 커서 개구리가 될까?',
-        movementPattern: 0.05,
-        appearanceHours: [], // 24시간
-        location: '연못',
-      ),
-      Fish(
-        id: 'frog',
-        name: '개구리',
-        emoji: '🐸',
-        difficulty: 1,
-        speed: 0.18,
-        size: 0.28,
-        reward: 1, // 120벨/100
-        price: 120,
-        description: '5월~8월에 연못에서 볼 수 있는 양서류',
-        catchMessage: '개구리를 잡았다! 폴짝폴짝!',
-        movementPattern: 0.06,
-        appearanceHours: [], // 24시간
-        location: '연못',
-      ),
+      // === 월요일 (강) - 민물고기 ===
       Fish(
         id: 'crucian_carp',
         name: '붕어',
@@ -153,6 +197,38 @@ class Fish {
         movementPattern: 0.08,
         appearanceHours: [9, 10, 11, 12, 13, 14, 15], // 9시~16시
         location: '강',
+      ),
+
+      // === 화요일 (연못) - 작은 물고기들 ===
+      Fish(
+        id: 'tadpole',
+        name: '올챙이',
+        emoji: '🪱',
+        difficulty: 1,
+        speed: 0.15,
+        size: 0.3,
+        reward: 1, // 100벨/100
+        price: 100,
+        description: '3월~7월에 연못에서 볼 수 있는 작은 생물',
+        catchMessage: '올챙이를 잡았다! 언제 커서 개구리가 될까?',
+        movementPattern: 0.05,
+        appearanceHours: [], // 24시간
+        location: '연못',
+      ),
+      Fish(
+        id: 'frog',
+        name: '개구리',
+        emoji: '🐸',
+        difficulty: 1,
+        speed: 0.18,
+        size: 0.28,
+        reward: 1, // 120벨/100
+        price: 120,
+        description: '5월~8월에 연못에서 볼 수 있는 양서류',
+        catchMessage: '개구리를 잡았다! 폴짝폴짝!',
+        movementPattern: 0.06,
+        appearanceHours: [], // 24시간
+        location: '연못',
       ),
 
       // 보통 (200-1000벨)

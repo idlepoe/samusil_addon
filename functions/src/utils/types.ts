@@ -68,7 +68,7 @@ export interface ApiResponse<T> {
 export interface PointHistory {
   id?: string;
   profile_uid: string;
-  action_type: '소원' | '게시글' | '댓글' | '첫댓글' | '대댓글' | '좋아요받음' | '베팅' | '플레이리스트' | '아바타구매';
+  action_type: '소원' | '게시글' | '댓글' | '첫댓글' | '대댓글' | '좋아요받음' | '베팅' | '플레이리스트' | '아바타구매' | '물고기판매';
   points_earned: number;
   description: string;
   related_id?: string; // 게시글 ID, 댓글 ID 등
@@ -131,4 +131,29 @@ export interface TrackArticle {
   total_duration: number; // 총 재생시간 (초)
   track_count: number; // 트랙 개수
   description: string; // 플레이리스트 설명
+}
+
+// 물고기 관련 타입
+export interface FishInventory {
+  fishId: string;
+  fishName: string;
+  caughtCount: number; // 총 잡은 횟수
+  currentCount: number; // 현재 보유 수량
+  lastCaughtAt: admin.firestore.Timestamp;
+}
+
+export interface SellFishRequest {
+  fishId: string;
+  fishName: string;
+  sellCount: number;
+  pointPerFish: number;
+}
+
+// 칭호 관련 타입
+export interface TitleInfo {
+  id: string;
+  name: string;
+  description: string;
+  condition: string;
+  unlockedAt: admin.firestore.Timestamp;
 } 

@@ -30,6 +30,8 @@ export { toggleTrackArticleLike } from './trackArticles/toggleTrackArticleLike';
 export { createWish } from './profiles/createWish';
 export { getWish } from './profiles/getWish';
 export { createAvatarPurchase } from './profiles/createAvatarPurchase';
+export { unlockTitle } from './profiles/unlockTitle';
+export { setSelectedTitle } from './profiles/setSelectedTitle';
 
 // News
 export { scheduledGameNewsCollection, scheduledEntertainmentNewsCollection } from './news/scheduledNewsCollection';
@@ -38,4 +40,7 @@ export { manualNewsCollection, manualEntertainmentNewsCollection } from './news/
 // Race
 export { scheduledCreateHorseRace } from './race/scheduledCreateHorseRace';
 export { scheduledUpdateHorseRace } from './race/scheduledUpdateHorseRace';
-export { placeBet } from './race/placeBet'; 
+export { placeBet } from './race/placeBet';
+
+// Fishing
+export { sellFish } from './fishing/sellFish'; 

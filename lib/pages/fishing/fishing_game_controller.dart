@@ -5,8 +5,12 @@ import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 
 import '../../models/fish.dart';
-import '../../controllers/profile_controller.dart';
+import '../../models/fish_inventory.dart';
+import '../../models/title_info.dart';
+
 import '../../utils/fish_collection_service.dart';
+import '../../utils/fish_inventory_service.dart';
+import '../../utils/http_service.dart';
 
 class FishingGameController extends GetxController
     with GetTickerProviderStateMixin {
@@ -47,17 +51,35 @@ class FishingGameController extends GetxController
   final FishCollectionService _collectionService =
       FishCollectionService.instance;
 
+  // 물고기 인벤토리 관련
+  final FishInventoryService _inventoryService = FishInventoryService.instance;
+  final RxList<FishInventory> fishInventory = <FishInventory>[].obs;
+
+  // HTTP 서비스
+  final HttpService _httpService = HttpService();
+
   @override
   void onInit() {
     super.onInit();
     _selectRandomFish();
     _loadCaughtFish();
+    _loadFishInventory();
   }
 
   /// 잡은 물고기 목록 로드
   Future<void> _loadCaughtFish() async {
     final caught = await _collectionService.getCaughtFish();
     caughtFish.value = caught;
+  }
+
+  /// 물고기 인벤토리 로드
+  Future<void> _loadFishInventory() async {
+    try {
+      final inventory = await _inventoryService.getAllInventory();
+      fishInventory.value = inventory;
+    } catch (e) {
+      logger.e('인벤토리 로드 중 오류: $e');
+    }
   }
 
   /// 잡은 물고기 추가
@@ -82,20 +104,30 @@ class FishingGameController extends GetxController
     super.onClose();
   }
 
-  /// 랜덤 물고기 선택 (현재 시간에 출현 가능한 물고기만)
+  /// 랜덤 물고기 선택 (오늘의 location과 현재 시간에 출현 가능한 물고기만)
   void _selectRandomFish() {
     final random = Random();
 
-    // 현재 시간에 출현 가능한 물고기만 필터링
-    final availableNow =
-        availableFishes.where((fish) => fish.isAvailableNow()).toList();
+    // 오늘 출현 가능한 물고기만 필터링 (요일별 location + 시간 조건)
+    final todayAvailable = Fish.getTodayAvailableFish();
 
-    if (availableNow.isEmpty) {
-      // 출현 가능한 물고기가 없으면 전체에서 선택 (예외 상황)
-      currentFish.value =
-          availableFishes[random.nextInt(availableFishes.length)];
+    if (todayAvailable.isEmpty) {
+      // 출현 가능한 물고기가 없으면 오늘의 location에서만 선택
+      final todayLocation = Fish.getTodayLocation();
+      final locationFish =
+          availableFishes
+              .where((fish) => fish.location == todayLocation)
+              .toList();
+
+      if (locationFish.isNotEmpty) {
+        currentFish.value = locationFish[random.nextInt(locationFish.length)];
+      } else {
+        // 최후의 수단으로 전체에서 선택
+        currentFish.value =
+            availableFishes[random.nextInt(availableFishes.length)];
+      }
     } else {
-      currentFish.value = availableNow[random.nextInt(availableNow.length)];
+      currentFish.value = todayAvailable[random.nextInt(todayAvailable.length)];
     }
   }
 
@@ -310,14 +342,10 @@ class FishingGameController extends GetxController
     });
 
     if (gameResult.value) {
-      // 성공 시 포인트 지급 및 물고기 도감에 추가
+      // 성공 시 물고기 포획 처리
       final fish = currentFish.value;
       if (fish != null) {
-        // TODO: ProfileController에 addPoints 메서드 추가 필요
-        // ProfileController.to.addPoints(fish.reward);
-
-        // 물고기 도감에 추가
-        _addCaughtFish(fish.name);
+        _processFishCatch(fish);
       }
     }
   }
@@ -339,6 +367,199 @@ class FishingGameController extends GetxController
     showResultMessage.value = false;
     isButtonDisabled.value = false;
     startGame();
+  }
+
+  /// 물고기 포획 처리 (로컬)
+  Future<void> _processFishCatch(Fish fish) async {
+    try {
+      // 로컬 도감에 추가
+      await _addCaughtFish(fish.name);
+
+      // 로컬 인벤토리에 추가 (SharedPreferences 사용)
+      await _addFishToInventory(fish);
+
+      // 칭호 해금 조건 체크
+      await _checkTitleUnlockConditions();
+
+      logger.i('물고기 포획 성공: ${fish.name}');
+    } catch (e) {
+      logger.e('물고기 포획 처리 중 오류: $e');
+    }
+  }
+
+  /// 로컬 인벤토리에 물고기 추가
+  Future<void> _addFishToInventory(Fish fish) async {
+    try {
+      await _inventoryService.addFish(fish.id, fish.name);
+      await _loadFishInventory(); // 인벤토리 새로고침
+      logger.i('인벤토리에 물고기 추가: ${fish.name}');
+    } catch (e) {
+      logger.e('인벤토리 추가 중 오류: $e');
+    }
+  }
+
+  /// 칭호 해금 조건 체크
+  Future<void> _checkTitleUnlockConditions() async {
+    try {
+      final caughtCount = caughtFish.length;
+
+      // 첫 물고기 칭호
+      if (caughtCount == 1) {
+        await _unlockTitle('first_fish');
+      }
+
+      // 낚시 초보 칭호
+      if (caughtCount == 5) {
+        await _unlockTitle('fishing_novice');
+      }
+
+      // 전설의 어부 칭호 (모든 물고기 포획)
+      if (caughtCount >= Fish.allFish.length) {
+        await _unlockTitle('legend_fisher');
+      }
+
+      // 위치별 칭호 체크
+      await _checkLocationBasedTitles();
+    } catch (e) {
+      logger.e('칭호 해금 조건 체크 중 오류: $e');
+    }
+  }
+
+  /// 위치별 칭호 체크
+  Future<void> _checkLocationBasedTitles() async {
+    final pondFish =
+        Fish.allFish
+            .where((f) => f.location == '연못')
+            .map((f) => f.name)
+            .toSet();
+    final riverFish =
+        Fish.allFish.where((f) => f.location == '강').map((f) => f.name).toSet();
+    final seaFish =
+        Fish.allFish
+            .where((f) => f.location == '바다')
+            .map((f) => f.name)
+            .toSet();
+    final deepSeaFish =
+        Fish.allFish
+            .where((f) => f.location == '바다(잠수)')
+            .map((f) => f.name)
+            .toSet();
+
+    final caughtFishSet = caughtFish.value;
+
+    // 연못 탐험가 (연못 물고기 3종)
+    if (pondFish.intersection(caughtFishSet).length >= 3) {
+      await _unlockTitle('pond_explorer');
+    }
+
+    // 강의 주인 (강 물고기 5종)
+    if (riverFish.intersection(caughtFishSet).length >= 5) {
+      await _unlockTitle('river_master');
+    }
+
+    // 바다 사냥꾼 (바다 물고기 10종)
+    if (seaFish.intersection(caughtFishSet).length >= 10) {
+      await _unlockTitle('sea_hunter');
+    }
+
+    // 심해 잠수부 (바다(잠수) 물고기 5종)
+    if (deepSeaFish.intersection(caughtFishSet).length >= 5) {
+      await _unlockTitle('deep_sea_diver');
+    }
+
+    // 희귀종 수집가 (희귀 등급 물고기 3종)
+    final rareFish =
+        Fish.allFish.where((f) => f.difficulty == 4).map((f) => f.name).toSet();
+    if (rareFish.intersection(caughtFishSet).length >= 3) {
+      await _unlockTitle('rare_collector');
+    }
+  }
+
+  /// 칭호 해금 요청
+  Future<void> _unlockTitle(String titleId) async {
+    try {
+      final titleInfo = TitleData.getTitleById(titleId);
+      if (titleInfo == null) return;
+
+      final response = await _httpService.unlockTitle(
+        titleId: titleId,
+        titleName: titleInfo.name,
+        description: titleInfo.description,
+      );
+
+      if (response.success) {
+        logger.i('칭호 해금 성공: ${titleInfo.name}');
+        // TODO: 칭호 해금 알림 표시
+      }
+    } catch (e) {
+      logger.e('칭호 해금 요청 중 오류: $e');
+    }
+  }
+
+  /// 물고기 판매
+  Future<void> sellFish(Fish fish, int sellCount) async {
+    try {
+      // 로컬 인벤토리에서 수량 확인
+      final inventory = await _inventoryService.getFishInventory(fish.id);
+      if (inventory == null || inventory.currentCount < sellCount) {
+        throw Exception('보유량이 부족합니다.');
+      }
+
+      // 서버에 판매 요청
+      final response = await _httpService.sellFish(
+        fishId: fish.id,
+        fishName: fish.name,
+        sellCount: sellCount,
+        pointPerFish: fish.reward,
+      );
+
+      if (response.success) {
+        // 로컬 인벤토리 업데이트
+        await _inventoryService.sellFish(fish.id, sellCount);
+        await _loadFishInventory();
+
+        // 포인트 백만장자 칭호 체크 (판매로 1000P 달성)
+        // TODO: 총 판매 포인트 추적 기능 추가 필요
+
+        logger.i('물고기 판매 성공: ${fish.name} ${sellCount}마리');
+
+        // 성공 메시지 표시
+        Get.snackbar(
+          '판매 완료',
+          response.data?['message'] ?? '물고기를 성공적으로 판매했습니다.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      } else {
+        throw Exception(response.error ?? '판매에 실패했습니다.');
+      }
+    } catch (e) {
+      logger.e('물고기 판매 중 오류: $e');
+      Get.snackbar(
+        '판매 실패',
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  /// 특정 물고기의 현재 보유 수량 조회
+  int getCurrentFishCount(String fishId) {
+    final inventory = fishInventory.firstWhere(
+      (fish) => fish.fishId == fishId,
+      orElse:
+          () => FishInventory(
+            fishId: fishId,
+            fishName: '',
+            caughtCount: 0,
+            currentCount: 0,
+            lastCaughtAt: DateTime.now(),
+          ),
+    );
+    return inventory.currentCount;
   }
 
   /// 현재 물고기 정보 가져오기 (UI에서 사용)
