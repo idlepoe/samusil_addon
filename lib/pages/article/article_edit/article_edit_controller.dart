@@ -68,8 +68,8 @@ class ArticleEditController extends GetxController {
 
       // 글쓰기 권한 체크
       if (!boardInfoArg.isCanWrite) {
-        AppSnackbar.error('이 게시판에서는 글을 작성할 수 없습니다.');
         Get.back();
+        AppSnackbar.error('이 게시판에서는 글을 작성할 수 없습니다.');
         return;
       }
       return; // arguments가 있으면 라우트 파라미터는 무시
@@ -86,8 +86,8 @@ class ArticleEditController extends GetxController {
 
       // 글쓰기 권한 체크
       if (!board.isCanWrite) {
-        AppSnackbar.error('이 게시판에서는 글을 작성할 수 없습니다.');
         Get.back();
+        AppSnackbar.error('이 게시판에서는 글을 작성할 수 없습니다.');
         return;
       }
     }
@@ -246,7 +246,16 @@ class ArticleEditController extends GetxController {
 
         String? result = await App.updateArticle(article: article);
         if (result != null) {
+          // 성공 시 콜백 호출 (콜백에서 Get.back() 처리)
+          if (onSuccess != null) {
+            onSuccess();
+          } else {
+            // 콜백이 없는 경우에만 직접 뒤로가기
+            Get.back();
+          }
+          // 뒤로가기 처리 후 Snackbar 표시
           AppSnackbar.success('게시글이 수정되었습니다.');
+          return; // 성공 시 여기서 함수 종료
         } else {
           AppSnackbar.error('게시글 수정에 실패했습니다.');
           return;
@@ -274,20 +283,21 @@ class ArticleEditController extends GetxController {
 
         String? result = await App.createArticle(article: article);
         if (result != null) {
+          // 성공 시 콜백 호출 (콜백에서 Get.back() 처리)
+          if (onSuccess != null) {
+            onSuccess();
+          } else {
+            // 콜백이 없는 경우에만 직접 뒤로가기
+            Get.back();
+          }
+          // 뒤로가기 처리 후 Snackbar 표시
           AppSnackbar.success('게시글이 작성되었습니다.');
+          return; // 성공 시 여기서 함수 종료
         } else {
           AppSnackbar.error('게시글 작성에 실패했습니다.');
           return;
         }
       }
-
-      // 성공 시 콜백 호출
-      if (onSuccess != null) {
-        onSuccess();
-      }
-
-      // 성공 시 이전 화면으로 이동
-      Get.back();
     } catch (e) {
       logger.e("writeArticle error: $e");
       AppSnackbar.error(

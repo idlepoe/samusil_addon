@@ -57,13 +57,13 @@ class OfficeMusicDetailController extends GetxController {
         // 작성자 여부 확인
         await _checkAuthorStatus();
       } else {
-        AppSnackbar.error(response.error ?? '플레이리스트를 불러오는데 실패했습니다.');
         Get.back();
+        AppSnackbar.error(response.error ?? '플레이리스트를 불러오는데 실패했습니다.');
       }
     } catch (e) {
       logger.e('loadTrackArticleDetail error: $e');
-      AppSnackbar.error('플레이리스트를 불러오는데 실패했습니다.');
       Get.back();
+      AppSnackbar.error('플레이리스트를 불러오는데 실패했습니다.');
     } finally {
       isLoading.value = false;
     }
@@ -379,8 +379,8 @@ $appLink
       );
 
       if (response.success) {
-        AppSnackbar.success('플레이리스트가 삭제되었습니다.');
         Get.back(result: true); // 삭제 완료를 알리기 위해 result 전달
+        AppSnackbar.success('플레이리스트가 삭제되었습니다.');
       } else {
         AppSnackbar.error(response.error ?? '플레이리스트 삭제에 실패했습니다.');
       }

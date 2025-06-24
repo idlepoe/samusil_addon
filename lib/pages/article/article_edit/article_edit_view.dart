@@ -419,6 +419,8 @@ class ArticleEditView extends GetView<ArticleEditController> {
                         onSuccess: () {
                           // 자유게시판 데이터 새로고침
                           _refreshFreeBoard();
+                          // BottomSheet 닫기
+                          Get.back();
                         },
                       ),
               child: Text(

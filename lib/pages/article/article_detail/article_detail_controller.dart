@@ -214,8 +214,8 @@ class ArticleDetailController extends GetxController {
     try {
       bool success = await App.deleteArticle(article: article.value);
       if (success) {
-        AppSnackbar.success('게시글이 삭제되었습니다.');
         Get.back(result: true);
+        AppSnackbar.success('게시글이 삭제되었습니다.');
       } else {
         AppSnackbar.error('게시글 삭제에 실패했습니다.');
       }

@@ -334,12 +334,12 @@ class ProfileEditController extends GetxController {
       }
 
       if (success) {
+        Get.back();
         Get.snackbar(
           '저장 완료',
           '프로필이 성공적으로 저장되었습니다.',
           snackPosition: SnackPosition.BOTTOM,
         );
-        Get.back();
       } else {
         Get.snackbar(
           '저장 실패',
