@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
+import 'package:simple_pip_mode/simple_pip.dart';
 
 import '../../define/arrays.dart';
 import '../../define/define.dart';
@@ -58,8 +59,17 @@ class DashBoardController extends GetxController {
   final isPlayerInitialized = false.obs;
   final playerKey = 0.obs; // YouTube 플레이어 리렌더링을 위한 키
 
+  // 재생 시간 관리
+  final currentPosition = 0.0.obs; // 현재 재생 위치 (초)
+  final totalDuration = 0.0.obs; // 총 재생 시간 (초)
+  final progressPercentage = 0.0.obs; // 재생 진행률 (0.0 ~ 1.0)
+
   // 플레이어 상태 모니터링
   Timer? _playerMonitorTimer;
+
+  // pip 관련
+  final isPipModeActive = false.obs; // PiP 모드 활성 상태를 위한 observable
+  SimplePip? _pip; // autoPipMode 관리용
 
   ViewType viewType = ViewType.normal;
 
@@ -67,6 +77,9 @@ class DashBoardController extends GetxController {
   void onInit() {
     super.onInit();
     logger.i("DashBoardController onInit called");
+
+    // pip 초기화
+    _initPip();
 
     // 기본 YouTube 컨트롤러 생성 (빈 상태로 시작)
     _initializeDefaultYoutubeController();
@@ -80,6 +93,20 @@ class DashBoardController extends GetxController {
     if (!Get.isRegistered<HorseRaceController>()) {
       Get.put(HorseRaceController());
       logger.i("HorseRaceController를 DashBoardController에서 초기화");
+    }
+  }
+
+  /// PiP 초기화 (autoPipMode 관리용)
+  Future<void> _initPip() async {
+    try {
+      bool isPipSupported = await SimplePip.isPipAvailable;
+      logger.i('PiP Support for autoPipMode: $isPipSupported');
+
+      if (isPipSupported) {
+        _pip = SimplePip();
+      }
+    } catch (e) {
+      logger.e('PiP initialization error: $e');
     }
   }
 
@@ -146,6 +173,7 @@ class DashBoardController extends GetxController {
   void onClose() {
     _playerMonitorTimer?.cancel();
     _youtubeController?.close();
+
     super.onClose();
   }
 
@@ -481,10 +509,12 @@ class DashBoardController extends GetxController {
             case PlayerState.playing:
               isPlaying.value = true;
               isPaused.value = false;
+              _enableAutoPipMode(); // 재생 시작 시 autoPipMode 활성화
               break;
             case PlayerState.paused:
               isPlaying.value = false;
               isPaused.value = true;
+              _disableAutoPipMode(); // 일시정지 시 autoPipMode 비활성화
               break;
             case PlayerState.ended:
               // 플레이리스트에서 자동으로 다음 곡으로 넘어감
@@ -579,10 +609,12 @@ class DashBoardController extends GetxController {
         await _youtubeController!.pauseVideo();
         isPlaying.value = false;
         isPaused.value = true;
+        _disableAutoPipMode(); // 일시정지 시 autoPipMode 비활성화
       } else {
         await _youtubeController!.playVideo();
         isPlaying.value = true;
         isPaused.value = false;
+        _enableAutoPipMode(); // 재생 시 autoPipMode 활성화
       }
     } catch (e) {
       logger.e('togglePlayPause error: $e');
@@ -672,6 +704,9 @@ class DashBoardController extends GetxController {
 
     // 플레이어 상태 모니터링 중지
     _stopPlayerMonitoring();
+
+    // 플레이어 닫을 때 autoPipMode 비활성화
+    _disableAutoPipMode();
   }
 
   /// 현재 재생 중인 트랙의 포맷된 제목
@@ -686,6 +721,41 @@ class DashBoardController extends GetxController {
 
   /// YouTube 플레이어 컨트롤러 getter
   YoutubePlayerController? get youtubeController => _youtubeController;
+
+  /// 시간을 포맷하는 유틸리티 메서드
+  String formatTime(double seconds) {
+    if (seconds.isNaN || seconds.isInfinite) return '0:00';
+
+    final minutes = (seconds / 60).floor();
+    final remainingSeconds = (seconds % 60).floor();
+    return '${minutes}:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
+  /// AutoPipMode 활성화 (재생 중일 때)
+  Future<void> _enableAutoPipMode() async {
+    if (_pip != null) {
+      try {
+        await _pip!.setAutoPipMode();
+        logger.i('AutoPipMode enabled - playing');
+      } catch (e) {
+        logger.e('Failed to enable AutoPipMode: $e');
+      }
+    }
+  }
+
+  /// AutoPipMode 비활성화 (재생 중이 아닐 때)
+  Future<void> _disableAutoPipMode() async {
+    if (_pip != null) {
+      try {
+        // simple_pip_mode에서 autoPipMode를 비활성화하는 직접적인 방법이 없으므로
+        // 새 인스턴스를 생성하여 기본 상태로 리셋
+        await _pip!.setAutoPipMode(autoEnter: false);
+        logger.i('AutoPipMode disabled - not playing');
+      } catch (e) {
+        logger.e('Failed to disable AutoPipMode: $e');
+      }
+    }
+  }
 
   /// 플레이리스트에서 트랙 변경 시 현재 트랙 인덱스 업데이트
   void _updateCurrentTrackIndex() {
@@ -732,6 +802,25 @@ class DashBoardController extends GetxController {
     logger.i('Player monitoring stopped');
   }
 
+  /// 현재 재생 위치 업데이트
+  Future<void> _updateCurrentPosition() async {
+    if (_youtubeController == null) return;
+
+    try {
+      final position = await _youtubeController!.currentTime;
+      final duration = await _youtubeController!.duration;
+
+      if (position != null && duration != null && duration > 0) {
+        currentPosition.value = position;
+        totalDuration.value = duration;
+        progressPercentage.value = position / duration;
+      }
+    } catch (e) {
+      // 에러가 발생해도 로그만 출력하고 계속 진행
+      // logger.w('Update position error: $e');
+    }
+  }
+
   /// YouTube 플레이어의 현재 인덱스 확인
   Future<void> _checkPlayerIndex() async {
     if (_youtubeController == null || currentTrackArticle.value == null) return;
@@ -755,6 +844,9 @@ class DashBoardController extends GetxController {
           'Track index updated from monitoring: $oldIndex -> $playlistIndex (${currentTrack.value?.title})',
         );
       }
+
+      // 현재 재생 시간 업데이트
+      await _updateCurrentPosition();
 
       // YouTube 플레이어의 현재 상태 확인
       final playerState = await _youtubeController!.playerState;
