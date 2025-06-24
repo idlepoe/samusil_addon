@@ -11,33 +11,26 @@ class FishingGameTab extends GetView<FishingGameController> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [const Color(0xFFF8FAFC), const Color(0xFFE2E8F0)],
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                // 현재 물고기 정보 카드 (별도 분리)
-                _buildFishInfo(),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              // 현재 물고기 정보 카드
+              _buildFishInfo(),
 
-                const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
-                // 게임 영역 (전체가 버튼으로 동작)
-                Expanded(child: _buildGameArea()),
-              ],
-            ),
+              // 게임 영역
+              Expanded(child: _buildGameArea()),
+            ],
           ),
         ),
       ),
@@ -58,49 +51,80 @@ class FishingGameTab extends GetView<FishingGameController> {
 
       return Container(
         width: double.infinity,
-        margin: const EdgeInsets.only(top: 12),
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        margin: const EdgeInsets.only(bottom: 20),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: success ? Colors.green[50] : Colors.red[50],
-          borderRadius: BorderRadius.circular(8),
+          gradient: LinearGradient(
+            colors:
+                success
+                    ? [
+                      const Color(0xFF10B981).withOpacity(0.1),
+                      const Color(0xFF059669).withOpacity(0.05),
+                    ]
+                    : [
+                      const Color(0xFFEF4444).withOpacity(0.1),
+                      const Color(0xFFDC2626).withOpacity(0.05),
+                    ],
+          ),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: success ? Colors.green[300]! : Colors.red[300]!,
-            width: 1,
+            color:
+                success
+                    ? const Color(0xFF10B981).withOpacity(0.2)
+                    : const Color(0xFFEF4444).withOpacity(0.2),
+            width: 1.5,
           ),
         ),
         child: Row(
           children: [
-            // 좌측: 아이콘과 제목
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  success ? '🎉' : '😢',
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  success ? '낚시 성공!' : '낚시 실패!',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: success ? Colors.green[800] : Colors.red[800],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(width: 12),
-            // 우측: 메시지 (2줄 표시)
-            Expanded(
+            // 좌측: 아이콘
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color:
+                    success
+                        ? const Color(0xFF10B981).withOpacity(0.1)
+                        : const Color(0xFFEF4444).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Text(
-                controller.getResultMessage(),
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
-                  color: success ? Colors.green[700] : Colors.red[700],
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+                success ? '🎉' : '😢',
+                style: const TextStyle(fontSize: 24),
+              ),
+            ),
+            const SizedBox(width: 16),
+            // 우측: 텍스트 내용
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    success ? '낚시 성공!' : '낚시 실패!',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color:
+                          success
+                              ? const Color(0xFF059669)
+                              : const Color(0xFFDC2626),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    controller.getResultMessage(),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color:
+                          success
+                              ? const Color(0xFF047857)
+                              : const Color(0xFFB91C1C),
+                      height: 1.4,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
           ],
@@ -122,78 +146,158 @@ class FishingGameTab extends GetView<FishingGameController> {
       // 잡은 물고기인지 확인
       final isCaught = controller.caughtFish.value.contains(fish.name);
 
-      return InkWell(
-        onTap: () => _showFishDetailDialog(fish, isCaught),
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[300]!),
-          ),
-          child: Row(
-            children: [
-              Text(
-                isGameActive && !showResult ? '❓' : fish.emoji,
-                style: const TextStyle(fontSize: 28),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isGameActive && !showResult ? '???' : fish.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      isGameActive && !showResult
-                          ? '어떤 물고기가 나올까요?'
-                          : fish.description,
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (!isGameActive || showResult) ...[
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.access_time,
-                            size: 12,
-                            color: Colors.grey[600],
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            fish.appearanceTimeText,
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(Icons.stars, size: 12, color: Colors.grey[600]),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${fish.reward}P',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _showFishDetailDialog(fish, isCaught),
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF64748B).withOpacity(0.08),
+                  blurRadius: 20,
+                  offset: const Offset(0, 4),
+                  spreadRadius: -2,
                 ),
-              ),
-              // 터치 가능함을 나타내는 아이콘
-              Icon(Icons.info_outline, size: 16, color: Colors.grey[400]),
-            ],
+              ],
+            ),
+            child: Row(
+              children: [
+                // 물고기 이모지 컨테이너
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF3B82F6).withOpacity(0.1),
+                        const Color(0xFF1D4ED8).withOpacity(0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Center(
+                    child: Text(
+                      isGameActive && !showResult ? '❓' : fish.emoji,
+                      style: const TextStyle(fontSize: 32),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isGameActive && !showResult ? '???' : fish.name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1E293B),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        isGameActive && !showResult
+                            ? '어떤 물고기가 나올까요?'
+                            : fish.description,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF64748B),
+                          fontWeight: FontWeight.w500,
+                          height: 1.4,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (!isGameActive || showResult) ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF3B82F6).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.access_time,
+                                    size: 14,
+                                    color: const Color(0xFF3B82F6),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    fish.appearanceTimeText,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF3B82F6),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF10B981).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.stars,
+                                    size: 14,
+                                    color: const Color(0xFF10B981),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${fish.reward}P',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF10B981),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                // 정보 아이콘
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF64748B).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.info_outline,
+                    size: 20,
+                    color: const Color(0xFF64748B),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -242,13 +346,13 @@ class FishingGameTab extends GetView<FishingGameController> {
           width: double.infinity,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey[300]!, width: 2),
+            borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                color: const Color(0xFF64748B).withOpacity(0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+                spreadRadius: -2,
               ),
             ],
           ),
@@ -256,23 +360,27 @@ class FishingGameTab extends GetView<FishingGameController> {
             children: [
               // 게임 콘텐츠 영역
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(24),
                 child: Column(
                   children: [
                     // 결과 메시지
                     _buildResultMessage(),
 
-                    // 결과 메시지와 게임 영역 사이 간격
-                    if (controller.showResult.value) const SizedBox(height: 24),
-
                     // 게임 영역
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFF87CEEB).withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(12),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              const Color(0xFF0EA5E9).withOpacity(0.1),
+                              const Color(0xFF0284C7).withOpacity(0.05),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: const Color(0xFF4682B4),
+                            color: const Color(0xFF0EA5E9).withOpacity(0.2),
                             width: 2,
                           ),
                         ),
@@ -280,7 +388,7 @@ class FishingGameTab extends GetView<FishingGameController> {
                           children: [
                             // 낚싯대 영역
                             Expanded(flex: 3, child: _buildFishingRod()),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 20),
 
                             // 성공 게이지
                             _buildSuccessGauge(),
@@ -289,26 +397,40 @@ class FishingGameTab extends GetView<FishingGameController> {
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
 
-                    // 버튼 영역 (별도 컨테이너)
+                    // 버튼 영역
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
-                        vertical: 16,
+                        vertical: 20,
                         horizontal: 24,
                       ),
                       decoration: BoxDecoration(
-                        color:
+                        gradient:
                             isDisabled
-                                ? Colors.grey[400]
-                                : const Color(0xFF4682B4),
-                        borderRadius: BorderRadius.circular(12),
+                                ? LinearGradient(
+                                  colors: [
+                                    const Color(0xFF94A3B8),
+                                    const Color(0xFF64748B),
+                                  ],
+                                )
+                                : LinearGradient(
+                                  colors: [
+                                    const Color(0xFF3B82F6),
+                                    const Color(0xFF1D4ED8),
+                                  ],
+                                ),
+                        borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
+                            color:
+                                isDisabled
+                                    ? const Color(0xFF64748B).withOpacity(0.2)
+                                    : const Color(0xFF3B82F6).withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                            spreadRadius: -2,
                           ),
                         ],
                       ),
@@ -319,15 +441,17 @@ class FishingGameTab extends GetView<FishingGameController> {
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 6),
                           Text(
                             statusText,
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
-                              fontSize: 12,
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              height: 1.3,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -342,8 +466,8 @@ class FishingGameTab extends GetView<FishingGameController> {
               if (isGameActive && controller.isButtonPressed.value)
                 Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4682B4).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
+                    color: const Color(0xFF3B82F6).withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(24),
                   ),
                 ),
             ],
@@ -356,11 +480,8 @@ class FishingGameTab extends GetView<FishingGameController> {
   /// 낚싯대 영역
   Widget _buildFishingRod() {
     return Container(
-      margin: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-      ),
+      margin: const EdgeInsets.all(12),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
       child: Stack(
         children: [
           // 물고기 범위 (노란색) - 배경에 위치
@@ -371,8 +492,8 @@ class FishingGameTab extends GetView<FishingGameController> {
             return AnimatedPositioned(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeInOut,
-              left: 40, // 원래 위치로 복원
-              right: 40, // 원래 위치로 복원
+              left: 40,
+              right: 40,
               top:
                   (1 - controller.fishPosition.value - fish.size / 2) *
                   (MediaQuery.of(Get.context!).size.height * 0.3),
@@ -382,9 +503,21 @@ class FishingGameTab extends GetView<FishingGameController> {
                 height:
                     fish.size * (MediaQuery.of(Get.context!).size.height * 0.3),
                 decoration: BoxDecoration(
-                  color: Colors.yellow.withOpacity(0.7),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange, width: 2),
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFFFBBF24).withOpacity(0.8),
+                      const Color(0xFFF59E0B).withOpacity(0.6),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFD97706), width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFBBF24).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Center(
                   child: TweenAnimationBuilder<double>(
@@ -396,7 +529,7 @@ class FishingGameTab extends GetView<FishingGameController> {
                         scale: scale,
                         child: Text(
                           fish.emoji,
-                          style: const TextStyle(fontSize: 20),
+                          style: const TextStyle(fontSize: 24),
                         ),
                       );
                     },
@@ -427,14 +560,26 @@ class FishingGameTab extends GetView<FishingGameController> {
                 height: playerBarHeight,
                 child: Center(
                   child: AnimatedRotation(
-                    turns: isPressed ? -0.1 : 0.1, // 눌렀을 때 왼쪽(-), 놓았을 때 오른쪽(+)
+                    turns: isPressed ? -0.1 : 0.1,
                     duration: const Duration(milliseconds: 200),
                     curve: Curves.easeInOut,
-                    child: Image.asset(
-                      'assets/lure.png',
-                      width: playerBarHeight * 1.6, // 2배 크기 (0.8 * 2)
-                      height: playerBarHeight * 1.6, // 2배 크기 (0.8 * 2)
-                      fit: BoxFit.contain,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF64748B).withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Image.asset(
+                        'assets/lure.png',
+                        width: playerBarHeight * 1.6,
+                        height: playerBarHeight * 1.6,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                 ),
@@ -449,37 +594,44 @@ class FishingGameTab extends GetView<FishingGameController> {
   /// 성공 게이지
   Widget _buildSuccessGauge() {
     return Container(
-      width: 40,
+      width: 48,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[400]!, width: 2),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF64748B).withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Obx(() {
         final gauge = controller.successGauge.value;
 
-        // 게이지 수준에 따른 파스텔 색상 결정
-        Color gaugeColor;
+        // 게이지 수준에 따른 그라데이션 색상 결정
+        List<Color> gaugeColors;
         if (gauge >= 0.8) {
-          gaugeColor = const Color(0xFFB8E6B8); // 파스텔 그린
+          gaugeColors = [const Color(0xFF10B981), const Color(0xFF059669)];
         } else if (gauge >= 0.6) {
-          gaugeColor = const Color(0xFFFFE4B5); // 파스텔 오렌지
+          gaugeColors = [const Color(0xFFF59E0B), const Color(0xFFD97706)];
         } else if (gauge >= 0.4) {
-          gaugeColor = const Color(0xFFFFD1DC); // 파스텔 핑크
+          gaugeColors = [const Color(0xFFEC4899), const Color(0xFFDB2777)];
         } else if (gauge >= 0.2) {
-          gaugeColor = const Color(0xFFFFB6C1); // 파스텔 로즈
+          gaugeColors = [const Color(0xFFEF4444), const Color(0xFFDC2626)];
         } else {
-          gaugeColor = const Color(0xFFFFC0CB); // 파스텔 레드
+          gaugeColors = [const Color(0xFFEF4444), const Color(0xFFB91C1C)];
         }
 
         return Column(
           children: [
             Expanded(
               child: Container(
-                margin: const EdgeInsets.all(4),
+                margin: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(4),
-                  color: Colors.grey[200], // 배경색
+                  borderRadius: BorderRadius.circular(8),
+                  color: const Color(0xFFF1F5F9),
                 ),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
@@ -493,8 +645,19 @@ class FishingGameTab extends GetView<FishingGameController> {
                           height: constraints.maxHeight * gauge,
                           child: Container(
                             decoration: BoxDecoration(
-                              color: gaugeColor,
-                              borderRadius: BorderRadius.circular(4),
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: gaugeColors,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: gaugeColors[0].withOpacity(0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
                             ),
                           ),
                         ),
