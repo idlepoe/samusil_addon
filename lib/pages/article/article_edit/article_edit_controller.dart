@@ -15,6 +15,8 @@ import '../../../models/profile.dart';
 import '../../../utils/app.dart';
 import '../../../utils/util.dart';
 import '../../../components/appSnackbar.dart';
+import '../article_list/article_list_controller.dart';
+import '../../dash_board/dash_board_controller.dart';
 
 class Contents {
   bool isPicture;
@@ -45,9 +47,9 @@ class ArticleEditController extends GetxController {
 
   // 컨트롤러들
   final TextEditingController titleController = TextEditingController();
-  final ImagePicker picker = ImagePicker();
 
-  final String? articleId;
+  String? articleId;
+  final RxBool isEditMode = false.obs;
 
   ArticleEditController({this.articleId});
 
@@ -58,21 +60,41 @@ class ArticleEditController extends GetxController {
   void onInit() {
     super.onInit();
 
-    // arguments로 전달된 boardInfo가 있으면 우선 사용
-    final boardInfoArg = Get.arguments as BoardInfo?;
-    if (boardInfoArg != null) {
-      init(boardInfoArg);
+    // arguments에서 article이 전달된 경우 (수정 모드)
+    final arguments = Get.arguments;
+    if (arguments is Map && arguments.containsKey('article')) {
+      final article = arguments['article'] as Article;
+      final board = Arrays.getBoardInfo(article.board_name);
+      init(board);
+
+      // 수정 모드로 설정하고 기존 데이터 로드
+      _loadArticleForEdit(article);
+
       logger.d(
-        "ArticleEditController boardInfoArg: ${boardInfoArg.board_name}",
+        "ArticleEditController edit mode - boardName: ${article.board_name}",
       );
 
       // 글쓰기 권한 체크
-      if (!boardInfoArg.isCanWrite) {
+      if (!board.isCanWrite) {
         Get.back();
         AppSnackbar.error('이 게시판에서는 글을 작성할 수 없습니다.');
         return;
       }
-      return; // arguments가 있으면 라우트 파라미터는 무시
+      return;
+    }
+
+    // arguments로 전달된 boardInfo가 있으면 우선 사용 (새 글 작성)
+    if (arguments is BoardInfo) {
+      init(arguments);
+      logger.d("ArticleEditController boardInfoArg: ${arguments.board_name}");
+
+      // 글쓰기 권한 체크
+      if (!arguments.isCanWrite) {
+        Get.back();
+        AppSnackbar.error('이 게시판에서는 글을 작성할 수 없습니다.');
+        return;
+      }
+      return;
     }
 
     // 라우트 파라미터에서 boardName으로 boardInfo 설정
@@ -106,6 +128,55 @@ class ArticleEditController extends GetxController {
     );
   }
 
+  // 수정할 게시글 데이터 로드
+  void _loadArticleForEdit(Article article) {
+    // 제목 설정
+    titleController.text = article.title;
+
+    // 수정 모드 설정
+    articleId = article.id;
+    isEditMode.value = true;
+
+    // 콘텐츠 리스트 초기화 후 기존 데이터 로드
+    contentList.clear();
+
+    for (var content in article.contents) {
+      if (content.isPicture) {
+        // 이미지 콘텐츠
+        contentList.add(
+          Contents(
+            true,
+            content.contents, // 이미지 URL
+            NetworkImage(content.contents), // 네트워크 이미지로 변환
+            null, // 파일 없음 (이미 업로드된 이미지)
+            null,
+            null,
+          ),
+        );
+      } else {
+        // 텍스트 콘텐츠
+        final textController = TextEditingController(text: content.contents);
+        contentList.add(
+          Contents(
+            false,
+            content.contents,
+            null,
+            null,
+            textController,
+            FocusNode(),
+          ),
+        );
+      }
+    }
+
+    // 콘텐츠가 없으면 빈 텍스트 콘텐츠 하나 추가
+    if (contentList.isEmpty) {
+      contentList.add(
+        Contents(false, "", null, null, TextEditingController(), FocusNode()),
+      );
+    }
+  }
+
   // 텍스트 추가
   void addTextContent() {
     final newContent = Contents(
@@ -126,16 +197,16 @@ class ArticleEditController extends GetxController {
 
   // 이미지 추가
   Future<void> addImageContent() async {
+    final picker = ImagePicker(); // 매번 새 인스턴스 생성
     final pickedFileList = await picker.pickMultiImage();
-    int index = 0;
 
     for (XFile pickedFile in pickedFileList) {
       if (pickedFileList.isNotEmpty) {
         ImageProvider<Object> image = await Utils.xFileToImage(pickedFile);
         logger.i(image);
 
-        contentList.insert(
-          index,
+        contentList.add(
+          // insert 대신 add 사용하여 리스트 끝에 추가
           Contents(
             true,
             "${Utils.getDateTimeKey()}.${pickedFile.path.split(".").last}",
@@ -145,7 +216,6 @@ class ArticleEditController extends GetxController {
             null,
           ),
         );
-        index++;
       }
     }
   }
@@ -223,7 +293,7 @@ class ArticleEditController extends GetxController {
       // 프로필 정보 가져오기
       Profile profile = await App.getProfile();
 
-      if (articleId != null) {
+      if (isEditMode.value && articleId != null) {
         // 게시글 수정
         Article article = Article(
           id: articleId!,
@@ -246,14 +316,8 @@ class ArticleEditController extends GetxController {
 
         String? result = await App.updateArticle(article: article);
         if (result != null) {
-          // 성공 시 콜백 호출 (콜백에서 Get.back() 처리)
-          if (onSuccess != null) {
-            onSuccess();
-          } else {
-            // 콜백이 없는 경우에만 직접 뒤로가기
-            Get.back();
-          }
-          // 뒤로가기 처리 후 Snackbar 표시
+          _refreshAfterWrite();
+          Get.back();
           AppSnackbar.success('게시글이 수정되었습니다.');
           return; // 성공 시 여기서 함수 종료
         } else {
@@ -283,14 +347,8 @@ class ArticleEditController extends GetxController {
 
         String? result = await App.createArticle(article: article);
         if (result != null) {
-          // 성공 시 콜백 호출 (콜백에서 Get.back() 처리)
-          if (onSuccess != null) {
-            onSuccess();
-          } else {
-            // 콜백이 없는 경우에만 직접 뒤로가기
-            Get.back();
-          }
-          // 뒤로가기 처리 후 Snackbar 표시
+          _refreshAfterWrite();
+          Get.back();
           AppSnackbar.success('게시글이 작성되었습니다.');
           return; // 성공 시 여기서 함수 종료
         } else {
@@ -301,10 +359,25 @@ class ArticleEditController extends GetxController {
     } catch (e) {
       logger.e("writeArticle error: $e");
       AppSnackbar.error(
-        articleId != null ? '게시글 수정 중 오류가 발생했습니다.' : '게시글 작성 중 오류가 발생했습니다.',
+        isEditMode.value ? '게시글 수정 중 오류가 발생했습니다.' : '게시글 작성 중 오류가 발생했습니다.',
       );
     } finally {
       isPressed.value = false;
+    }
+  }
+
+  // 글 작성/수정 후 관련 컨트롤러들 새로고침
+  void _refreshAfterWrite() {
+    // ArticleListController가 등록되어 있으면 새로고침 호출
+    if (Get.isRegistered<ArticleListController>()) {
+      final articleListController = Get.find<ArticleListController>();
+      articleListController.onRefresh();
+    }
+
+    // DashBoardController가 등록되어 있으면 새로고침 호출
+    if (Get.isRegistered<DashBoardController>()) {
+      final dashBoardController = Get.find<DashBoardController>();
+      dashBoardController.refreshDashboard();
     }
   }
 

@@ -34,8 +34,13 @@ class HttpService {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          logger.i("🚀 [REQUEST] ${options.method} ${options.uri}");
-          if (options.data != null) logger.d("Data: ${options.data}");
+          // logger.i("🚀 [REQUEST] ${options.method} ${options.uri}");
+          // if (options.data != null) logger.d("Data: ${options.data}");
+
+          // startTime이 이미 설정되어 있지 않으면 현재 시간으로 설정
+          if (options.extra['startTime'] == null) {
+            options.extra['startTime'] = DateTime.now();
+          }
 
           try {
             final user = FirebaseAuth.instance.currentUser;
@@ -140,13 +145,10 @@ class HttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final startTime = DateTime.now();
     return await _dio.get(
       path,
       queryParameters: queryParameters,
-      options:
-          options?.copyWith(extra: {'startTime': startTime}) ??
-          Options(extra: {'startTime': startTime}),
+      options: options,
     );
   }
 
@@ -157,14 +159,11 @@ class HttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final startTime = DateTime.now();
     return await _dio.post(
       path,
       data: data,
       queryParameters: queryParameters,
-      options:
-          options?.copyWith(extra: {'startTime': startTime}) ??
-          Options(extra: {'startTime': startTime}),
+      options: options,
     );
   }
 
@@ -175,14 +174,11 @@ class HttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final startTime = DateTime.now();
     return await _dio.put(
       path,
       data: data,
       queryParameters: queryParameters,
-      options:
-          options?.copyWith(extra: {'startTime': startTime}) ??
-          Options(extra: {'startTime': startTime}),
+      options: options,
     );
   }
 
@@ -193,14 +189,11 @@ class HttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final startTime = DateTime.now();
     return await _dio.delete(
       path,
       data: data,
       queryParameters: queryParameters,
-      options:
-          options?.copyWith(extra: {'startTime': startTime}) ??
-          Options(extra: {'startTime': startTime}),
+      options: options,
     );
   }
 
@@ -349,7 +342,7 @@ class HttpService {
   /// 게시글 삭제
   Future<CloudFunctionResponse> deleteArticle({required String id}) async {
     try {
-      final response = await _dio.post('/deleteArticle', data: {'id': id});
+      final response = await _dio.delete('/deleteArticle', data: {'id': id});
       return CloudFunctionResponse(success: true, data: response.data);
     } catch (e) {
       return CloudFunctionResponse(success: false, error: e.toString());
@@ -362,7 +355,7 @@ class HttpService {
     required String commentId,
   }) async {
     try {
-      final response = await _dio.post(
+      final response = await _dio.delete(
         '/deleteComment',
         data: {'articleId': articleId, 'commentId': commentId},
       );

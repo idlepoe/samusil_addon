@@ -9,6 +9,7 @@ import '../../../components/appButton.dart';
 import '../../../components/appCircularProgress.dart';
 import 'article_edit_controller.dart';
 import '../article_list/article_list_controller.dart';
+import '../../dash_board/dash_board_controller.dart';
 
 class ArticleEditView extends GetView<ArticleEditController> {
   final String? id;
@@ -23,40 +24,20 @@ class ArticleEditView extends GetView<ArticleEditController> {
       controller.init(boardInfo);
     }
 
-    // bottom sheet에서 사용되는지 확인 (AppBar가 없는 경우)
-    final isInBottomSheet =
-        context.findAncestorWidgetOfExactType<Scaffold>() == null;
-
-    if (isInBottomSheet) {
-      // bottom sheet에서 사용될 때
-      return Material(
-        color: Colors.white,
-        child: Container(
-          color: Colors.white,
-          child: Column(
-            children: [
-              // 상단 헤더 (AppBar 대신)
-              _buildBottomSheetHeader(),
-              // 본문 (스크롤 가능하도록)
-              Expanded(
-                child: SingleChildScrollView(child: _buildBody(context)),
-              ),
-              // 하단 툴바
-              _buildToolbar(),
-            ],
-          ),
+    // 일반 페이지로만 동작
+    return Scaffold(
+      resizeToAvoidBottomInset: true, // 키보드가 올라올 때 레이아웃 조정
+      backgroundColor: Colors.white,
+      appBar: _buildAppBar(context),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(child: _buildBody(context)),
+            _buildToolbar(), // body 안으로 이동
+          ],
         ),
-      );
-    } else {
-      // 일반 화면에서 사용될 때
-      return Scaffold(
-        resizeToAvoidBottomInset: false,
-        backgroundColor: Colors.white,
-        appBar: _buildAppBar(context),
-        body: SafeArea(child: _buildBody(context)),
-        bottomNavigationBar: _buildToolbar(),
-      );
-    }
+      ),
+    );
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
@@ -82,12 +63,7 @@ class ArticleEditView extends GetView<ArticleEditController> {
             onPressed:
                 controller.isPressed.value
                     ? null
-                    : () => controller.writeArticle(
-                      onSuccess: () {
-                        // 자유게시판 데이터 새로고침
-                        _refreshFreeBoard();
-                      },
-                    ),
+                    : () => controller.writeArticle(),
             child: Text(
               id != null ? '수정' : '완료',
               style: TextStyle(
@@ -109,31 +85,27 @@ class ArticleEditView extends GetView<ArticleEditController> {
   Widget _buildBody(BuildContext context) {
     return Obx(() {
       if (controller.isPressed.value) {
-        return Container(
-          height: 300, // 고정 높이 설정
-          child: const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AppCircularProgress.large(color: Color(0xFF0064FF)),
-                SizedBox(height: 16),
-                Text(
-                  '글을 작성하고 있습니다...',
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
-                ),
-              ],
-            ),
+        return const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AppCircularProgress.large(color: Color(0xFF0064FF)),
+              SizedBox(height: 16),
+              Text(
+                '글을 작성하고 있습니다...',
+                style: TextStyle(color: Colors.grey, fontSize: 14),
+              ),
+            ],
           ),
         );
       }
 
       return Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
           _buildTitleSection(),
           _buildDivider(),
-          SizedBox(height: 10),
-          _buildContentSection(),
+          const SizedBox(height: 10),
+          Expanded(child: _buildContentSection()), // Expanded로 감싸서 남은 공간 모두 사용
         ],
       );
     });
@@ -173,23 +145,20 @@ class ArticleEditView extends GetView<ArticleEditController> {
 
   Widget _buildContentSection() {
     return Obx(
-      () => Container(
-        height: 400, // 고정 높이 설정
-        child: ReorderableListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          itemCount: controller.contentList.length,
-          buildDefaultDragHandles: false,
-          onReorder:
-              controller.isReorderMode.value
-                  ? controller.reorderContent
-                  : (oldIndex, newIndex) {},
-          itemBuilder: (context, index) {
-            final content = controller.contentList[index];
-            return _buildContentItem(content, index);
-          },
-          // 키보드가 표시되었을 때 스크롤 가능하도록 설정
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        ),
+      () => ReorderableListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: controller.contentList.length,
+        buildDefaultDragHandles: false,
+        onReorder:
+            controller.isReorderMode.value
+                ? controller.reorderContent
+                : (oldIndex, newIndex) {},
+        itemBuilder: (context, index) {
+          final content = controller.contentList[index];
+          return _buildContentItem(content, index);
+        },
+        // 키보드가 표시되었을 때 스크롤 가능하도록 설정
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       ),
     );
   }
@@ -287,48 +256,58 @@ class ArticleEditView extends GetView<ArticleEditController> {
   }
 
   Widget _buildImageContent(Contents content, int index) {
-    return Stack(
-      children: [
-        Container(
-          width: double.infinity,
-          height: 200,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            image: DecorationImage(image: content.picture!, fit: BoxFit.cover),
-          ),
-        ),
-      ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Image(
+        image: content.picture!,
+        width: double.infinity,
+        fit: BoxFit.fitWidth, // fit width로 변경하여 화면 너비에 맞추고 비율 유지
+      ),
     );
   }
 
   Widget _buildToolbar() {
-    return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border(
-            top: BorderSide(color: const Color(0xFFF0F0F0), width: 1),
+    return Builder(
+      builder: (context) {
+        final mediaQuery = MediaQuery.of(context);
+        final keyboardHeight = mediaQuery.viewInsets.bottom;
+
+        return Container(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 16,
+            bottom:
+                16 +
+                (keyboardHeight > 0
+                    ? 0
+                    : mediaQuery.padding.bottom), // 키보드가 있으면 SafeArea 패딩 제거
           ),
-        ),
-        child: Row(
-          children: [
-            _buildToolbarButton(
-              icon: LineIcons.font,
-              label: '텍스트',
-              onTap: controller.addTextContent,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              top: BorderSide(color: const Color(0xFFF0F0F0), width: 1),
             ),
-            const SizedBox(width: 16),
-            _buildToolbarButton(
-              icon: LineIcons.image,
-              label: '이미지',
-              onTap: controller.addImageContent,
-            ),
-            const Spacer(),
-            _buildReorderButton(),
-          ],
-        ),
-      ),
+          ),
+          child: Row(
+            children: [
+              _buildToolbarButton(
+                icon: LineIcons.font,
+                label: '텍스트',
+                onTap: controller.addTextContent,
+              ),
+              const SizedBox(width: 16),
+              _buildToolbarButton(
+                icon: LineIcons.image,
+                label: '이미지',
+                onTap: controller.addImageContent,
+              ),
+              const Spacer(),
+              _buildReorderButton(),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -385,68 +364,5 @@ class ArticleEditView extends GetView<ArticleEditController> {
         ),
       ),
     );
-  }
-
-  Widget _buildBottomSheetHeader() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0xFFF0F0F0))),
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.black),
-            onPressed: () => Get.back(),
-          ),
-          Expanded(
-            child: Text(
-              id != null ? '글 수정' : '글쓰기',
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          Obx(
-            () => TextButton(
-              onPressed:
-                  controller.isPressed.value
-                      ? null
-                      : () => controller.writeArticle(
-                        onSuccess: () {
-                          // 자유게시판 데이터 새로고침
-                          _refreshFreeBoard();
-                          // BottomSheet 닫기
-                          Get.back();
-                        },
-                      ),
-              child: Text(
-                id != null ? '수정' : '완료',
-                style: TextStyle(
-                  color:
-                      controller.isPressed.value
-                          ? Colors.grey
-                          : const Color(0xFF0064FF),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 자유게시판 데이터 새로고침
-  void _refreshFreeBoard() {
-    // ArticleListController가 등록되어 있으면 새로고침 호출
-    if (Get.isRegistered<ArticleListController>()) {
-      final articleListController = Get.find<ArticleListController>();
-      articleListController.onRefresh();
-    }
   }
 }

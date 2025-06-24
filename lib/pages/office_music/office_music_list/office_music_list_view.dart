@@ -251,19 +251,19 @@ class OfficeMusicListView extends GetView<OfficeMusicListController> {
   }
 
   Widget _buildFilterDropdown() {
-    return PopupMenuButton<FilterType>(
-      onSelected: (FilterType filter) {
-        controller.changeFilter(filter);
+    return PopupMenuButton<SortType>(
+      onSelected: (SortType sortType) {
+        controller.changeSortType(sortType);
       },
       itemBuilder: (BuildContext context) {
-        return FilterType.values.map((FilterType filter) {
-          final isSelected = controller.currentFilter.value == filter;
-          return PopupMenuItem<FilterType>(
-            value: filter,
+        return SortType.values.map((SortType sortType) {
+          final isSelected = controller.currentSortType.value == sortType;
+          return PopupMenuItem<SortType>(
+            value: sortType,
             child: Row(
               children: [
                 Text(
-                  controller.getFilterName(filter),
+                  controller.getSortTypeText(sortType),
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
@@ -291,7 +291,7 @@ class OfficeMusicListView extends GetView<OfficeMusicListController> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              controller.getFilterName(controller.currentFilter.value),
+              controller.getSortTypeText(controller.currentSortType.value),
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,

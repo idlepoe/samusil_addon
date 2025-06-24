@@ -17,6 +17,7 @@ import '../../models/youtube/track.dart';
 import '../../utils/app.dart';
 import '../../utils/http_service.dart';
 import '../../utils/util.dart';
+import '../../utils/pending_navigation_service.dart';
 import '../wish/wish_controller.dart';
 import '../../controllers/profile_controller.dart';
 import '../../controllers/horse_race_controller.dart';
@@ -143,6 +144,9 @@ class DashBoardController extends GetxController {
     logger.i("Starting DashBoardController init...");
     await init();
     logger.i("DashBoardController init completed");
+
+    // 지연된 네비게이션 처리
+    await _handlePendingNavigation();
   }
 
   /// ProfileController가 초기화되었는지 확인하고, 필요시 초기화합니다.
@@ -166,6 +170,57 @@ class DashBoardController extends GetxController {
       }
     } catch (e) {
       logger.e("ProfileController 초기화 오류: $e");
+    }
+  }
+
+  /// 지연된 네비게이션 처리 (1회 사용 후 자동 삭제)
+  Future<void> _handlePendingNavigation() async {
+    try {
+      final pendingNavigationService = PendingNavigationService();
+
+      // 지연된 네비게이션이 있는지 확인
+      if (await pendingNavigationService.hasPendingNavigation()) {
+        final pendingData =
+            await pendingNavigationService.getPendingNavigation();
+
+        if (pendingData != null) {
+          final route = pendingData['route'] as String?;
+          final data = pendingData['data'] as Map<String, dynamic>?;
+
+          logger.i('🚀 지연된 네비게이션 실행: $route, 데이터: $data');
+
+          // 먼저 지연된 네비게이션 정보 삭제 (1회 사용 보장)
+          await pendingNavigationService.clearPendingNavigation();
+          logger.i('🗑️ 지연된 네비게이션 정보 삭제 완료 (1회 사용)');
+
+          // 약간의 지연 후 네비게이션 실행 (UI가 완전히 로드된 후)
+          if (route != null && route.isNotEmpty) {
+            Future.delayed(const Duration(milliseconds: 500), () {
+              try {
+                Get.toNamed(route);
+                logger.i('🚀 지연된 네비게이션 완료: $route');
+              } catch (navError) {
+                logger.e('네비게이션 실행 오류: $navError');
+              }
+            });
+          } else {
+            logger.w('지연된 네비게이션 route가 비어있습니다.');
+          }
+        } else {
+          // 데이터가 null이면 저장된 정보 삭제
+          await pendingNavigationService.clearPendingNavigation();
+          logger.w('지연된 네비게이션 데이터가 null입니다. 정보를 삭제했습니다.');
+        }
+      }
+    } catch (e) {
+      logger.e('지연된 네비게이션 처리 오류: $e');
+      // 오류 발생 시에도 저장된 정보 삭제 (안전장치)
+      try {
+        await PendingNavigationService().clearPendingNavigation();
+        logger.i('🗑️ 오류 발생으로 인한 지연된 네비게이션 정보 정리 완료');
+      } catch (clearError) {
+        logger.e('지연된 네비게이션 정보 삭제 오류: $clearError');
+      }
     }
   }
 

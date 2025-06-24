@@ -29,9 +29,8 @@ class ArticleMenuWidget extends StatelessWidget {
       itemBuilder: (BuildContext context) {
         final List<PopupMenuItem<String>> items = [];
 
-        // 공통 메뉴 (공유, 신고)
+        // 공유하기는 항상 표시
         items.add(_buildPopupMenuItem('share', '공유하기', Icons.share_outlined));
-        items.add(_buildPopupMenuItem('report', '신고하기', Icons.report_outlined));
 
         // 작성자인 경우
         if (isAuthor) {
@@ -49,7 +48,10 @@ class ArticleMenuWidget extends StatelessWidget {
             );
           }
         } else {
-          // 작성자가 아닌 경우 차단 메뉴 추가
+          // 작성자가 아닌 경우에만 신고하기, 차단하기 메뉴 추가
+          items.add(
+            _buildPopupMenuItem('report', '신고하기', Icons.report_outlined),
+          );
           items.add(_buildPopupMenuItem('block', '차단하기', Icons.block));
         }
 

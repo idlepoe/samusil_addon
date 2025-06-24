@@ -7,6 +7,7 @@ import 'package:office_lounge/utils/util.dart';
 import 'package:intl/intl.dart';
 
 import '../../../components/appBarAction.dart';
+import '../../../components/appCircularProgress.dart';
 import '../../../components/bottomButton.dart';
 import '../../../define/define.dart';
 import '../../../define/arrays.dart';
@@ -65,21 +66,42 @@ class ArticleListView extends GetView<ArticleListController> {
         _buildFilterBar(),
         const Divider(height: 1, color: Color(0xFFF0F0F0)),
         Expanded(
-          child: RefreshIndicator(
-            onRefresh: controller.onRefresh,
-            child: Obx(
-              () => Padding(
+          child: Obx(() {
+            // 데이터가 로드되지 않았으면 로딩 인디케이터 표시
+            if (!controller.isDataLoaded.value) {
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AppCircularProgress.large(color: Color(0xFF0064FF)),
+                    SizedBox(height: 16),
+                    Text(
+                      '게시글을 불러오고 있습니다...',
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            // 데이터가 로드되면 RefreshIndicator와 함께 리스트 표시
+            return RefreshIndicator(
+              onRefresh: controller.onRefresh,
+              child: Padding(
                 padding: EdgeInsets.only(
                   bottom: _shouldShowWriteButton() ? 100.0 : 0.0,
                 ),
-                child: ArticleListWidget(
-                  articles: controller.displayArticles,
-                  hasPicture: controller.hasPicture,
-                  hasNoContents: controller.hasNoContents,
-                ),
+                child:
+                    controller.displayArticles.isEmpty
+                        ? _buildEmptyState()
+                        : ArticleListWidget(
+                          articles: controller.displayArticles,
+                          hasPicture: controller.hasPicture,
+                          hasNoContents: controller.hasNoContents,
+                        ),
               ),
-            ),
-          ),
+            );
+          }),
         ),
       ],
     );
@@ -172,6 +194,36 @@ class ArticleListView extends GetView<ArticleListController> {
     return controller.boardInfo.value.isCanWrite;
   }
 
+  Widget _buildEmptyState() {
+    return ListView(
+      children: [
+        const SizedBox(height: 100),
+        Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.article_outlined, size: 64, color: Colors.grey[400]),
+              const SizedBox(height: 16),
+              Text(
+                '아직 게시글이 없습니다',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '첫 번째 게시글을 작성해보세요!',
+                style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildWriteCommentSheet(BuildContext context) {
     final profileController = ProfileController.to;
 
@@ -191,7 +243,7 @@ class ArticleListView extends GetView<ArticleListController> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            controller.showWriteBottomSheet();
+            controller.navigateToWrite();
           },
           borderRadius: BorderRadius.circular(12),
           child: Container(

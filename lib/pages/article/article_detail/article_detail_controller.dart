@@ -17,6 +17,8 @@ import '../../../models/profile.dart';
 import '../../../utils/app.dart';
 import '../../../utils/http_service.dart';
 import '../../../utils/util.dart';
+import '../article_list/article_list_controller.dart';
+import '../../dash_board/dash_board_controller.dart';
 
 class ArticleDetailController extends GetxController {
   var logger = Logger();
@@ -214,6 +216,8 @@ class ArticleDetailController extends GetxController {
     try {
       bool success = await App.deleteArticle(article: article.value);
       if (success) {
+        // 삭제 성공 시 관련 컨트롤러들 새로고침
+        _refreshAfterDelete();
         Get.back(result: true);
         AppSnackbar.success('게시글이 삭제되었습니다.');
       } else {
@@ -222,6 +226,21 @@ class ArticleDetailController extends GetxController {
     } catch (e) {
       logger.e('deleteArticle error: $e');
       AppSnackbar.error('게시글 삭제 중 오류가 발생했습니다.');
+    }
+  }
+
+  // 삭제 후 관련 컨트롤러들 새로고침
+  void _refreshAfterDelete() {
+    // ArticleListController가 등록되어 있으면 새로고침 호출
+    if (Get.isRegistered<ArticleListController>()) {
+      final articleListController = Get.find<ArticleListController>();
+      articleListController.onRefresh();
+    }
+
+    // DashBoardController가 등록되어 있으면 새로고침 호출
+    if (Get.isRegistered<DashBoardController>()) {
+      final dashBoardController = Get.find<DashBoardController>();
+      dashBoardController.refreshDashboard();
     }
   }
 
@@ -318,7 +337,10 @@ class ArticleDetailController extends GetxController {
       return;
     }
 
-    Get.toNamed('/article-edit', arguments: {'article': article.value});
+    Get.toNamed(
+      '/list/${article.value.board_name}/edit',
+      arguments: {'article': article.value},
+    );
   }
 
   void _sortComments() {

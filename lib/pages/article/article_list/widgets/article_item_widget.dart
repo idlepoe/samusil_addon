@@ -8,6 +8,9 @@ import 'package:office_lounge/components/profile_badge_widget.dart';
 import 'package:office_lounge/components/profile_avatar_widget.dart';
 import 'package:office_lounge/components/article_image_widget.dart';
 import 'package:office_lounge/components/article_menu_widget.dart';
+import '../../../../controllers/profile_controller.dart';
+import '../article_list_controller.dart';
+import '../../../dash_board/dash_board_controller.dart';
 
 import '../../../../models/article.dart';
 
@@ -130,7 +133,9 @@ class ArticleItemWidget extends StatelessWidget {
           height: 40,
           child: ArticleMenuWidget(
             article: article,
-            isAuthor: false, // 목록에서는 일반적으로 작성자 여부를 확인하지 않음
+            isAuthor: _isAuthor(),
+            onEdit: _isAuthor() ? () => _editArticle() : null,
+            onDelete: _isAuthor() ? () => _deleteArticle() : null,
           ),
         ),
       ],
@@ -155,5 +160,67 @@ class ArticleItemWidget extends StatelessWidget {
         Text(count, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
       ],
     );
+  }
+
+  // 작성자 여부 확인
+  bool _isAuthor() {
+    final profileController = ProfileController.to;
+    return profileController.profile.value.uid == article.profile_uid;
+  }
+
+  // 게시글 수정
+  void _editArticle() {
+    Get.toNamed(
+      '/list/${article.board_name}/edit',
+      arguments: {'article': article},
+    );
+  }
+
+  // 게시글 삭제
+  void _deleteArticle() {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('게시글 삭제'),
+        content: const Text('정말로 이 게시글을 삭제하시겠습니까?'),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('취소')),
+          TextButton(
+            onPressed: () async {
+              Get.back();
+              await _performDelete();
+            },
+            child: const Text('삭제', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 실제 삭제 수행
+  Future<void> _performDelete() async {
+    try {
+      final result = await App.deleteArticle(article: article);
+      if (result) {
+        // 삭제 성공 시 관련 컨트롤러들 새로고침
+        _refreshAfterDelete();
+      }
+    } catch (e) {
+      // 에러 처리는 App.deleteArticle 내부에서 처리됨
+    }
+  }
+
+  // 삭제 후 관련 컨트롤러들 새로고침
+  void _refreshAfterDelete() {
+    // ArticleListController가 등록되어 있으면 새로고침 호출
+    if (Get.isRegistered<ArticleListController>()) {
+      final articleListController = Get.find<ArticleListController>();
+      articleListController.onRefresh();
+    }
+
+    // DashBoardController가 등록되어 있으면 새로고침 호출
+    if (Get.isRegistered<DashBoardController>()) {
+      final dashBoardController = Get.find<DashBoardController>();
+      dashBoardController.refreshDashboard();
+    }
   }
 }

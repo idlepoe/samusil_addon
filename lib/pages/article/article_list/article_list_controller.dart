@@ -14,7 +14,7 @@ import '../article_edit/article_edit_binding.dart';
 import '../article_edit/article_edit_view.dart';
 import '../article_edit/article_edit_controller.dart';
 
-enum SortType { latest, popular }
+enum SortType { latest, viewCount, popular }
 
 class ArticleListController extends GetxController {
   // 상태 관리
@@ -24,6 +24,7 @@ class ArticleListController extends GetxController {
   final RxInt listMaxLength = Define.DEFAULT_BOARD_PAGE_LENGTH.obs;
   final Rx<ViewType> viewType = ViewType.normal.obs;
   final RxBool isDataLoaded = false.obs;
+  final RxBool isRefreshing = false.obs;
   final Rx<SortType> currentSortType = SortType.latest.obs;
 
   // 라우트 파라미터에서 boardName 받기
@@ -50,9 +51,9 @@ class ArticleListController extends GetxController {
     // arguments에서 showWriteSheet 확인
     final arguments = Get.arguments;
     if (arguments != null && arguments['showWriteSheet'] == true) {
-      // 약간의 지연 후 작성 bottom sheet 표시
+      // 약간의 지연 후 작성 페이지로 이동
       Future.delayed(const Duration(milliseconds: 500), () {
-        showWriteBottomSheet();
+        navigateToWrite();
       });
     }
   }
@@ -106,8 +107,29 @@ class ArticleListController extends GetxController {
       case SortType.latest:
         sortedList.sort((a, b) => b.created_at.compareTo(a.created_at));
         break;
+      case SortType.viewCount:
+        // 7일 이내 게시글만 필터링하여 조회순 정렬
+        final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
+        final recentArticles =
+            sortedList
+                .where((article) => article.created_at.isAfter(sevenDaysAgo))
+                .toList();
+
+        recentArticles.sort((a, b) => b.count_view.compareTo(a.count_view));
+
+        // 7일 이내 게시글을 앞으로, 나머지는 최신순으로 정렬
+        final oldArticles =
+            sortedList
+                .where((article) => article.created_at.isBefore(sevenDaysAgo))
+                .toList();
+        oldArticles.sort((a, b) => b.created_at.compareTo(a.created_at));
+
+        sortedList.clear();
+        sortedList.addAll(recentArticles);
+        sortedList.addAll(oldArticles);
+        break;
       case SortType.popular:
-        // 7일 이내 게시글만 필터링하여 인기순 정렬
+        // 7일 이내 게시글만 필터링하여 좋아요순 정렬
         final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
         final recentArticles =
             sortedList
@@ -137,15 +159,22 @@ class ArticleListController extends GetxController {
     switch (sortType) {
       case SortType.latest:
         return '최신순';
+      case SortType.viewCount:
+        return '조회순(7일)';
       case SortType.popular:
-        return '인기순(7일)';
+        return '좋아요순(7일)';
     }
   }
 
   // 새로고침
   Future<void> onRefresh() async {
-    listMaxLength.value = Define.DEFAULT_BOARD_PAGE_LENGTH;
-    await loadData();
+    isRefreshing.value = true;
+    try {
+      listMaxLength.value = Define.DEFAULT_BOARD_PAGE_LENGTH;
+      await loadData();
+    } finally {
+      isRefreshing.value = false;
+    }
   }
 
   // 추가 로딩
@@ -207,54 +236,11 @@ class ArticleListController extends GetxController {
     Get.toNamed('/edit/${article.id}');
   }
 
-  // 글쓰기 bottomSheet 표시
-  void showWriteBottomSheet() {
-    // ArticleEditBinding의 의존성을 수동으로 주입
-    final ArticleEditBinding binding = ArticleEditBinding(
-      boardInfo: boardInfo.value,
-      articleId: null,
+  // 글쓰기 페이지로 이동
+  void navigateToWrite() {
+    Get.toNamed(
+      "/list/${boardInfo.value.board_name}/edit",
+      arguments: boardInfo.value,
     );
-    binding.dependencies();
-
-    Get.bottomSheet(
-      SafeArea(
-        child: Container(
-          height: Get.height * 0.9,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(16.0),
-              topRight: Radius.circular(16.0),
-            ),
-          ),
-          child: Column(
-            children: [
-              // 드래그 핸들
-              Container(
-                margin: const EdgeInsets.only(top: 8),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              // 게시글 작성 화면
-              Expanded(child: ArticleEditView(boardInfo.value)),
-            ],
-          ),
-        ),
-      ),
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      enableDrag: true,
-      isDismissible: true,
-      persistent: false,
-    ).then((_) {
-      // Bottom sheet가 완전히 닫힌 후 컨트롤러 삭제
-      if (Get.isRegistered<ArticleEditController>()) {
-        Get.delete<ArticleEditController>();
-      }
-    });
   }
 }

@@ -317,7 +317,7 @@ class App {
       logger.e("getArticleList exception: $e");
     }
 
-    result.sort((a, b) => b.id.compareTo(a.id));
+    result.sort((a, b) => b.created_at.compareTo(a.created_at));
     return result;
   }
 

@@ -4,20 +4,13 @@ import '../../../models/track_article.dart';
 import '../../../utils/http_service.dart';
 import '../../../components/appSnackbar.dart';
 
-enum FilterType {
-  latest, // 최신순
-  popularDay, // 인기순(하루)
-  popularWeek, // 인기순(일주일)
-  popularMonth, // 인기순(한달)
-  popularAll, // 인기순(전체)
-  likes, // 좋아요순
-}
+enum SortType { latest, viewCount, popular }
 
 class OfficeMusicListController extends GetxController {
   final trackArticles = <TrackArticle>[].obs;
   final isLoading = false.obs;
   final hasMore = true.obs;
-  final currentFilter = FilterType.latest.obs;
+  final currentSortType = SortType.latest.obs;
   String? lastDocumentId;
 
   @override
@@ -39,33 +32,11 @@ class OfficeMusicListController extends GetxController {
         hasMore.value = true;
       }
 
-      // 필터에 따른 정렬 옵션 설정
-      String orderBy;
-      String orderDirection;
-
-      switch (currentFilter.value) {
-        case FilterType.latest:
-          orderBy = 'created_at';
-          orderDirection = 'desc';
-          break;
-        case FilterType.popularDay:
-        case FilterType.popularWeek:
-        case FilterType.popularMonth:
-        case FilterType.popularAll:
-          orderBy = 'count_view';
-          orderDirection = 'desc';
-          break;
-        case FilterType.likes:
-          orderBy = 'count_like';
-          orderDirection = 'desc';
-          break;
-      }
-
       final response = await HttpService().getTrackArticleList(
         lastDocumentId: lastDocumentId,
         limit: 20,
-        orderBy: orderBy,
-        orderDirection: orderDirection,
+        orderBy: 'created_at',
+        orderDirection: 'desc',
       );
 
       if (response.success && response.data != null) {
@@ -85,6 +56,9 @@ class OfficeMusicListController extends GetxController {
           trackArticles.addAll(newTrackArticles);
         }
 
+        // 클라이언트 사이드에서 정렬 적용
+        _sortTrackArticles();
+
         // 페이지네이션 정보 업데이트
         hasMore.value = data['hasMore'] ?? false;
         lastDocumentId = data['lastDocumentId'];
@@ -102,34 +76,81 @@ class OfficeMusicListController extends GetxController {
     }
   }
 
+  // 플레이리스트 정렬
+  void _sortTrackArticles() {
+    final sortedList = List<TrackArticle>.from(trackArticles);
+
+    switch (currentSortType.value) {
+      case SortType.latest:
+        sortedList.sort((a, b) => b.created_at.compareTo(a.created_at));
+        break;
+      case SortType.viewCount:
+        // 7일 이내 플레이리스트만 필터링하여 조회순 정렬
+        final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
+        final recentPlaylists =
+            sortedList
+                .where((playlist) => playlist.created_at.isAfter(sevenDaysAgo))
+                .toList();
+
+        recentPlaylists.sort((a, b) => b.count_view.compareTo(a.count_view));
+
+        // 7일 이내 플레이리스트를 앞으로, 나머지는 최신순으로 정렬
+        final oldPlaylists =
+            sortedList
+                .where((playlist) => playlist.created_at.isBefore(sevenDaysAgo))
+                .toList();
+        oldPlaylists.sort((a, b) => b.created_at.compareTo(a.created_at));
+
+        sortedList.clear();
+        sortedList.addAll(recentPlaylists);
+        sortedList.addAll(oldPlaylists);
+        break;
+      case SortType.popular:
+        // 7일 이내 플레이리스트만 필터링하여 좋아요순 정렬
+        final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
+        final recentPlaylists =
+            sortedList
+                .where((playlist) => playlist.created_at.isAfter(sevenDaysAgo))
+                .toList();
+
+        recentPlaylists.sort((a, b) => b.count_like.compareTo(a.count_like));
+
+        // 7일 이내 플레이리스트를 앞으로, 나머지는 최신순으로 정렬
+        final oldPlaylists =
+            sortedList
+                .where((playlist) => playlist.created_at.isBefore(sevenDaysAgo))
+                .toList();
+        oldPlaylists.sort((a, b) => b.created_at.compareTo(a.created_at));
+
+        sortedList.clear();
+        sortedList.addAll(recentPlaylists);
+        sortedList.addAll(oldPlaylists);
+        break;
+    }
+
+    trackArticles.value = sortedList;
+  }
+
   // 새로고침
   Future<void> onRefresh() async {
     await loadTrackArticles(isRefresh: true);
   }
 
-  // 필터 변경
-  Future<void> changeFilter(FilterType filter) async {
-    if (currentFilter.value == filter) return;
-
-    currentFilter.value = filter;
-    await loadTrackArticles(isRefresh: true);
+  // 정렬 타입 변경
+  void changeSortType(SortType sortType) {
+    currentSortType.value = sortType;
+    _sortTrackArticles();
   }
 
-  // 필터 이름 반환
-  String getFilterName(FilterType filter) {
-    switch (filter) {
-      case FilterType.latest:
+  // 정렬 타입 텍스트 가져오기
+  String getSortTypeText(SortType sortType) {
+    switch (sortType) {
+      case SortType.latest:
         return '최신순';
-      case FilterType.popularDay:
-        return '인기순(하루)';
-      case FilterType.popularWeek:
-        return '인기순(일주일)';
-      case FilterType.popularMonth:
-        return '인기순(한달)';
-      case FilterType.popularAll:
-        return '인기순(전체)';
-      case FilterType.likes:
-        return '좋아요순';
+      case SortType.viewCount:
+        return '조회순(7일)';
+      case SortType.popular:
+        return '좋아요순(7일)';
     }
   }
 

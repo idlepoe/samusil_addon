@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:line_icons/line_icons.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../components/appCircularProgress.dart';
+import '../../../components/appSnackbar.dart';
+import '../../../components/report_bottom_sheet.dart';
+import '../../../components/block_bottom_sheet.dart';
 import '../../../models/youtube/track.dart';
+import '../../../models/article.dart';
 import 'office_music_detail_controller.dart';
 
 class OfficeMusicDetailView extends GetView<OfficeMusicDetailController> {
@@ -559,10 +564,10 @@ class OfficeMusicDetailView extends GetView<OfficeMusicDetailController> {
       itemBuilder: (BuildContext context) {
         final List<PopupMenuItem<String>> items = [];
 
-        // 공통 메뉴 (공유)
+        // 공유하기는 항상 표시
         items.add(_buildPopupMenuItem('share', '공유하기', Icons.share_outlined));
 
-        // 작성자인 경우에만 수정, 삭제 메뉴 추가
+        // 작성자인 경우
         if (controller.isAuthor.value) {
           items.add(_buildPopupMenuItem('edit', '수정하기', Icons.edit_outlined));
           items.add(
@@ -573,6 +578,12 @@ class OfficeMusicDetailView extends GetView<OfficeMusicDetailController> {
               isDestructive: true,
             ),
           );
+        } else {
+          // 작성자가 아닌 경우에만 신고하기, 차단하기 메뉴 추가
+          items.add(
+            _buildPopupMenuItem('report', '신고하기', Icons.report_outlined),
+          );
+          items.add(_buildPopupMenuItem('block', '차단하기', Icons.block));
         }
 
         return items;
@@ -618,6 +629,105 @@ class OfficeMusicDetailView extends GetView<OfficeMusicDetailController> {
       case 'delete':
         _showDeleteConfirmDialog(Get.context!);
         break;
+      case 'report':
+        _reportTrackArticle();
+        break;
+      case 'block':
+        _blockUser();
+        break;
+    }
+  }
+
+  void _reportTrackArticle() async {
+    try {
+      final trackArticle = controller.trackArticle.value;
+      if (trackArticle == null) return;
+
+      // SharedPreferences에서 신고한 게시물 확인
+      final prefs = await SharedPreferences.getInstance();
+      final reportedArticles =
+          prefs.getStringList('reported_track_articles') ?? [];
+
+      if (reportedArticles.contains(trackArticle.id)) {
+        AppSnackbar.warning('이미 신고한 플레이리스트입니다.');
+        return;
+      }
+
+      // TrackArticle을 Article로 변환하여 ReportBottomSheet에서 사용
+      final article = Article(
+        id: trackArticle.id,
+        board_name: 'track_article',
+        profile_uid: trackArticle.profile_uid,
+        profile_name: trackArticle.profile_name,
+        profile_photo_url: trackArticle.profile_photo_url ?? '',
+        profile_point: trackArticle.profile_point,
+        count_view: trackArticle.count_view,
+        count_like: trackArticle.count_like,
+        count_unlike: 0,
+        count_comments: 0,
+        title: trackArticle.title,
+        contents: [],
+        created_at: trackArticle.created_at,
+        updated_at: trackArticle.updated_at,
+        is_notice: false,
+        thumbnail: '',
+      );
+
+      // 신고 bottom sheet 표시
+      Get.bottomSheet(
+        ReportBottomSheet(article: article),
+        isScrollControlled: true,
+        enableDrag: true,
+        isDismissible: true,
+      );
+    } catch (e) {
+      AppSnackbar.error('신고 처리 중 오류가 발생했습니다.');
+    }
+  }
+
+  void _blockUser() async {
+    try {
+      final trackArticle = controller.trackArticle.value;
+      if (trackArticle == null) return;
+
+      // SharedPreferences에서 차단된 사용자 확인
+      final prefs = await SharedPreferences.getInstance();
+      final blockedUsers = prefs.getStringList('blocked_users') ?? [];
+
+      if (blockedUsers.contains(trackArticle.profile_uid)) {
+        AppSnackbar.warning('이미 차단된 사용자입니다.');
+        return;
+      }
+
+      // TrackArticle을 Article로 변환하여 BlockBottomSheet에서 사용
+      final article = Article(
+        id: trackArticle.id,
+        board_name: 'track_article',
+        profile_uid: trackArticle.profile_uid,
+        profile_name: trackArticle.profile_name,
+        profile_photo_url: trackArticle.profile_photo_url ?? '',
+        profile_point: trackArticle.profile_point,
+        count_view: trackArticle.count_view,
+        count_like: trackArticle.count_like,
+        count_unlike: 0,
+        count_comments: 0,
+        title: trackArticle.title,
+        contents: [],
+        created_at: trackArticle.created_at,
+        updated_at: trackArticle.updated_at,
+        is_notice: false,
+        thumbnail: '',
+      );
+
+      // 차단 확인 bottom sheet 표시
+      Get.bottomSheet(
+        BlockBottomSheet(article: article),
+        isScrollControlled: true,
+        enableDrag: true,
+        isDismissible: true,
+      );
+    } catch (e) {
+      AppSnackbar.error('차단 처리 중 오류가 발생했습니다.');
     }
   }
 }

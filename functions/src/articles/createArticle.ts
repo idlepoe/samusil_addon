@@ -72,6 +72,7 @@ export const createArticle = onRequest({
       title: articleData.title,
       contents: articleData.contents,
       created_at: admin.firestore.FieldValue.serverTimestamp(),
+      updated_at: admin.firestore.FieldValue.serverTimestamp(),
       is_notice: articleData.is_notice,
       thumbnail: articleData.thumbnail,
     });
