@@ -29,6 +29,7 @@ export { toggleTrackArticleLike } from './trackArticles/toggleTrackArticleLike';
 // Profiles
 export { createWish } from './profiles/createWish';
 export { getWish } from './profiles/getWish';
+export { createAvatarPurchase } from './profiles/createAvatarPurchase';
 
 // News
 export { scheduledGameNewsCollection, scheduledEntertainmentNewsCollection } from './news/scheduledNewsCollection';

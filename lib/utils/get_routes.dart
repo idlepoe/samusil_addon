@@ -44,6 +44,8 @@ import '../pages/office_music/office_music_detail/office_music_detail_view.dart'
 import '../pages/office_music/office_music_detail/office_music_detail_binding.dart';
 import '../pages/office_music/favorite_playlist/favorite_playlist_view.dart';
 import '../pages/office_music/favorite_playlist/favorite_playlist_binding.dart';
+import '../pages/profile/profile_edit_view.dart';
+import '../pages/profile/profile_edit_binding.dart';
 
 class GetRoutes {
   static final routes = [
@@ -155,6 +157,11 @@ class GetRoutes {
       name: '/favorite-playlist',
       page: () => const FavoritePlaylistView(),
       binding: FavoritePlaylistBinding(),
+    ),
+    GetPage(
+      name: '/profile-edit',
+      page: () => const ProfileEditView(),
+      binding: ProfileEditBinding(),
     ),
   ];
 }

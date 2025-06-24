@@ -16,7 +16,7 @@ import '../utils/app.dart';
 import '../utils/util.dart';
 import '../controllers/profile_controller.dart';
 
-enum PopupItem { profile, point, notifications, option, logout }
+enum PopupItem { profile, profileEdit, point, notifications, option, logout }
 
 List<Widget> AppBarAction(BuildContext context, Profile profile) {
   return [
@@ -31,6 +31,9 @@ List<Widget> AppBarAction(BuildContext context, Profile profile) {
       }),
       onSelected: (PopupItem item) {
         switch (item) {
+          case PopupItem.profileEdit:
+            Get.toNamed('/profile-edit');
+            break;
           case PopupItem.point:
             Get.toNamed('/point-history');
             break;
@@ -74,6 +77,16 @@ List<Widget> AppBarAction(BuildContext context, Profile profile) {
               }),
             ),
             const PopupMenuDivider(height: 1),
+            PopupMenuItem<PopupItem>(
+              value: PopupItem.profileEdit,
+              child: Row(
+                children: [
+                  const Icon(Icons.edit, color: Color(0xFF0064FF)),
+                  const SizedBox(width: 8),
+                  Text("프로필 수정"),
+                ],
+              ),
+            ),
             PopupMenuItem<PopupItem>(
               value: PopupItem.point,
               child: Row(

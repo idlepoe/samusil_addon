@@ -34,7 +34,7 @@ class HttpService {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // logger.i("🚀 [REQUEST] ${options.method} ${options.uri}");
+          logger.i("🚀 [REQUEST] ${options.method} ${options.uri}");
           if (options.data != null) logger.d("Data: ${options.data}");
 
           try {
@@ -107,6 +107,8 @@ class HttpService {
             '  method: ${error.requestOptions.method}\n'
             '  url: ${error.requestOptions.uri.toString()}\n'
             '  path: ${error.requestOptions.path}\n'
+            '  errorType: ${error.type}\n'
+            '  errorMessage: ${error.message}\n'
             '  errorData: ${error.response?.data}\n'
             '  duration: ${duration.inMilliseconds}ms',
           );
@@ -367,6 +369,37 @@ class HttpService {
       return CloudFunctionResponse(success: true, data: response.data);
     } catch (e) {
       return CloudFunctionResponse(success: false, error: e.toString());
+    }
+  }
+
+  /// Cloud Functions: 아바타 구매
+  Future<CloudFunctionResponse<void>> postCreateAvatarPurchase({
+    required String avatarId,
+    required String avatarUrl,
+    required String avatarName,
+    required int price,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/createAvatarPurchase',
+        data: {
+          'avatarId': avatarId,
+          'avatarUrl': avatarUrl,
+          'avatarName': avatarName,
+          'price': price,
+        },
+      );
+      return CloudFunctionResponse<void>(
+        success: response.data['success'] ?? false,
+        data: null,
+        error: response.data['error'],
+      );
+    } catch (e) {
+      return CloudFunctionResponse<void>(
+        success: false,
+        data: null,
+        error: e.toString(),
+      );
     }
   }
 

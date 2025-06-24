@@ -68,7 +68,7 @@ export interface ApiResponse<T> {
 export interface PointHistory {
   id?: string;
   profile_uid: string;
-  action_type: '소원' | '게시글' | '댓글' | '첫댓글' | '대댓글' | '좋아요받음' | '베팅' | '플레이리스트';
+  action_type: '소원' | '게시글' | '댓글' | '첫댓글' | '대댓글' | '좋아요받음' | '베팅' | '플레이리스트' | '아바타구매';
   points_earned: number;
   description: string;
   related_id?: string; // 게시글 ID, 댓글 ID 등
