@@ -20,12 +20,12 @@ class HorseRaceController extends GetxController {
   final RxBool isBetting = false.obs;
   final RxString selectedHorseId = ''.obs;
   final Rx<String?> betOnHorseId = Rx<String?>(null);
-  final RxInt selectedBetAmount = 10.obs;
+  final RxInt selectedBetAmount = 50.obs;
   final RxString selectedBetType = 'winner'.obs;
   final RxBool hasPlacedBet = false.obs;
 
   // 베팅 금액 옵션
-  final List<int> betAmountOptions = [10, 20, 50, 100];
+  final List<int> betAmountOptions = [50, 100, 300, 500];
   StreamSubscription? _raceSubscription;
 
   @override

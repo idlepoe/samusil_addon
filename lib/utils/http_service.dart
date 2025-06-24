@@ -845,7 +845,7 @@ class HttpService {
   Future<CloudFunctionResponse> payFishingFee({required int feeAmount}) async {
     return await updatePoints(
       pointsChange: -feeAmount.toDouble(),
-      actionType: 'fishing_fee',
+      actionType: '낚시 참여비',
       description: '낚시 게임 참여비',
       metadata: {'gameType': 'fishing', 'feeAmount': feeAmount},
     );

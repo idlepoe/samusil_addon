@@ -168,14 +168,18 @@ class PointHistoryView extends GetView<PointHistoryController> {
                     color: const Color(0xFF0064FF).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Text(
-                    '이번 달 +${controller.thisMonthPoints.round().toString()}P',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF0064FF),
-                    ),
-                  ),
+                  child: Obx(() {
+                    final monthPoints = controller.thisMonthPoints.round();
+                    final sign = monthPoints >= 0 ? '+' : '';
+                    return Text(
+                      '이번 달 $sign${monthPoints}P',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF0064FF),
+                      ),
+                    );
+                  }),
                 ),
               ],
             ),

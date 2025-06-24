@@ -129,31 +129,63 @@ class FishingGameController extends GetxController
     super.onClose();
   }
 
-  /// 랜덤 물고기 선택 (오늘의 location과 현재 시간에 출현 가능한 물고기만)
+  /// 랜덤 물고기 선택 (가치에 반비례하는 확률로 선택)
   void _selectRandomFish() {
     final random = Random();
 
     // 오늘 출현 가능한 물고기만 필터링 (요일별 location + 시간 조건)
-    final todayAvailable = Fish.getTodayAvailableFish();
+    List<Fish> candidateFish = Fish.getTodayAvailableFish();
 
-    if (todayAvailable.isEmpty) {
+    if (candidateFish.isEmpty) {
       // 출현 가능한 물고기가 없으면 오늘의 location에서만 선택
       final todayLocation = Fish.getTodayLocation();
-      final locationFish =
+      candidateFish =
           availableFishes
               .where((fish) => fish.location == todayLocation)
               .toList();
 
-      if (locationFish.isNotEmpty) {
-        currentFish.value = locationFish[random.nextInt(locationFish.length)];
-      } else {
+      if (candidateFish.isEmpty) {
         // 최후의 수단으로 전체에서 선택
-        currentFish.value =
-            availableFishes[random.nextInt(availableFishes.length)];
+        candidateFish = availableFishes;
       }
-    } else {
-      currentFish.value = todayAvailable[random.nextInt(todayAvailable.length)];
     }
+
+    // 가중치 기반 확률 선택
+    currentFish.value = _selectFishByWeight(candidateFish, random);
+  }
+
+  /// 가중치 기반으로 물고기 선택 (가치가 높을수록 낮은 확률)
+  Fish _selectFishByWeight(List<Fish> fishes, Random random) {
+    if (fishes.isEmpty) {
+      return availableFishes.first; // 안전장치
+    }
+
+    // 각 물고기의 가중치 계산 (가치에 반비례)
+    final weights = <double>[];
+    double totalWeight = 0.0;
+
+    for (final fish in fishes) {
+      // 가중치 = 10000 / (price + 100)
+      // 예: 160벨 물고기 = 10000/260 = 38.46
+      // 예: 15000벨 물고기 = 10000/15100 = 0.66
+      final weight = 10000.0 / (fish.price + 100);
+      weights.add(weight);
+      totalWeight += weight;
+    }
+
+    // 랜덤 값으로 선택
+    final randomValue = random.nextDouble() * totalWeight;
+    double currentWeight = 0.0;
+
+    for (int i = 0; i < fishes.length; i++) {
+      currentWeight += weights[i];
+      if (randomValue <= currentWeight) {
+        return fishes[i];
+      }
+    }
+
+    // 안전장치 (마지막 물고기 반환)
+    return fishes.last;
   }
 
   /// 게임 시작
@@ -590,7 +622,7 @@ class FishingGameController extends GetxController
       // 서버에 포인트 증가 요청 (공통 API 사용)
       final response = await _httpService.updatePoints(
         pointsChange: totalPoints.toDouble(),
-        actionType: 'fish_sale',
+        actionType: '물고기 판매',
         description: '물고기 판매: ${fish.name} x$sellCount',
         metadata: {
           'fishId': fish.id,

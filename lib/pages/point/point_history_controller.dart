@@ -119,6 +119,14 @@ class PointHistoryController extends GetxController {
         };
       case '출석 보너스':
         return {'icon': 'calendar', 'color': 0xFF9775FA, 'isPositive': true};
+      case '낚시 참여비':
+        return {'icon': 'fishing', 'color': 0xFFE91E63, 'isPositive': false};
+      case '물고기 판매':
+        return {
+          'icon': 'monetization_on',
+          'color': 0xFF00BCD4,
+          'isPositive': true,
+        };
       default:
         return {'icon': 'point', 'color': 0xFF9C9C9C, 'isPositive': true};
     }
