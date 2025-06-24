@@ -6,6 +6,7 @@ import 'package:logger/logger.dart';
 
 import '../../models/fish.dart';
 import '../../controllers/profile_controller.dart';
+import '../../utils/fish_collection_service.dart';
 
 class FishingGameController extends GetxController
     with GetTickerProviderStateMixin {
@@ -27,7 +28,8 @@ class FishingGameController extends GetxController
   static const double barSize = 0.08; // 플레이어 바 크기 (모든 물고기보다 작게)
   static const double gravity = 0.8; // 중력 (바가 아래로 떨어지는 속도)
   static const double jumpPower = 1.2; // 버튼 누를 때 위로 올라가는 속도
-  static const double gaugeIncreaseSpeed = 0.6; // 게이지 증가 속도 (2.0 → 0.6)
+  static const double gaugeIncreaseSpeed =
+      0.2; // 게이지 증가 속도 (0.6 → 0.2, 3배 더 느리게)
   static const double gaugeDecreaseSpeed = 0.25; // 게이지 감소 속도 (0.8 → 0.25)
 
   // 타이머
@@ -40,10 +42,38 @@ class FishingGameController extends GetxController
   // 물고기 목록
   final List<Fish> availableFishes = Fish.getDummyFishes();
 
+  // 물고기 도감 관련
+  final RxSet<String> caughtFish = <String>{}.obs;
+  final FishCollectionService _collectionService =
+      FishCollectionService.instance;
+
   @override
   void onInit() {
     super.onInit();
     _selectRandomFish();
+    _loadCaughtFish();
+  }
+
+  /// 잡은 물고기 목록 로드
+  Future<void> _loadCaughtFish() async {
+    final caught = await _collectionService.getCaughtFish();
+    caughtFish.value = caught;
+  }
+
+  /// 잡은 물고기 추가
+  Future<void> _addCaughtFish(String fishName) async {
+    await _collectionService.addCaughtFish(fishName);
+    caughtFish.add(fishName);
+  }
+
+  /// 특정 물고기를 잡았는지 확인
+  bool isFishCaught(String fishName) {
+    return caughtFish.contains(fishName);
+  }
+
+  /// 특정 물고기를 잡은 개수 가져오기
+  Future<int> getFishCount(String fishName) async {
+    return await _collectionService.getFishCount(fishName);
   }
 
   @override
@@ -52,10 +82,21 @@ class FishingGameController extends GetxController
     super.onClose();
   }
 
-  /// 랜덤 물고기 선택
+  /// 랜덤 물고기 선택 (현재 시간에 출현 가능한 물고기만)
   void _selectRandomFish() {
     final random = Random();
-    currentFish.value = availableFishes[random.nextInt(availableFishes.length)];
+
+    // 현재 시간에 출현 가능한 물고기만 필터링
+    final availableNow =
+        availableFishes.where((fish) => fish.isAvailableNow()).toList();
+
+    if (availableNow.isEmpty) {
+      // 출현 가능한 물고기가 없으면 전체에서 선택 (예외 상황)
+      currentFish.value =
+          availableFishes[random.nextInt(availableFishes.length)];
+    } else {
+      currentFish.value = availableNow[random.nextInt(availableNow.length)];
+    }
   }
 
   /// 게임 시작
@@ -269,11 +310,14 @@ class FishingGameController extends GetxController
     });
 
     if (gameResult.value) {
-      // 성공 시 포인트 지급
+      // 성공 시 포인트 지급 및 물고기 도감에 추가
       final fish = currentFish.value;
       if (fish != null) {
         // TODO: ProfileController에 addPoints 메서드 추가 필요
         // ProfileController.to.addPoints(fish.reward);
+
+        // 물고기 도감에 추가
+        _addCaughtFish(fish.name);
       }
     }
   }
