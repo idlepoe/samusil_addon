@@ -410,7 +410,8 @@ class FishingGameTab extends GetView<FishingGameController> {
           Obx(() {
             final playerBarHeight =
                 FishingGameController.barSize *
-                (MediaQuery.of(Get.context!).size.height * 0.3);
+                (MediaQuery.of(Get.context!).size.height * 0.5);
+            final isPressed = controller.isButtonPressed.value;
 
             return AnimatedPositioned(
               duration: const Duration(milliseconds: 100),
@@ -425,11 +426,16 @@ class FishingGameTab extends GetView<FishingGameController> {
               child: Container(
                 height: playerBarHeight,
                 child: Center(
-                  child: Image.asset(
-                    'assets/lure.png',
-                    width: playerBarHeight * 1.6, // 2배 크기 (0.8 * 2)
-                    height: playerBarHeight * 1.6, // 2배 크기 (0.8 * 2)
-                    fit: BoxFit.contain,
+                  child: AnimatedRotation(
+                    turns: isPressed ? -0.1 : 0.1, // 눌렀을 때 왼쪽(-), 놓았을 때 오른쪽(+)
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    child: Image.asset(
+                      'assets/lure.png',
+                      width: playerBarHeight * 1.6, // 2배 크기 (0.8 * 2)
+                      height: playerBarHeight * 1.6, // 2배 크기 (0.8 * 2)
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
               ),
