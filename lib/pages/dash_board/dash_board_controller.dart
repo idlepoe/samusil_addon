@@ -519,6 +519,9 @@ class DashBoardController extends GetxController {
             case PlayerState.ended:
               // 플레이리스트에서 자동으로 다음 곡으로 넘어감
               _updateCurrentTrackIndex();
+              isPlaying.value = false;
+              isPaused.value = true;
+              _disableAutoPipMode(); // 트랙이 완전 종료된 경우에도 autoPipMode 비활성화
               break;
             default:
               break;
