@@ -20,6 +20,7 @@ import 'widgets/music_player_widget.dart';
 import 'widgets/music_salon_widget.dart';
 import 'widgets/favorite_playlists_widget.dart';
 import 'widgets/pip_child_widget.dart';
+import 'widgets/daily_location_widget.dart';
 
 class DashBoardView extends GetView<DashBoardController> {
   const DashBoardView({super.key});
@@ -104,6 +105,10 @@ class DashBoardView extends GetView<DashBoardController> {
                         children: [
                           // 코인 가격 스크롤
                           const RaceStatusWidget(),
+                          const SizedBox(height: 16),
+
+                          // 오늘의 낚시터 정보
+                          const DailyLocationWidget(),
                           const SizedBox(height: 20),
 
                           // 오늘 날짜 헤더
@@ -114,9 +119,11 @@ class DashBoardView extends GetView<DashBoardController> {
                           const MusicSalonWidget(),
                           const SizedBox(height: 20),
 
-                          // 즐겨찾기 플레이리스트 섹션
-                          FavoritePlaylistsWidget(controller: controller),
-                          const SizedBox(height: 20),
+                          // 즐겨찾기 플레이리스트 섹션 (즐겨찾기가 있을 때만 표시)
+                          if (controller.favoritePlaylists.isNotEmpty) ...[
+                            FavoritePlaylistsWidget(controller: controller),
+                            const SizedBox(height: 20),
+                          ],
 
                           // 게임 뉴스 섹션
                           GameNewsListWidget(controller: controller),
