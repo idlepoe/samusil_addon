@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
@@ -14,10 +15,48 @@ class SplashController extends GetxController {
   final RxBool isLoading = true.obs;
   final Rx<Profile> profile = Profile.init().obs;
 
+  // 랜덤 문구 리스트
+  final List<String> _subtitles = [
+    '오늘도 화이팅! 🎯',
+    '커피 한 잔의 여유 ☕',
+    '새로운 하루를 시작해요! 🌅',
+    '동료들과 함께하는 시간 👥',
+    '점심 메뉴 고민 해결! 🍽️',
+    '오피스 라이프를 즐겨보세요 🏢',
+    '소원을 빌어보세요 ⭐',
+    '오늘의 BGM은? 🎵',
+    '잠깐의 휴식 시간 🌸',
+    '함께라서 더 즐거운 하루 💫',
+  ];
+
+  final List<String> _loadingTexts = [
+    '오피스 라운지 준비 중... ☕',
+    '맛있는 점심 메뉴 찾는 중... 🍱',
+    '좋은 음악 준비 중... 🎧',
+    '동료들과 연결 중... 👋',
+    '오늘의 운세 확인 중... 🔮',
+    '신선한 콘텐츠 로딩 중... 📱',
+    '즐거운 하루 준비 중... 🌟',
+    '커피 내리는 중... ☕',
+  ];
+
+  // 선택된 랜덤 문구들
+  late final String randomSubtitle;
+  late final String randomLoadingText;
+
   @override
   void onInit() {
     super.onInit();
+    _selectRandomTexts();
     _initializeApp();
+  }
+
+  /// 랜덤 문구들을 선택합니다.
+  void _selectRandomTexts() {
+    final random = Random();
+    randomSubtitle = _subtitles[random.nextInt(_subtitles.length)];
+    randomLoadingText = _loadingTexts[random.nextInt(_loadingTexts.length)];
+    logger.i('랜덤 문구 선택: $randomSubtitle, $randomLoadingText');
   }
 
   Future<void> _initializeApp() async {

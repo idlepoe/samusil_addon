@@ -33,6 +33,8 @@ class RaceHistoryItem {
   final Horse? secondPlace;
   final Horse? thirdPlace;
   final int totalBets;
+  final Map<String, double> horseDistances;
+  final List<Horse> horses;
 
   RaceHistoryItem({
     required this.id,
@@ -42,21 +44,34 @@ class RaceHistoryItem {
     this.secondPlace,
     this.thirdPlace,
     required this.totalBets,
+    required this.horseDistances,
+    required this.horses,
   });
 
   factory RaceHistoryItem.fromHorseRace(HorseRace race, int totalBets) {
-    // movements 배열의 마지막 값(최종 위치)을 기준으로 순위 계산
+    // movements 배열의 합계를 계산하여 최종 위치 계산
     final horsesWithFinalPosition =
         race.horses.map((horse) {
-          final finalPosition =
-              horse.movements.isNotEmpty
-                  ? horse.movements.last
-                  : horse.currentPosition;
-          return MapEntry(horse, finalPosition);
+          final totalMovement = horse.movements.fold<double>(
+            0,
+            (sum, movement) => sum + movement,
+          );
+          return MapEntry(horse, totalMovement);
         }).toList();
 
-    // 최종 위치가 가장 작은 순서대로 정렬 (가장 앞선 말이 1등)
-    horsesWithFinalPosition.sort((a, b) => a.value.compareTo(b.value));
+    // 최종 위치가 가장 큰 순서대로 정렬 (가장 앞선 말이 1등)
+    horsesWithFinalPosition.sort((a, b) => b.value.compareTo(a.value));
+
+    // 디버깅을 위한 로그 추가
+    final timeStr = DateFormat('HH:mm:ss').format(race.endTime);
+    print('🐎 경마 ${race.currentRound}라운드 순위 계산 (${timeStr}):');
+    for (int i = 0; i < horsesWithFinalPosition.length; i++) {
+      final horse = horsesWithFinalPosition[i].key;
+      final distance = horsesWithFinalPosition[i].value;
+      print(
+        '  ${i + 1}등: ${horse.name} (${horse.symbol}) - 이동거리: ${distance.toStringAsFixed(3)}',
+      );
+    }
 
     // 1, 2, 3등 추출
     Horse? firstPlace =
@@ -72,6 +87,16 @@ class RaceHistoryItem {
             ? horsesWithFinalPosition[2].key
             : null;
 
+    // 말별 이동거리 맵 생성
+    final Map<String, double> horseDistances = {};
+    for (final horse in race.horses) {
+      final totalMovement = horse.movements.fold<double>(
+        0,
+        (sum, movement) => sum + movement,
+      );
+      horseDistances[horse.coinId] = totalMovement;
+    }
+
     return RaceHistoryItem(
       id: race.id,
       title: '코인 경마 ${race.currentRound}라운드',
@@ -80,6 +105,8 @@ class RaceHistoryItem {
       secondPlace: secondPlace,
       thirdPlace: thirdPlace,
       totalBets: totalBets,
+      horseDistances: horseDistances,
+      horses: race.horses,
     );
   }
 }
@@ -94,8 +121,17 @@ class HorseRaceHistoryController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    loadHistory();
-    loadTopWinners();
+    _initializeData();
+  }
+
+  /// 초기 데이터 로드
+  Future<void> _initializeData() async {
+    try {
+      await loadHistory();
+      await loadTopWinners();
+    } catch (e) {
+      logger.e('데이터 초기화 오류: $e');
+    }
   }
 
   /// 경마 히스토리 로드
@@ -103,27 +139,40 @@ class HorseRaceHistoryController extends GetxController {
     try {
       isLoading.value = true;
 
-      // 완료된 경마들을 최신순으로 가져오기 (최대 50개)
+      // 24시간 전 시간 계산
+      final now = DateTime.now();
+      final yesterday = now.subtract(const Duration(hours: 24));
+
+      // 24시간 내 완료된 경마들을 최신순으로 가져오기
       final raceQuery =
           await FirebaseFirestore.instance
               .collection(Define.FIRESTORE_COLLECTION_HORSE_RACE)
               .where('isFinished', isEqualTo: true)
+              .where('endTime', isGreaterThan: Timestamp.fromDate(yesterday))
               .orderBy('endTime', descending: true)
-              .limit(50)
               .get();
 
       final List<RaceHistoryItem> historyItems = [];
-      logger.d('완료된 경마 수: ${raceQuery.docs.length}');
+      // logger.d('24시간 내 완료된 경마 수: ${raceQuery.docs.length}');
 
       for (final raceDoc in raceQuery.docs) {
         try {
           final raceData = raceDoc.data();
           final race = HorseRace.fromJson(raceData);
 
-          logger.d('경마 데이터: ${race.id}, 완료: ${race.isFinished}');
-          logger.d(
-            '말들의 최종 위치: ${race.horses.map((h) => '${h.name}: ${h.movements.isNotEmpty ? h.movements.last : h.currentPosition}').join(', ')}',
-          );
+          // logger.d('경마 데이터: ${race.id}, 완료: ${race.isFinished}');
+
+          // 각 말의 실제 이동거리 계산 및 로그
+          final horseDistances = race.horses
+              .map((h) {
+                final totalMovement = h.movements.fold<double>(
+                  0,
+                  (sum, movement) => sum + movement,
+                );
+                return '${h.name}: ${totalMovement.toStringAsFixed(3)}';
+              })
+              .join(', ');
+          // logger.d('말들의 총 이동거리: $horseDistances');
 
           // 해당 경마의 총 베팅 수 계산
           final betsQuery =
@@ -136,9 +185,9 @@ class HorseRaceHistoryController extends GetxController {
           final totalBets = betsQuery.docs.length;
 
           final historyItem = RaceHistoryItem.fromHorseRace(race, totalBets);
-          logger.d(
-            '히스토리 아이템: 1등=${historyItem.firstPlace?.name}, 2등=${historyItem.secondPlace?.name}, 3등=${historyItem.thirdPlace?.name}',
-          );
+          // logger.d(
+          //   '히스토리 아이템: 1등=${historyItem.firstPlace?.name}, 2등=${historyItem.secondPlace?.name}, 3등=${historyItem.thirdPlace?.name}',
+          // );
 
           historyItems.add(historyItem);
         } catch (e) {
@@ -162,22 +211,8 @@ class HorseRaceHistoryController extends GetxController {
     try {
       isLoadingStats.value = true;
 
-      // 24시간 전 시간 계산
-      final now = DateTime.now();
-      final yesterday = now.subtract(const Duration(hours: 24));
-
-      // 24시간 내 완료된 경마들 가져오기
-      final raceQuery =
-          await FirebaseFirestore.instance
-              .collection(Define.FIRESTORE_COLLECTION_HORSE_RACE)
-              .where('isFinished', isEqualTo: true)
-              .where('endTime', isGreaterThan: Timestamp.fromDate(yesterday))
-              .get();
-
-      logger.i('24시간 내 완료된 경마 수: ${raceQuery.docs.length}');
-
-      // 24시간 내 경마가 없으면 빈 리스트 반환
-      if (raceQuery.docs.isEmpty) {
+      // raceHistory가 비어있으면 빈 리스트 반환
+      if (raceHistory.isEmpty) {
         logger.i('24시간 내 완료된 경마가 없습니다');
         topWinners.value = [];
         return;
@@ -186,28 +221,11 @@ class HorseRaceHistoryController extends GetxController {
       // 코인별 승리 통계 계산
       final Map<String, Map<String, dynamic>> coinStats = {};
 
-      for (final raceDoc in raceQuery.docs) {
+      for (final race in raceHistory) {
         try {
-          final raceData = raceDoc.data();
-          final race = HorseRace.fromJson(raceData);
-
-          // 각 말의 최종 위치 계산
-          final horsesWithFinalPosition =
-              race.horses.map((horse) {
-                final finalPosition =
-                    horse.movements.isNotEmpty
-                        ? horse.movements.last
-                        : horse.currentPosition;
-                return MapEntry(horse, finalPosition);
-              }).toList();
-
-          // 최종 위치로 정렬 (가장 앞선 말이 1등)
-          horsesWithFinalPosition.sort((a, b) => b.value.compareTo(a.value));
-
           // 1등 말 찾기
-          if (horsesWithFinalPosition.isNotEmpty) {
-            final winner = horsesWithFinalPosition.first.key;
-
+          final winner = race.firstPlace;
+          if (winner != null) {
             if (!coinStats.containsKey(winner.coinId)) {
               coinStats[winner.coinId] = {
                 'name': winner.name,
@@ -221,8 +239,14 @@ class HorseRaceHistoryController extends GetxController {
             coinStats[winner.coinId]!['wins']++;
           }
 
-          // 모든 말의 총 경주 수 증가
-          for (final horse in race.horses) {
+          // 모든 참가 말들의 총 경주 수 증가
+          final allHorses = [
+            if (race.firstPlace != null) race.firstPlace!,
+            if (race.secondPlace != null) race.secondPlace!,
+            if (race.thirdPlace != null) race.thirdPlace!,
+          ];
+
+          for (final horse in allHorses) {
             if (!coinStats.containsKey(horse.coinId)) {
               coinStats[horse.coinId] = {
                 'name': horse.name,
@@ -282,7 +306,12 @@ class HorseRaceHistoryController extends GetxController {
 
   /// 히스토리 새로고침
   Future<void> refreshHistory() async {
-    await Future.wait([loadHistory(), loadTopWinners()]);
+    try {
+      await loadHistory();
+      await loadTopWinners();
+    } catch (e) {
+      logger.e('히스토리 새로고침 오류: $e');
+    }
   }
 
   /// 날짜 포맷팅
@@ -299,5 +328,29 @@ class HorseRaceHistoryController extends GetxController {
     } else {
       return DateFormat('MM/dd').format(date);
     }
+  }
+
+  /// 시간 포맷팅 (시간대 강조용)
+  String formatTime(DateTime date) {
+    return DateFormat('HH:mm').format(date);
+  }
+
+  /// 말의 최종 위치 계산
+  double calculateFinalPosition(Horse horse) {
+    return horse.movements.fold<double>(0, (sum, movement) => sum + movement);
+  }
+
+  /// 말의 순위 계산
+  int getHorseRank(Horse horse) {
+    if (raceHistory.isEmpty) return 0;
+
+    final latestRace = raceHistory[0];
+    final sortedHorses = List<Horse>.from(latestRace.horses)..sort((a, b) {
+      final posA = calculateFinalPosition(a);
+      final posB = calculateFinalPosition(b);
+      return posB.compareTo(posA);
+    });
+
+    return sortedHorses.indexOf(horse) + 1;
   }
 }

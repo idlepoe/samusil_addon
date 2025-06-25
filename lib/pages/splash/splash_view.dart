@@ -52,9 +52,9 @@ class SplashView extends GetView<SplashController> {
               const SizedBox(height: 8),
 
               // 부제목
-              const Text(
-                '소원을 빌고 소통하세요',
-                style: TextStyle(color: Colors.white70, fontSize: 16),
+              Text(
+                controller.randomSubtitle,
+                style: const TextStyle(color: Colors.white70, fontSize: 16),
               ),
 
               const SizedBox(height: 48),
@@ -71,9 +71,9 @@ class SplashView extends GetView<SplashController> {
 
               // 로딩 텍스트
               if (controller.isLoading.value)
-                const Text(
-                  '초기화 중...',
-                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                Text(
+                  controller.randomLoadingText,
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
                 ),
             ],
           ),

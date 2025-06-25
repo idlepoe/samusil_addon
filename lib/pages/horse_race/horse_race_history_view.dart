@@ -4,16 +4,25 @@ import '../../components/appCircularProgress.dart';
 import 'horse_race_history_controller.dart';
 
 class HorseRaceHistoryView extends GetView<HorseRaceHistoryController> {
-  const HorseRaceHistoryView({super.key});
+  const HorseRaceHistoryView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text('경마 기록'),
+        title: const Text(
+          '경마 기록',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF191F28),
+          ),
+        ),
         backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 1,
+        foregroundColor: const Color(0xFF191F28),
+        elevation: 0,
+        centerTitle: false,
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
@@ -21,15 +30,19 @@ class HorseRaceHistoryView extends GetView<HorseRaceHistoryController> {
         }
 
         if (controller.raceHistory.isEmpty) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.history, size: 64, color: Colors.grey),
-                SizedBox(height: 16),
+                Icon(Icons.history, size: 64, color: Colors.grey[400]),
+                const SizedBox(height: 16),
                 Text(
                   '경마 기록이 없습니다',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
@@ -38,371 +51,338 @@ class HorseRaceHistoryView extends GetView<HorseRaceHistoryController> {
 
         return RefreshIndicator(
           onRefresh: controller.refreshHistory,
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount:
-                controller.raceHistory.length + 1, // +1 for top winners widget
-            itemBuilder: (context, index) {
-              // 첫 번째 아이템은 24시간 승리 통계
-              if (index == 0) {
-                return _buildTopWinnersWidget();
-              }
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (controller.topWinners.isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          '24시간 최다 승리 코인',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF191F28),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children:
+                                controller.topWinners.asMap().entries.map((
+                                  entry,
+                                ) {
+                                  final index = entry.key;
+                                  final stats = entry.value;
+                                  final isLast =
+                                      index == controller.topWinners.length - 1;
 
-              // 나머지는 경마 기록
-              final raceIndex = index - 1;
-              final race = controller.raceHistory[raceIndex];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
+                                  return Column(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(16),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              width: 40,
+                                              height: 40,
+                                              decoration: BoxDecoration(
+                                                color: _getRankColor(
+                                                  index,
+                                                ).withOpacity(0.1),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                              child: Center(
+                                                child: Text(
+                                                  '${index + 1}',
+                                                  style: TextStyle(
+                                                    color: _getRankColor(index),
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 16),
+                                            ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              child: Image.network(
+                                                stats.image,
+                                                width: 40,
+                                                height: 40,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 16),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    stats.coinId.toUpperCase(),
+                                                    style: const TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: Color(0xFF191F28),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    '승리: ${stats.wins}회',
+                                                    style: TextStyle(
+                                                      color: Colors.grey[600],
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 6,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: const Color(
+                                                  0xFF3182F6,
+                                                ).withOpacity(0.1),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                              child: Text(
+                                                '승률 ${stats.winRate.toStringAsFixed(1)}%',
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Color(0xFF3182F6),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (!isLast)
+                                        Container(
+                                          height: 1,
+                                          margin: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                          ),
+                                          color: const Color(0xFFEEF0F2),
+                                        ),
+                                    ],
+                                  );
+                                }).toList(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 경마 제목과 날짜
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              race.title,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                      const Text(
+                        '경마 기록',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF191F28),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ...controller.raceHistory.map((race) {
+                        final endTime = race.createdAt;
+                        final formattedTime = controller.formatTime(endTime);
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
                               ),
-                            ),
+                            ],
                           ),
-                          Text(
-                            controller.formatDate(race.createdAt),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Text(
+                                  '경주 종료 시간: $formattedTime',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF191F28),
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                height: 1,
+                                color: const Color(0xFFEEF0F2),
+                              ),
+                              ...List.generate(
+                                race.horses.length > 3 ? 3 : race.horses.length,
+                                (horseIndex) {
+                                  final horse = race.horses[horseIndex];
+                                  final finalPosition = controller
+                                      .calculateFinalPosition(horse);
+                                  final isLast =
+                                      horseIndex ==
+                                      (race.horses.length > 3
+                                          ? 2
+                                          : race.horses.length - 1);
 
-                      // 순위 표시
-                      Row(
-                        children: [
-                          // 1등
-                          _buildRankCard(
-                            rank: '1등',
-                            horseName: race.firstPlace?.name ?? '',
-                            color: Colors.amber,
-                            icon: Icons.emoji_events,
-                            coinImage: race.firstPlace?.image,
+                                  return Column(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(16),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              width: 40,
+                                              height: 40,
+                                              decoration: BoxDecoration(
+                                                color: _getRankColor(
+                                                  horseIndex,
+                                                ).withOpacity(0.1),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                              child: Center(
+                                                child: Text(
+                                                  '${horseIndex + 1}',
+                                                  style: TextStyle(
+                                                    color: _getRankColor(
+                                                      horseIndex,
+                                                    ),
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 16),
+                                            ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              child: Image.network(
+                                                horse.image,
+                                                width: 40,
+                                                height: 40,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 16),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    horse.coinId.toUpperCase(),
+                                                    style: const TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: Color(0xFF191F28),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 6,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: const Color(
+                                                  0xFF3182F6,
+                                                ).withOpacity(0.1),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                              child: Text(
+                                                '${finalPosition.toStringAsFixed(2)} m',
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Color(0xFF3182F6),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (!isLast)
+                                        Container(
+                                          height: 1,
+                                          margin: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                          ),
+                                          color: const Color(0xFFEEF0F2),
+                                        ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-
-                          // 2등
-                          _buildRankCard(
-                            rank: '2등',
-                            horseName: race.secondPlace?.name ?? '',
-                            color: Colors.grey[400]!,
-                            icon: Icons.workspace_premium,
-                            coinImage: race.secondPlace?.image,
-                          ),
-                          const SizedBox(width: 8),
-
-                          // 3등
-                          _buildRankCard(
-                            rank: '3등',
-                            horseName: race.thirdPlace?.name ?? '',
-                            color: Colors.brown[300]!,
-                            icon: Icons.military_tech,
-                            coinImage: race.thirdPlace?.image,
-                          ),
-                        ],
-                      ),
-
-                      // 총 참여자 수
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.people,
-                            size: 16,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '총 ${race.totalBets}명 참여',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
+                        );
+                      }).toList(),
                     ],
                   ),
                 ),
-              );
-            },
+              ],
+            ),
           ),
         );
       }),
     );
   }
 
-  Widget _buildRankCard({
-    required String rank,
-    required String horseName,
-    required Color color,
-    required IconData icon,
-    String? coinImage,
-  }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 20, color: color),
-            const SizedBox(height: 4),
-            Text(
-              rank,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            const SizedBox(height: 6),
-            // 코인 이미지와 이름을 함께 표시
-            if (horseName.isNotEmpty && coinImage != null) ...[
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.grey.withOpacity(0.3)),
-                ),
-                child: ClipOval(
-                  child: Image.network(
-                    coinImage,
-                    width: 24,
-                    height: 24,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 24,
-                        height: 24,
-                        color: Colors.grey[200],
-                        child: const Icon(
-                          Icons.currency_bitcoin,
-                          size: 16,
-                          color: Colors.grey,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 4),
-            ],
-            Text(
-              horseName.isEmpty ? '미정' : horseName,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight:
-                    horseName.isEmpty ? FontWeight.normal : FontWeight.bold,
-                color: horseName.isEmpty ? Colors.grey : Colors.black87,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTopWinnersWidget() {
-    return Obx(() {
-      if (controller.isLoadingStats.value) {
-        return Card(
-          margin: const EdgeInsets.only(bottom: 16),
-          child: Container(
-            height: 120,
-            child: const Center(child: AppCircularProgress()),
-          ),
-        );
-      }
-
-      if (controller.topWinners.isEmpty) {
-        return Card(
-          margin: const EdgeInsets.only(bottom: 16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                Icon(Icons.trending_up, size: 48, color: Colors.grey[400]),
-                const SizedBox(height: 8),
-                Text(
-                  '지난 24시간 동안 완료된 경마가 없습니다',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '경마가 완료되면 승리 통계가 표시됩니다',
-                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-        );
-      }
-
-      return Card(
-        margin: const EdgeInsets.only(bottom: 16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.emoji_events, color: Colors.amber, size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    '24시간 최다 승리 코인',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF191F28),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children:
-                    controller.topWinners.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final winner = entry.value;
-                      final rankColors = [
-                        Colors.amber,
-                        Colors.grey[400]!,
-                        Colors.brown[300]!,
-                      ];
-                      final rankIcons = [
-                        Icons.emoji_events,
-                        Icons.workspace_premium,
-                        Icons.military_tech,
-                      ];
-
-                      return Expanded(
-                        child: Container(
-                          margin: EdgeInsets.only(right: index < 2 ? 8 : 0),
-                          child: _buildWinnerCard(
-                            rank: '${index + 1}등',
-                            winner: winner,
-                            color: rankColors[index],
-                            icon: rankIcons[index],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-              ),
-            ],
-          ),
-        ),
-      );
-    });
-  }
-
-  Widget _buildWinnerCard({
-    required String rank,
-    required dynamic winner,
-    required Color color,
-    required IconData icon,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        children: [
-          // 순위 아이콘
-          Icon(icon, size: 24, color: color),
-          const SizedBox(height: 6),
-          Text(
-            rank,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 8),
-          // 코인 이미지
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.grey.withOpacity(0.3)),
-            ),
-            child: ClipOval(
-              child: Image.network(
-                winner.image,
-                width: 32,
-                height: 32,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 32,
-                    height: 32,
-                    color: Colors.grey[200],
-                    child: const Icon(
-                      Icons.currency_bitcoin,
-                      size: 20,
-                      color: Colors.grey,
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          // 코인 이름
-          Text(
-            winner.symbol,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          // 승수
-          Text(
-            '${winner.wins}승',
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 2),
-          // 승률
-          Text(
-            '${winner.winRate.toStringAsFixed(1)}%',
-            style: TextStyle(
-              fontSize: 10,
-              color: color,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
+  Color _getRankColor(int index) {
+    switch (index) {
+      case 0:
+        return const Color(0xFFFFB800); // Toss 금색
+      case 1:
+        return const Color(0xFF98A2B3); // Toss 은색
+      case 2:
+        return const Color(0xFFB65C32); // Toss 동색
+      default:
+        return const Color(0xFF98A2B3); // Toss 회색
+    }
   }
 }
