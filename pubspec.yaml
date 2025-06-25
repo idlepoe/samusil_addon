@@ -58,8 +58,6 @@ flutter:
   assets:
     - assets/
     - assets/icon/
-    - assets/images/
-    - assets/animations/
     - shorebird.yaml
 # For changing the app logo
 # flutter_launcher_icons: ^0.13.1
@@ -75,4 +73,4 @@ flutter_launcher_icons:
     theme_color: "#FFFFFF"
   windows:
     generate: true
-    image_path: "assets/images/icon-removebg.ico"
+    image_path: "assets/icon/icon.ico"

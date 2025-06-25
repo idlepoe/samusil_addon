@@ -396,20 +396,27 @@ class ProfileEditView extends GetView<ProfileEditController> {
                     ),
                     if (!isPurchased)
                       Positioned(
-                        top: 6,
-                        right: 6,
+                        top: 4,
+                        right: 4,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
+                            horizontal: 6,
+                            vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFF6B35),
-                            borderRadius: BorderRadius.circular(12),
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFF0064FF), // Toss 브랜드 블루
+                                Color(0xFF3182F6), // 밝은 블루
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFFF6B35).withOpacity(0.3),
-                                blurRadius: 8,
+                                color: const Color(0xFF0064FF).withOpacity(0.3),
+                                blurRadius: 6,
                                 offset: const Offset(0, 2),
                               ),
                             ],
@@ -417,9 +424,10 @@ class ProfileEditView extends GetView<ProfileEditController> {
                           child: Text(
                             '${avatar.price}P',
                             style: const TextStyle(
-                              fontSize: 11,
+                              fontSize: 9,
                               color: Colors.white,
                               fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
                             ),
                           ),
                         ),
