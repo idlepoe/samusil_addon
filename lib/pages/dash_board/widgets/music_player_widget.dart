@@ -36,10 +36,10 @@ class MusicPlayerWidget extends GetView<DashBoardController> {
           ),
         ),
 
-        // 미니 플레이어 UI (재생 중일 때만 표시)
+        // 미니 플레이어 UI (플레이어가 표시될 때만 표시)
         Obx(() {
-          // 재생 중이 아니면 표시하지 않음
-          if (!controller.isPlaying.value && !controller.isPaused.value) {
+          // 플레이어가 표시되지 않으면 숨김
+          if (!controller.isPlayerVisible.value) {
             return const SizedBox.shrink();
           }
 
@@ -49,9 +49,14 @@ class MusicPlayerWidget extends GetView<DashBoardController> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 16,
+                  offset: const Offset(0, -4),
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 6,
+                  offset: const Offset(0, -1),
                 ),
               ],
             ),
@@ -201,6 +206,7 @@ class MusicPlayerWidget extends GetView<DashBoardController> {
                       onPressed: controller.closePlayer,
                       icon: const Icon(Icons.close, size: 20),
                       color: const Color(0xFF8B95A1),
+                      tooltip: '플레이어 닫기',
                     ),
                   ],
                 ),

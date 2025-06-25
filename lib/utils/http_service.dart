@@ -207,17 +207,23 @@ class HttpService {
       final path = '/$functionName';
       Response response;
 
+      logger.i('🌐 callCloudFunction: $functionName, method: $method');
+
       switch (method.toUpperCase()) {
         case 'GET':
+          logger.i('📥 GET 요청 실행');
           response = await get(path, queryParameters: data);
           break;
         case 'PUT':
+          logger.i('📤 PUT 요청 실행');
           response = await put(path, data: data);
           break;
         case 'DELETE':
+          logger.i('🗑️ DELETE 요청 실행');
           response = await delete(path, data: data);
           break;
         default:
+          logger.i('📮 POST 요청 실행 (기본값)');
           response = await post(path, data: data);
       }
 
@@ -289,9 +295,11 @@ class HttpService {
   Future<CloudFunctionResponse<Map<String, dynamic>>> updateArticle({
     required Map<String, dynamic> articleData,
   }) async {
+    logger.i('🔧 updateArticle 호출 - PUT 메서드 사용');
     final response = await callCloudFunction(
       'updateArticle',
       data: articleData,
+      method: 'PUT',
     );
     return CloudFunctionResponse<Map<String, dynamic>>(
       success: response['success'] ?? false,

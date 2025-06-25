@@ -19,8 +19,8 @@ class ArticleEditView extends GetView<ArticleEditController> {
 
   @override
   Widget build(BuildContext context) {
-    // boardInfo를 컨트롤러에 직접 설정
-    if (boardInfo != null) {
+    // 수정 모드가 아닐 때만 초기화 (새 글 작성일 때만)
+    if (boardInfo != null && !controller.isEditMode.value) {
       controller.init(boardInfo);
     }
 

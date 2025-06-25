@@ -884,8 +884,8 @@ class App {
       logger.d("updateArticle response: ${response.data}");
 
       if (response.isSuccess) {
-        // 수정된 게시글의 ID 반환
-        return response.data?['id'] as String?;
+        // 수정 성공 시 원본 게시글 ID 반환
+        return article.id;
       } else {
         logger.e("updateArticle failed: ${response.error}");
       }

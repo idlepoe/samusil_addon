@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../controllers/profile_controller.dart';
 import '../../components/profile_avatar_widget.dart';
+import '../../components/appSnackbar.dart';
 import '../../models/profile.dart';
 import '../../utils/http_service.dart';
 import '../../utils/app.dart';
@@ -263,11 +264,7 @@ class ProfileEditController extends GetxController {
       final currentPoint = ProfileController.to.currentPoint;
 
       if (currentPoint < avatar.price) {
-        Get.snackbar(
-          '포인트 부족',
-          '아바타 구매에 필요한 포인트가 부족합니다.',
-          snackPosition: SnackPosition.BOTTOM,
-        );
+        AppSnackbar.warning('아바타 구매에 필요한 포인트가 부족합니다.');
         return false;
       }
 
@@ -283,24 +280,16 @@ class ProfileEditController extends GetxController {
         // 구매한 아바타 목록 새로고침
         await _loadPurchasedAvatars();
 
-        Get.snackbar(
-          '구매 완료',
-          '${avatar.name} 아바타를 구매했습니다!',
-          snackPosition: SnackPosition.BOTTOM,
-        );
+        AppSnackbar.success('${avatar.name} 아바타를 구매했습니다!');
         await ProfileController.to.refreshProfile();
         return true;
       } else {
-        Get.snackbar(
-          '구매 실패',
-          result.error ?? '알 수 없는 오류',
-          snackPosition: SnackPosition.BOTTOM,
-        );
+        AppSnackbar.error(result.error ?? '알 수 없는 오류');
         return false;
       }
     } catch (e) {
       logger.e('아바타 구매 오류: $e');
-      Get.snackbar('구매 실패', e.toString(), snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.error('구매 중 오류가 발생했습니다.');
       return false;
     }
   }
@@ -335,27 +324,15 @@ class ProfileEditController extends GetxController {
 
       if (success) {
         Get.back();
-        Get.snackbar(
-          '저장 완료',
-          '프로필이 성공적으로 저장되었습니다.',
-          snackPosition: SnackPosition.BOTTOM,
-        );
+        AppSnackbar.success('프로필이 성공적으로 저장되었습니다.');
       } else {
-        Get.snackbar(
-          '저장 실패',
-          '프로필 저장 중 오류가 발생했습니다.',
-          snackPosition: SnackPosition.BOTTOM,
-        );
+        AppSnackbar.error('프로필 저장 중 오류가 발생했습니다.');
       }
 
       return success;
     } catch (e) {
       logger.e('프로필 저장 오류: $e');
-      Get.snackbar(
-        '오류',
-        '프로필 저장 중 오류가 발생했습니다.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      AppSnackbar.error('프로필 저장 중 오류가 발생했습니다.');
       return false;
     } finally {
       isLoading.value = false;

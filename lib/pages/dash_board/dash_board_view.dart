@@ -142,15 +142,30 @@ class DashBoardView extends GetView<DashBoardController> {
                 ),
               ),
             ),
-            // 음악 플레이어 - PiP 모드일 때 화면 밖으로 이동
+            // 음악 플레이어 - 애니메이션과 함께 표시/숨김
             Positioned(
-              bottom:
-                  controller.isPipModeActive.value
-                      ? -200
-                      : 0, // PiP 모드에서 화면 아래로 이동
+              bottom: 0,
               left: 0,
               right: 0,
-              child: const MusicPlayerWidget(),
+              child: Obx(() {
+                final shouldShow =
+                    controller.isPlayerVisible.value &&
+                    !controller.isPipModeActive.value;
+
+                return AnimatedSlide(
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeInOutCubic,
+                  offset: shouldShow ? Offset.zero : const Offset(0, 1),
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 300),
+                    opacity: shouldShow ? 1.0 : 0.0,
+                    child: Transform.scale(
+                      scale: shouldShow ? 1.0 : 0.95,
+                      child: const MusicPlayerWidget(),
+                    ),
+                  ),
+                );
+              }),
             ),
           ],
         ),

@@ -16,36 +16,41 @@ export const getArticleDetail = onRequest({
 
     const db = admin.firestore();
     const articleRef = db.collection(FIRESTORE_COLLECTION_ARTICLE).doc(key);
-    const articleDoc = await articleRef.get();
+    
+    // 병렬로 게시글과 댓글 조회
+    const [articleDoc, commentsSnapshot] = await Promise.all([
+      articleRef.get(),
+      articleRef.collection('comments').orderBy('created_at', 'asc').get()
+    ]);
 
     if (!articleDoc.exists) {
       res.status(404).json({ success: false, error: 'Article not found' });
       return;
     }
 
-    // 조회수 증가
-    await articleRef.update({
+    // 조회수 증가 (비동기, 응답에 영향 없음)
+    articleRef.update({
       count_view: admin.firestore.FieldValue.increment(1)
+    }).catch(error => {
+      console.error('Failed to increment view count:', error);
     });
 
-    // 댓글 서브컬렉션에서 댓글 가져오기
-    const commentsSnapshot = await articleRef.collection('comments').orderBy('created_at', 'asc').get();
+    // 댓글 데이터 매핑
     const comments = commentsSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
 
-    const updatedDoc = await articleRef.get();
-    const articleData = updatedDoc.data();
+    const articleData = articleDoc.data();
     
     if (articleData) {
       const article = {
-        id: updatedDoc.id,
+        id: articleDoc.id,
         board_name: articleData.board_name,
         profile_uid: articleData.profile_uid,
         profile_name: articleData.profile_name,
         profile_photo_url: articleData.profile_photo_url,
-        count_view: articleData.count_view || 0,
+        count_view: (articleData.count_view || 0) + 1, // 조회수 증가 반영
         count_like: articleData.count_like || 0,
         count_unlike: articleData.count_unlike || 0,
         count_comments: comments.length, // 서브컬렉션의 댓글 수로 업데이트

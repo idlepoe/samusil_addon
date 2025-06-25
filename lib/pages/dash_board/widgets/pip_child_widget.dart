@@ -27,48 +27,61 @@ class PipChildWidget extends GetView<DashBoardController> {
                 : const BoxDecoration(color: Colors.black),
         child: Stack(
           children: [
-            Column(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(height: 20),
-                        Text(
+            // 메인 콘텐츠 영역 - 중앙 텍스트
+            Positioned.fill(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
                           track?.title ?? '제목 없음',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 16,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            height: 1.2,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.left,
+                          textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 8),
-                        Text(
+                      ),
+                      const SizedBox(height: 6),
+                      Flexible(
+                        child: Text(
                           track?.description ?? '설명 없음',
                           style: const TextStyle(
                             color: Colors.white70,
-                            fontSize: 12,
-                            height: 1.2,
+                            fontSize: 10,
                           ),
-                          maxLines: 2,
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.left,
+                          textAlign: TextAlign.center,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
-                  child: Column(
-                    children: [
-                      Row(
+              ),
+            ),
+
+            // 하단 진행률 바 영역
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                height: 28,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // 시간 표시
+                    Container(
+                      height: 16,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
@@ -77,7 +90,7 @@ class PipChildWidget extends GetView<DashBoardController> {
                             ),
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 10,
+                              fontSize: 8,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -87,51 +100,63 @@ class PipChildWidget extends GetView<DashBoardController> {
                             ),
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 10,
+                              fontSize: 8,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 6),
-                      Container(
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                        child: FractionallySizedBox(
-                          alignment: Alignment.centerLeft, // 왼쪽에서 시작
-                          widthFactor: controller.progressPercentage.value
-                              .clamp(0.0, 1.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Colors.cyan, Colors.blue],
-                              ),
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                        ),
+                    ),
+                    // 진행률 바
+                    Container(
+                      height: 3,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(1.5),
                       ),
-                    ],
-                  ),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final progressWidth =
+                              constraints.maxWidth *
+                              controller.progressPercentage.value.clamp(
+                                0.0,
+                                1.0,
+                              );
+                          return Stack(
+                            children: [
+                              // 진행된 부분 (왼쪽에서 오른쪽으로 채워짐)
+                              Positioned(
+                                left: 0,
+                                top: 0,
+                                bottom: 0,
+                                width: progressWidth,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Colors.cyan, Colors.blue],
+                                    ),
+                                    borderRadius: BorderRadius.circular(1.5),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                  ],
                 ),
-              ],
+              ),
             ),
+
+            // 우상단 트랙 정보
             if (trackArticle != null)
               Positioned(
-                top: 12,
-                right: 12,
+                top: 8,
+                right: 8,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    // color: Colors.black.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     mainAxisSize: MainAxisSize.min,
@@ -149,8 +174,8 @@ class PipChildWidget extends GetView<DashBoardController> {
                                 margin: const EdgeInsets.symmetric(
                                   horizontal: 1.5,
                                 ),
-                                width: 5,
-                                height: 5,
+                                width: 4,
+                                height: 4,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color:
@@ -174,8 +199,8 @@ class PipChildWidget extends GetView<DashBoardController> {
                                 margin: const EdgeInsets.symmetric(
                                   horizontal: 1.5,
                                 ),
-                                width: 5,
-                                height: 5,
+                                width: 4,
+                                height: 4,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color:
@@ -187,12 +212,12 @@ class PipChildWidget extends GetView<DashBoardController> {
                             }),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 3),
                       Text(
                         '${controller.currentTrackIndex.value + 1} / ${trackArticle.tracks.length}',
                         style: const TextStyle(
                           color: Colors.white70,
-                          fontSize: 8,
+                          fontSize: 7,
                         ),
                       ),
                     ],

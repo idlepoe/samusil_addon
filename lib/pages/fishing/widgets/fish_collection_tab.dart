@@ -195,7 +195,7 @@ class FishCollectionTab extends GetView<FishingGameController> {
   /// 물고기 아이템 위젯
   Widget _buildFishItem(Fish fish, Set<String> caughtFishSet) {
     final isCaught = caughtFishSet.contains(fish.name);
-    final isAvailableNow = fish.isAvailableNow();
+    final isAvailableNow = fish.isAvailableToday();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),

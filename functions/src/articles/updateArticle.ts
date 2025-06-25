@@ -60,7 +60,9 @@ export const updateArticle = onRequest({
 
     res.status(200).json({
       success: true,
-      message: 'Article updated successfully'
+      data: {
+        id: articleId
+      }
     });
 
   } catch (error) {
