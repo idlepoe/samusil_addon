@@ -447,4 +447,22 @@ class ArticleDetailController extends GetxController {
       AppSnackbar.error('공유 중 오류가 발생했습니다.');
     }
   }
+
+  // 신고하기
+  Future<void> reportArticle() async {
+    try {
+      final db = FirebaseFirestore.instance;
+
+      // 게시글의 신고 횟수 증가
+      await db
+          .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
+          .doc(article.value.id)
+          .update({'count_report': FieldValue.increment(1)});
+
+      AppSnackbar.success('신고가 접수되었습니다. 관리자가 검토 후 조치하겠습니다.');
+    } catch (e) {
+      logger.e('reportArticle error: $e');
+      AppSnackbar.error('신고 처리 중 오류가 발생했습니다.');
+    }
+  }
 }

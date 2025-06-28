@@ -238,9 +238,9 @@ class CommentListWidget extends GetView<ArticleDetailController> {
       // 게시글 ID를 가져와서 올바른 경로로 댓글 신고
       final articleId = controller.articleId.value;
       await FirebaseFirestore.instance
-          .collection('articles')
+          .collection(Define.FIRESTORE_COLLECTION_ARTICLE)
           .doc(articleId)
-          .collection('comments')
+          .collection(Define.FIRESTORE_FIELD_COMMETS)
           .doc(comment.id)
           .update({'count_report': FieldValue.increment(1)});
 

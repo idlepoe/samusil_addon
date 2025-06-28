@@ -86,6 +86,18 @@ class ArticleDetailView extends GetView<ArticleDetailController> {
         // 공통 메뉴 (공유)
         items.add(_buildPopupMenuItem('share', '공유하기', Icons.share_outlined));
 
+        // 작성자가 아닌 경우 신고하기 메뉴 추가
+        if (!controller.isAuthor) {
+          items.add(
+            _buildPopupMenuItem(
+              'report',
+              '신고하기',
+              Icons.report_outlined,
+              isDestructive: true,
+            ),
+          );
+        }
+
         // 작성자인 경우에만 수정, 삭제 메뉴 추가
         if (controller.isAuthor) {
           items.add(_buildPopupMenuItem('edit', '수정하기', Icons.edit_outlined));
@@ -136,6 +148,9 @@ class ArticleDetailView extends GetView<ArticleDetailController> {
       case 'share':
         controller.shareArticle();
         break;
+      case 'report':
+        _showReportConfirmDialog();
+        break;
       case 'edit':
         controller.editArticle();
         break;
@@ -175,6 +190,42 @@ class ArticleDetailView extends GetView<ArticleDetailController> {
                   controller.deleteArticle();
                 },
                 child: const Text('삭제', style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _showReportConfirmDialog() {
+    showDialog(
+      context: Get.context!,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Text(
+              '게시글 신고',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            content: const Text(
+              '이 게시글이 부적절한 내용을 포함하고 있다고 신고하시겠습니까?\n신고는 취소할 수 없습니다.',
+              style: TextStyle(fontSize: 14, height: 1.5),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Get.back(),
+                child: const Text(
+                  '취소',
+                  style: TextStyle(color: Color(0xFF8B95A1)),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Get.back();
+                  controller.reportArticle();
+                },
+                child: const Text('신고', style: TextStyle(color: Colors.red)),
               ),
             ],
           ),
