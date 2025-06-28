@@ -48,6 +48,8 @@ import '../pages/profile/profile_edit_view.dart';
 import '../pages/profile/profile_edit_binding.dart';
 import '../pages/fishing/fishing_game_view.dart';
 import '../pages/fishing/fishing_game_binding.dart';
+import '../pages/schedule/schedule_view.dart';
+import '../pages/schedule/schedule_binding.dart';
 
 class GetRoutes {
   static final routes = [
@@ -169,6 +171,11 @@ class GetRoutes {
       name: '/fishing-game',
       page: () => const FishingGameView(),
       binding: FishingGameBinding(),
+    ),
+    GetPage(
+      name: '/schedule',
+      page: () => const ScheduleView(),
+      binding: ScheduleBinding(),
     ),
   ];
 }

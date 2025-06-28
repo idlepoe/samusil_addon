@@ -1,8 +1,10 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:office_lounge/pages/splash/splash_view.dart';
 import 'package:office_lounge/pages/splash/splash_binding.dart';
 import 'package:office_lounge/pages/dash_board/dash_board_view.dart';
@@ -18,6 +20,7 @@ import 'package:office_lounge/utils/http_service.dart';
 import 'package:office_lounge/utils/app.dart';
 import 'package:office_lounge/utils/notification_service.dart';
 import 'package:office_lounge/controllers/profile_controller.dart';
+import 'package:office_lounge/utils/schedule_service.dart';
 
 import 'define/define.dart';
 import 'firebase_options.dart';
@@ -29,8 +32,14 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // 로케일 데이터 초기화
+  await initializeDateFormatting('ko_KR', null);
+
   // 로컬 알림 서비스 초기화
   await NotificationService().initializeFCM();
+
+  // 일정관리 서비스 초기화
+  await ScheduleService.initialize();
 
   // HttpService 초기화 (baseUrl은 나중에 설정)
   HttpService().initialize();
@@ -49,6 +58,13 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Samusil Addon',
+      locale: const Locale('ko', 'KR'),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('ko', 'KR'), Locale('en', 'US')],
       theme: ThemeData(
         primarySwatch: Colors.blue,
         primaryColor: const Color(0xFF0064FF), // 토스 스타일 포인트 컬러

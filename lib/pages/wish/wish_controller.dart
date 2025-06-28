@@ -54,6 +54,8 @@ class WishController extends GetxController {
 
       // Wish 목록 조회
       final wishes = await App.getWish();
+      // 인덱스 기준으로 내림차순 정렬 (높은 숫자가 위로)
+      wishes.sort((a, b) => b.index.compareTo(a.index));
       wishList.value = wishes;
     } catch (e) {
       logger.e("Error in init: $e");
@@ -71,6 +73,8 @@ class WishController extends GetxController {
 
       // Wish 목록 새로고침
       final wishes = await App.getWish();
+      // 인덱스 기준으로 내림차순 정렬 (높은 숫자가 위로)
+      wishes.sort((a, b) => b.index.compareTo(a.index));
       wishList.value = wishes;
     } catch (e) {
       logger.e("Error in refresh: $e");
@@ -105,6 +109,8 @@ class WishController extends GetxController {
 
         // Wish 목록 새로고침
         final wishes = await App.getWish();
+        // 인덱스 기준으로 내림차순 정렬 (높은 숫자가 위로)
+        wishes.sort((a, b) => b.index.compareTo(a.index));
         wishList.value = wishes;
 
         // 입력 필드 초기화

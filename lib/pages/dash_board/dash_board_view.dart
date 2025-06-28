@@ -12,7 +12,7 @@ import '../left_drawer/left_drawer.dart';
 import 'dash_board_controller.dart';
 import 'widgets/race_status_widget.dart';
 import '../../main.dart';
-import 'widgets/date_wish_card_widget.dart';
+import 'widgets/date_header_widget.dart';
 import 'widgets/game_news_list_widget.dart';
 import 'widgets/entertainment_news_list_widget.dart';
 import 'widgets/all_articles_widget.dart';
@@ -103,16 +103,16 @@ class DashBoardView extends GetView<DashBoardController> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // 오늘 날짜 헤더
+                          const DateHeaderWidget(),
+                          const SizedBox(height: 16),
+
                           // 코인 가격 스크롤
                           const RaceStatusWidget(),
                           const SizedBox(height: 16),
 
                           // 오늘의 낚시터 정보
                           const DailyLocationWidget(),
-                          const SizedBox(height: 20),
-
-                          // 오늘 날짜 헤더
-                          const DateWishCardWidget(),
                           const SizedBox(height: 20),
 
                           // 뮤직살롱 섹션
