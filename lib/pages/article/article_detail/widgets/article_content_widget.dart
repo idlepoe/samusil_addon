@@ -3,14 +3,20 @@ import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import 'package:office_lounge/components/article_image_widget.dart';
 import 'package:office_lounge/components/appSnackbar.dart';
 import 'package:office_lounge/pages/image_viewer/image_viewer_page.dart';
+import 'package:office_lounge/pages/dash_board/dash_board_controller.dart';
+import 'package:logger/logger.dart';
 
 import '../article_detail_controller.dart';
 
 class ArticleContentWidget extends GetView<ArticleDetailController> {
+  static final logger = Logger();
+
   const ArticleContentWidget({super.key});
 
   @override
@@ -72,27 +78,113 @@ class ArticleContentWidget extends GetView<ArticleDetailController> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
       child: SelectionArea(
-        child: Html(
-          data: content.contents,
-          style: {
-            "body": Style(
-              fontSize: FontSize(16),
-              color: Colors.black87,
-              lineHeight: LineHeight(1.6),
-              margin: Margins.zero,
-              padding: HtmlPaddings.zero,
-            ),
-          },
-          onLinkTap: (url, __, ___) async {
-            if (await canLaunchUrlString(url!)) {
-              await launchUrlString(url);
+        child: Linkify(
+          text: content.contents,
+          options: const LinkifyOptions(humanize: false),
+          style: const TextStyle(fontSize: 16),
+          onOpen: (link) async {
+            if (_isYoutubeLink(link.url)) {
+              _showYoutubePlayer(link.url);
             } else {
-              AppSnackbar.error('링크를 열 수 없습니다');
+              await launchUrlString(
+                link.url,
+                mode: LaunchMode.externalApplication,
+              );
             }
           },
         ),
       ),
     );
+  }
+
+  bool _isYoutubeLink(String url) {
+    return url.contains('youtube.com') || url.contains('youtu.be');
+  }
+
+  void _showYoutubePlayer(String url) {
+    final videoId = YoutubePlayerController.convertUrlToId(url);
+    if (videoId == null) {
+      logger.e('Invalid YouTube URL: $url');
+      return;
+    }
+
+    logger.i('Opening YouTube player for video ID: $videoId');
+
+    // 대시보드 컨트롤러 가져오기
+    final dashboardController = Get.find<DashBoardController>();
+    final wasPlaying = dashboardController.isPlaying.value;
+
+    if (wasPlaying) {
+      dashboardController.togglePlayPause();
+      logger.i('Paused dashboard player');
+    }
+
+    final controller = YoutubePlayerController.fromVideoId(
+      videoId: videoId,
+      autoPlay: true,
+      params: const YoutubePlayerParams(
+        showControls: true,
+        showVideoAnnotations: false,
+        showFullscreenButton: true,
+        loop: false,
+        enableCaption: true,
+      ),
+    );
+
+    logger.i('Created YouTube controller');
+
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AspectRatio(
+                aspectRatio: 16 / 9,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(8),
+                  ),
+                  child: YoutubePlayer(
+                    controller: controller,
+                    aspectRatio: 16 / 9,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      onPressed: () {
+                        logger.i('Closing YouTube player dialog');
+                        Get.back();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: true,
+    ).then((_) {
+      logger.i('YouTube player dialog closed');
+      controller.close();
+      if (wasPlaying) {
+        logger.i('Resuming dashboard player');
+        dashboardController.togglePlayPause();
+      }
+    });
   }
 
   void _navigateToImageViewer(String imageUrl, String heroTag) {
