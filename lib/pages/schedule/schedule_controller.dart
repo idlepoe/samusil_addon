@@ -5,6 +5,8 @@ import 'package:table_calendar/table_calendar.dart';
 
 import '../../models/schedule.dart';
 import '../../utils/schedule_service.dart';
+import '../../components/appSnackbar.dart';
+import '../../components/showSimpleDialog.dart';
 
 class ScheduleController extends GetxController {
   // 현재 포커스된 날짜
@@ -51,7 +53,7 @@ class ScheduleController extends GetxController {
       final schedules = await ScheduleService.getAllSchedules();
       allSchedules.value = schedules;
     } catch (e) {
-      Get.snackbar('오류', '일정을 불러오는데 실패했습니다.');
+      AppSnackbar.error('일정을 불러오는데 실패했습니다.');
     } finally {
       isLoading.value = false;
     }
@@ -67,7 +69,7 @@ class ScheduleController extends GetxController {
       schedules.sort((a, b) => a.time.compareTo(b.time));
       selectedDaySchedules.value = schedules;
     } catch (e) {
-      Get.snackbar('오류', '일정을 불러오는데 실패했습니다.');
+      AppSnackbar.error('일정을 불러오는데 실패했습니다.');
     }
   }
 
@@ -131,7 +133,7 @@ class ScheduleController extends GetxController {
       await loadSchedules();
       await loadSelectedDaySchedules();
     } catch (e) {
-      Get.snackbar('오류', '일정 상태 변경에 실패했습니다.');
+      AppSnackbar.error('일정 상태 변경에 실패했습니다.');
     }
   }
 
@@ -141,9 +143,9 @@ class ScheduleController extends GetxController {
       await ScheduleService.deleteSchedule(scheduleId);
       await loadSchedules();
       await loadSelectedDaySchedules();
-      Get.snackbar('완료', '일정이 삭제되었습니다.');
+      AppSnackbar.success('일정이 삭제되었습니다.');
     } catch (e) {
-      Get.snackbar('오류', '일정 삭제에 실패했습니다.');
+      AppSnackbar.error('일정 삭제에 실패했습니다.');
     }
   }
 

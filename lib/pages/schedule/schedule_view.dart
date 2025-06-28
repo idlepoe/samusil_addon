@@ -4,6 +4,7 @@ import 'package:table_calendar/table_calendar.dart';
 
 import 'schedule_controller.dart';
 import 'widgets/add_schedule_bottom_sheet.dart';
+import '../../components/showSimpleDialog.dart';
 
 class ScheduleView extends GetView<ScheduleController> {
   const ScheduleView({super.key});
@@ -274,15 +275,33 @@ class ScheduleView extends GetView<ScheduleController> {
         ),
         trailing: PopupMenuButton(
           icon: Icon(Icons.more_vert, color: Colors.grey.shade600),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          position: PopupMenuPosition.under,
+          elevation: 4,
+          color: Colors.white,
           itemBuilder:
               (context) => [
                 PopupMenuItem(
                   value: 'delete',
+                  height: 48,
                   child: Row(
                     children: [
-                      Icon(Icons.delete, color: Colors.red.shade400),
-                      const SizedBox(width: 8),
-                      const Text('삭제'),
+                      Icon(
+                        Icons.delete_outline,
+                        color: const Color(0xFFFF3B30),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        '삭제',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFFFF3B30),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -311,21 +330,14 @@ class ScheduleView extends GetView<ScheduleController> {
   }
 
   void _showDeleteConfirmDialog(String scheduleId) {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('일정 삭제'),
-        content: const Text('이 일정을 삭제하시겠습니까?'),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('취소')),
-          TextButton(
-            onPressed: () {
-              Get.back();
-              controller.deleteSchedule(scheduleId);
-            },
-            child: Text('삭제', style: TextStyle(color: Colors.red.shade400)),
-          ),
-        ],
-      ),
+    showSimpleDialog(
+      title: '일정 삭제',
+      message: '이 일정을 삭제하시겠습니까?\n삭제된 일정은 복구할 수 없습니다.',
+      confirmText: '삭제',
+      confirmButtonStyle: SimpleDialogButtonStyle.destructive,
+      onConfirm: () {
+        controller.deleteSchedule(scheduleId);
+      },
     );
   }
 }

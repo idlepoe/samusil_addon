@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../main.dart';
 import '../../../models/schedule.dart';
 import '../../../utils/schedule_service.dart';
+import '../../../components/appSnackbar.dart';
 
 class AddScheduleBottomSheet extends StatefulWidget {
   final DateTime selectedDate;
@@ -228,6 +229,60 @@ class _AddScheduleBottomSheetState extends State<AddScheduleBottomSheet> {
         hour: int.parse(_selectedTime.split(':')[0]),
         minute: int.parse(_selectedTime.split(':')[1]),
       ),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            timePickerTheme: TimePickerThemeData(
+              backgroundColor: Colors.white,
+              hourMinuteShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              dayPeriodShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              dayPeriodColor: MaterialStateColor.resolveWith((states) {
+                if (states.contains(MaterialState.selected)) {
+                  return const Color(0xFF0064FF);
+                }
+                return const Color(0xFFF8F9FA);
+              }),
+              dayPeriodTextColor: MaterialStateColor.resolveWith((states) {
+                if (states.contains(MaterialState.selected)) {
+                  return Colors.white;
+                }
+                return const Color(0xFF191F28);
+              }),
+              hourMinuteColor: MaterialStateColor.resolveWith((states) {
+                if (states.contains(MaterialState.selected)) {
+                  return const Color(0xFF0064FF);
+                }
+                return const Color(0xFFF8F9FA);
+              }),
+              hourMinuteTextColor: MaterialStateColor.resolveWith((states) {
+                if (states.contains(MaterialState.selected)) {
+                  return Colors.white;
+                }
+                return const Color(0xFF191F28);
+              }),
+              dialHandColor: const Color(0xFF0064FF),
+              dialBackgroundColor: const Color(0xFFF8F9FA),
+              dialTextColor: MaterialStateColor.resolveWith((states) {
+                if (states.contains(MaterialState.selected)) {
+                  return Colors.white;
+                }
+                return const Color(0xFF191F28);
+              }),
+              entryModeIconColor: const Color(0xFF0064FF),
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF0064FF),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (time != null) {
@@ -240,7 +295,7 @@ class _AddScheduleBottomSheetState extends State<AddScheduleBottomSheet> {
 
   void _saveSchedule() async {
     if (_titleController.text.trim().isEmpty) {
-      Get.snackbar('오류', '제목을 입력해주세요.');
+      AppSnackbar.error('제목을 입력해주세요.');
       return;
     }
 
@@ -262,10 +317,10 @@ class _AddScheduleBottomSheetState extends State<AddScheduleBottomSheet> {
       await ScheduleService.saveSchedule(schedule);
       widget.onScheduleAdded();
       Get.back();
-      Get.snackbar('완료', '일정이 추가되었습니다.');
+      AppSnackbar.success('일정이 추가되었습니다.');
     } catch (e) {
       logger.e(e);
-      Get.snackbar('오류', '일정 추가에 실패했습니다.');
+      AppSnackbar.error('일정 추가에 실패했습니다.');
     } finally {
       setState(() {
         _isLoading = false;
