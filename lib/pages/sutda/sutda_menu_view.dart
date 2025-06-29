@@ -27,54 +27,42 @@ class SutdaMenuView extends StatelessWidget {
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              const SizedBox(height: 40),
+              const SizedBox(height: 24),
 
               // 섯다 로고/이미지
               Container(
-                width: 120,
-                height: 120,
+                width: 100,
+                height: 100,
                 decoration: BoxDecoration(
                   color: const Color(0xFF0064FF),
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFF0064FF).withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
                     ),
                   ],
                 ),
-                child: const Icon(Icons.casino, color: Colors.white, size: 60),
+                child: const Icon(Icons.casino, color: Colors.white, size: 50),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 20),
 
               // 제목
               const Text(
                 '섯다',
                 style: TextStyle(
                   color: Color(0xFF191F28),
-                  fontSize: 32,
+                  fontSize: 28,
                   fontWeight: FontWeight.w700,
                 ),
               ),
 
-              const SizedBox(height: 12),
-
-              // 설명
-              Text(
-                '3장 섯다 베팅 게임을 즐겨보세요',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-
-              const SizedBox(height: 60),
+              const SizedBox(height: 32),
 
               // 게임 모드 선택
               Column(
@@ -82,13 +70,13 @@ class SutdaMenuView extends StatelessWidget {
                   // AI와 게임하기 (활성화)
                   Container(
                     width: double.infinity,
-                    margin: const EdgeInsets.only(bottom: 16),
+                    margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
                       boxShadow: [
                         BoxShadow(
                           color: const Color(0xFF0064FF).withOpacity(0.3),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
                         ),
                       ],
                     ),
@@ -97,9 +85,9 @@ class SutdaMenuView extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF0064FF),
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                         elevation: 0,
                       ),
@@ -107,23 +95,23 @@ class SutdaMenuView extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Container(
-                            width: 32,
-                            height: 32,
+                            width: 28,
+                            height: 28,
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(
                               Icons.smart_toy,
                               color: Colors.white,
-                              size: 20,
+                              size: 18,
                             ),
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: 12),
                           const Text(
                             'AI와 게임하기',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -135,14 +123,24 @@ class SutdaMenuView extends StatelessWidget {
                   // 온라인 게임하기 (비활성화)
                   Container(
                     width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
                     child: ElevatedButton(
                       onPressed: null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF2F4F6),
-                        foregroundColor: const Color(0xFF8B95A1),
-                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        backgroundColor: Colors.grey,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                         elevation: 0,
                       ),
@@ -150,23 +148,23 @@ class SutdaMenuView extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Container(
-                            width: 32,
-                            height: 32,
+                            width: 28,
+                            height: 28,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF8B95A1).withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(16),
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(
                               Icons.people,
-                              color: Color(0xFF8B95A1),
-                              size: 20,
+                              color: Colors.white,
+                              size: 18,
                             ),
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: 12),
                           const Text(
-                            '온라인 게임하기 (준비중)',
+                            '온라인 2장 섯다 (준비중)',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -182,10 +180,10 @@ class SutdaMenuView extends StatelessWidget {
               // 게임 설명
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: const Color(0xFFE5E8EB), width: 1),
                 ),
                 child: Column(
@@ -195,17 +193,17 @@ class SutdaMenuView extends StatelessWidget {
                       '게임 방법',
                       style: TextStyle(
                         color: Color(0xFF191F28),
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     Text(
-                      '• 2장을 받고 첫 번째 베팅을 합니다\n• 3번째 카드를 받고 두 번째 베팅을 합니다\n• 처음 2장으로 족보가 결정됩니다\n• 기본 베팅 금액은 50포인트입니다\n• 콜, 따당, 다이로 베팅할 수 있습니다',
+                      '• 3장 섯다: 2장을 받고 첫 번째 베팅 → 3번째 카드를 받고 두 번째 베팅\n• 2장 섯다: 1장을 받고 첫 번째 베팅 → 2번째 카드를 받고 두 번째 베팅\n• 기본 베팅 금액은 50포인트(3장) / 100포인트(2장)\n• 체크, 콜, 삥, 쿼터, 하프, 따당, 다이로 베팅 가능\n• 온라인 게임은 실시간 매칭으로 진행됩니다',
                       style: TextStyle(
                         color: Colors.grey[600],
-                        fontSize: 14,
-                        height: 1.5,
+                        fontSize: 12,
+                        height: 1.4,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -213,7 +211,7 @@ class SutdaMenuView extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
             ],
           ),
         ),

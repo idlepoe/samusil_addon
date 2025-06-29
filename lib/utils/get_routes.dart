@@ -53,6 +53,8 @@ import '../pages/schedule/schedule_binding.dart';
 import '../pages/sutda/sutda_menu_view.dart';
 import '../pages/sutda/sutda_game_view.dart';
 import '../pages/sutda/sutda_game_binding.dart';
+import '../pages/online_sutda/online_sutda_view.dart';
+import '../pages/online_sutda/online_sutda_binding.dart';
 
 class GetRoutes {
   static final routes = [
@@ -185,6 +187,11 @@ class GetRoutes {
       name: '/sutda/game',
       page: () => const SutdaGameView(),
       binding: SutdaGameBinding(),
+    ),
+    GetPage(
+      name: '/online-sutda',
+      page: () => const OnlineSutdaView(),
+      binding: OnlineSutdaBinding(),
     ),
   ];
 }
