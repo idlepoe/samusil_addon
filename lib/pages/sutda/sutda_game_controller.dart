@@ -75,6 +75,10 @@ class SutdaGameController extends GetxController {
 
   Random random = Random();
 
+  // 베팅 라운드 추적 변수 추가
+  final playerHasBet = false.obs;
+  final aiHasBet = false.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -209,6 +213,7 @@ class SutdaGameController extends GetxController {
     // 게임 상태 초기화
     gameState.value = GameState.dealing;
     bettingRoundComplete.value = false;
+    isDie.value = false; // 다이 상태 초기화
 
     // 카드 초기화
     playerCards.clear();
@@ -230,6 +235,8 @@ class SutdaGameController extends GetxController {
     playerTotalBet.value = baseBet.value;
     aiTotalBet.value = baseBet.value;
     finalPointChange.value = 0;
+    playerHasBet.value = false; // 베팅 추적 초기화
+    aiHasBet.value = false;
 
     // 히스토리 초기화
     bettingHistory.clear();
@@ -326,6 +333,8 @@ class SutdaGameController extends GetxController {
   void _startFirstBetting() {
     gameState.value = GameState.firstBetting;
     gamePhase.value = 1;
+    playerHasBet.value = false;
+    aiHasBet.value = false;
     bettingHistory.add('--- 1라운드 베팅 ---');
 
     if (bettingTurn.value == BettingTurn.ai) {
@@ -338,6 +347,7 @@ class SutdaGameController extends GetxController {
         gameState.value != GameState.finalBetting)
       return;
 
+    developer.log('플레이어 체크');
     _addBettingHistory('체크');
     currentBet.value = 0;
     _processBetting();
@@ -350,6 +360,7 @@ class SutdaGameController extends GetxController {
 
     int callAmount = currentBet.value;
     if (callAmount > 0) {
+      developer.log('플레이어 콜 (${callAmount}P)');
       _addBettingHistory('콜 (${callAmount}P)');
       _payBetAmount(callAmount, '섯다 콜');
 
@@ -360,6 +371,7 @@ class SutdaGameController extends GetxController {
       }
       pot.value += callAmount;
     } else {
+      developer.log('플레이어 체크');
       _addBettingHistory('체크');
     }
 
@@ -372,6 +384,7 @@ class SutdaGameController extends GetxController {
       return;
 
     int raiseAmount = currentBet.value + baseBet.value;
+    developer.log('플레이어 따당 (+${baseBet.value}P)');
     _addBettingHistory('따당 (+${baseBet.value}P)');
     _payBetAmount(raiseAmount, '섯다 레이즈');
 
@@ -391,6 +404,7 @@ class SutdaGameController extends GetxController {
         gameState.value != GameState.finalBetting)
       return;
 
+    developer.log('플레이어 다이');
     _addBettingHistory('다이');
     isDie.value = true;
     isPlayerWin.value = bettingTurn.value == BettingTurn.ai;
@@ -400,6 +414,13 @@ class SutdaGameController extends GetxController {
   }
 
   void _processBetting() {
+    // 현재 턴의 플레이어가 베팅했음을 표시
+    if (bettingTurn.value == BettingTurn.player) {
+      playerHasBet.value = true;
+    } else {
+      aiHasBet.value = true;
+    }
+
     // 베팅 라운드가 완료되었는지 확인
     if (_isBettingRoundComplete()) {
       _nextGamePhase();
@@ -420,8 +441,12 @@ class SutdaGameController extends GetxController {
 
   bool _isBettingRoundComplete() {
     // 양쪽 모두 베팅했고, 베팅 금액이 같으면 라운드 완료
-    return playerTotalBet.value == aiTotalBet.value + currentBet.value ||
-        aiTotalBet.value == playerTotalBet.value + currentBet.value;
+    if (!playerHasBet.value || !aiHasBet.value) {
+      return false; // 둘 중 하나라도 베팅하지 않았으면 라운드 미완료
+    }
+
+    // 양쪽 모두 베팅했고, 베팅 금액이 같으면 라운드 완료
+    return playerTotalBet.value == aiTotalBet.value;
   }
 
   void _nextGamePhase() {
@@ -467,6 +492,8 @@ class SutdaGameController extends GetxController {
       gameState.value = GameState.finalBetting;
       gamePhase.value = 2;
       currentBet.value = 0; // 베팅 초기화
+      playerHasBet.value = false; // 2라운드 베팅 추적 초기화
+      aiHasBet.value = false;
       bettingHistory.add('--- 2라운드 베팅 ---');
 
       if (bettingTurn.value == BettingTurn.ai) {
