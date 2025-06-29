@@ -123,6 +123,16 @@ class _LeftDrawerState extends State<LeftDrawer> {
                 Get.toNamed('/fishing-game');
               },
             ),
+            // 섯다
+            ListTile(
+              title: const Text("섯다"),
+              subtitle: Text("AI와 함께하는 전통 카드 게임"),
+              leading: const Icon(Icons.casino, color: Colors.red),
+              onTap: () {
+                Navigator.pop(context);
+                Get.toNamed('/sutda');
+              },
+            ),
             Define.APP_DIVIDER,
 
             // 뉴스 섹션

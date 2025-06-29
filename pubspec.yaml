@@ -63,6 +63,7 @@ flutter:
   assets:
     - assets/
     - assets/icon/
+    - assets/hwatu/
     - shorebird.yaml
 # For changing the app logo
 # flutter_launcher_icons: ^0.13.1

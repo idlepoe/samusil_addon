@@ -195,6 +195,62 @@ class ProfileController extends GetxController {
   /// 현재 포인트를 반올림하여 반환합니다.
   int get currentPointRounded => profile.value.point.round();
 
+  /// 포인트 getter (정수형)
+  int get point => profile.value.point.toInt();
+
+  /// 포인트를 추가합니다.
+  Future<bool> addPoint(int points) async {
+    try {
+      final newPoint = profile.value.point + points;
+      final updatedProfile = profile.value.copyWith(point: newPoint);
+
+      // Firestore 업데이트
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance
+            .collection(Define.FIRESTORE_COLLECTION_PROFILE)
+            .doc(user.uid)
+            .update({'point': newPoint});
+
+        profile.value = updatedProfile;
+        logger.i('Points added successfully: +$points (Total: $newPoint)');
+        return true;
+      }
+      return false;
+    } catch (e) {
+      logger.e('Error adding points: $e');
+      return false;
+    }
+  }
+
+  /// 포인트를 차감합니다.
+  Future<bool> subtractPoint(int points) async {
+    try {
+      final newPoint = (profile.value.point - points).clamp(
+        0.0,
+        double.infinity,
+      );
+      final updatedProfile = profile.value.copyWith(point: newPoint);
+
+      // Firestore 업데이트
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance
+            .collection(Define.FIRESTORE_COLLECTION_PROFILE)
+            .doc(user.uid)
+            .update({'point': newPoint});
+
+        profile.value = updatedProfile;
+        logger.i('Points subtracted successfully: -$points (Total: $newPoint)');
+        return true;
+      }
+      return false;
+    } catch (e) {
+      logger.e('Error subtracting points: $e');
+      return false;
+    }
+  }
+
   /// 사용자 이름을 반환합니다.
   String get userName => profile.value.name;
 

@@ -50,6 +50,9 @@ import '../pages/fishing/fishing_game_view.dart';
 import '../pages/fishing/fishing_game_binding.dart';
 import '../pages/schedule/schedule_view.dart';
 import '../pages/schedule/schedule_binding.dart';
+import '../pages/sutda/sutda_menu_view.dart';
+import '../pages/sutda/sutda_game_view.dart';
+import '../pages/sutda/sutda_game_binding.dart';
 
 class GetRoutes {
   static final routes = [
@@ -176,6 +179,12 @@ class GetRoutes {
       name: '/schedule',
       page: () => const ScheduleView(),
       binding: ScheduleBinding(),
+    ),
+    GetPage(name: '/sutda', page: () => const SutdaMenuView()),
+    GetPage(
+      name: '/sutda/game',
+      page: () => const SutdaGameView(),
+      binding: SutdaGameBinding(),
     ),
   ];
 }

@@ -58,11 +58,6 @@ export const updatePoints = onRequest({
       const currentPoints = profileDoc.data()?.point || 0;
       const newPoints = currentPoints + pointsChange;
 
-      // 포인트가 음수가 되는 것을 방지 (감소 시에만)
-      if (newPoints < 0) {
-        throw new Error(`포인트가 부족합니다. (현재: ${currentPoints}P, 요청: ${pointsChange}P)`);
-      }
-
       // 프로필 포인트 업데이트
       transaction.update(profileRef, { point: newPoints });
 
