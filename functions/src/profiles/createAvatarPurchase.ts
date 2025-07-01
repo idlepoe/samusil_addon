@@ -5,7 +5,6 @@ import { PointHistory } from '../utils/types';
 
 export const createAvatarPurchase = onRequest({
   cors: true,
-  region: 'asia-northeast3',
 }, async (req, res) => {
   try {
     if (req.method === 'OPTIONS') {

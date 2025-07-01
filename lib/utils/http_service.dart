@@ -8,6 +8,7 @@ import 'package:office_lounge/main.dart';
 import '../models/cloud_function_response.dart';
 import '../models/youtube/track.dart';
 import '../utils/util.dart';
+import '../define/define.dart';
 
 class HttpService {
   static final HttpService _instance = HttpService._internal();
@@ -15,6 +16,7 @@ class HttpService {
   HttpService._internal();
 
   late Dio _dio;
+  String _baseUrl = '';
 
   /// Dio 인스턴스 초기화
   void initialize({String? baseUrl}) {
@@ -53,37 +55,21 @@ class HttpService {
               } else {
                 logger.w("⚠️ Firebase ID Token is empty");
               }
-
-              handler.next(options); // 유저 + 토큰 정상 → 계속 진행
             } else {
-              logger.w("❌ 로그인 안 된 사용자 요청 차단");
-              _redirectToLogin();
-              handler.reject(
-                DioException(
-                  requestOptions: options,
-                  error: 'User not authenticated',
-                  type: DioExceptionType.cancel,
-                ),
-              );
+              logger.w("⚠️ Firebase Auth user is null");
             }
           } catch (e) {
-            logger.e("❌ Firebase 인증 처리 중 오류: $e");
-            _redirectToLogin();
-            handler.reject(
-              DioException(
-                requestOptions: options,
-                error: 'Firebase auth token error',
-                type: DioExceptionType.cancel,
-              ),
-            );
+            logger.e("❌ Firebase Auth error: $e");
           }
+
+          handler.next(options);
         },
-        onResponse: (response, handler) {
+        onResponse: (response, handler) async {
+          final startTime =
+              response.requestOptions.extra['startTime'] as DateTime?;
           final duration =
-              response.requestOptions.extra['startTime'] != null
-                  ? DateTime.now().difference(
-                    response.requestOptions.extra['startTime'],
-                  )
+              startTime != null
+                  ? DateTime.now().difference(startTime)
                   : Duration.zero;
 
           logger.i(
@@ -91,19 +77,17 @@ class HttpService {
             '  statusCode: ${response.statusCode}\n'
             '  method: ${response.requestOptions.method}\n'
             '  url: ${response.requestOptions.uri.toString()}\n'
-            '  path: ${response.requestOptions.path}\n'
-            '  data: ${response.data}\n'
             '  duration: ${duration.inMilliseconds}ms',
           );
 
           handler.next(response);
         },
-        onError: (error, handler) {
+        onError: (error, handler) async {
+          final startTime =
+              error.requestOptions.extra['startTime'] as DateTime?;
           final duration =
-              error.requestOptions.extra['startTime'] != null
-                  ? DateTime.now().difference(
-                    error.requestOptions.extra['startTime'],
-                  )
+              startTime != null
+                  ? DateTime.now().difference(startTime)
                   : Duration.zero;
 
           logger.e(
@@ -136,104 +120,8 @@ class HttpService {
 
   /// baseUrl 설정
   void setBaseUrl(String baseUrl) {
+    _baseUrl = baseUrl;
     _dio.options.baseUrl = baseUrl;
-  }
-
-  /// GET 요청
-  Future<Response> get(
-    String path, {
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) async {
-    return await _dio.get(
-      path,
-      queryParameters: queryParameters,
-      options: options,
-    );
-  }
-
-  /// POST 요청
-  Future<Response> post(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) async {
-    return await _dio.post(
-      path,
-      data: data,
-      queryParameters: queryParameters,
-      options: options,
-    );
-  }
-
-  /// PUT 요청
-  Future<Response> put(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) async {
-    return await _dio.put(
-      path,
-      data: data,
-      queryParameters: queryParameters,
-      options: options,
-    );
-  }
-
-  /// DELETE 요청
-  Future<Response> delete(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) async {
-    return await _dio.delete(
-      path,
-      data: data,
-      queryParameters: queryParameters,
-      options: options,
-    );
-  }
-
-  /// Cloud Functions 호출을 위한 공통 메서드
-  Future<Map<String, dynamic>> callCloudFunction(
-    String functionName, {
-    Map<String, dynamic>? data,
-    String method = 'POST',
-  }) async {
-    try {
-      final path = '/$functionName';
-      Response response;
-
-      logger.i('🌐 callCloudFunction: $functionName, method: $method');
-
-      switch (method.toUpperCase()) {
-        case 'GET':
-          logger.i('📥 GET 요청 실행');
-          response = await get(path, queryParameters: data);
-          break;
-        case 'PUT':
-          logger.i('📤 PUT 요청 실행');
-          response = await put(path, data: data);
-          break;
-        case 'DELETE':
-          logger.i('🗑️ DELETE 요청 실행');
-          response = await delete(path, data: data);
-          break;
-        default:
-          logger.i('📮 POST 요청 실행 (기본값)');
-          response = await post(path, data: data);
-      }
-
-      // Firebase Functions는 이미 {success: true, data: ...} 형태로 응답하므로
-      // response.data를 그대로 반환
-      return response.data as Map<String, dynamic>;
-    } catch (e) {
-      logger.e('Cloud Function call failed: $e');
-      return {'success': false, 'error': e.toString(), 'data': null};
-    }
   }
 
   // ===== Cloud Function 전용 메서드들 =====
@@ -242,34 +130,38 @@ class HttpService {
   Future<CloudFunctionResponse<List<Map<String, dynamic>>>> getArticleList({
     required Map<String, dynamic> params,
   }) async {
-    final response = await callCloudFunction(
-      'getArticleList',
-      data: params,
-      method: 'GET',
-    );
+    try {
+      _dio.options.baseUrl = 'https://getarticlelist-moqfvmeufa-uc.a.run.app';
+      final response = await _dio.get('', queryParameters: params);
 
-    List<Map<String, dynamic>>? dataList;
-    if (response['data'] != null && response['data'] is List) {
-      dataList =
-          (response['data'] as List)
-              .map((item) => item as Map<String, dynamic>)
-              .toList();
+      List<Map<String, dynamic>>? dataList;
+      if (response.data['data'] != null && response.data['data'] is List) {
+        dataList =
+            (response.data['data'] as List)
+                .map((item) => item as Map<String, dynamic>)
+                .toList();
+      }
+
+      return CloudFunctionResponse<List<Map<String, dynamic>>>(
+        success: response.data['success'] ?? false,
+        data: dataList,
+        error: response.data['error'],
+      );
+    } catch (e) {
+      logger.e('getArticleList error: $e');
+      return CloudFunctionResponse<List<Map<String, dynamic>>>(
+        success: false,
+        data: null,
+        error: e.toString(),
+      );
     }
-
-    return CloudFunctionResponse<List<Map<String, dynamic>>>(
-      success: response['success'] ?? false,
-      data: dataList,
-      error: response['error'],
-    );
   }
 
   /// 게시글 상세 조회
   Future<CloudFunctionResponse> getArticle({required String id}) async {
     try {
-      final response = await _dio.get(
-        '/getArticleDetail',
-        queryParameters: {'key': id},
-      );
+      _dio.options.baseUrl = 'https://getarticledetail-moqfvmeufa-uc.a.run.app';
+      final response = await _dio.get('', queryParameters: {'key': id});
       return CloudFunctionResponse(success: true, data: response.data);
     } catch (e) {
       return CloudFunctionResponse(success: false, error: e.toString());
@@ -280,32 +172,49 @@ class HttpService {
   Future<CloudFunctionResponse<Map<String, dynamic>>> createArticle({
     required Map<String, dynamic> articleData,
   }) async {
-    final response = await callCloudFunction(
-      'createArticle',
-      data: {'articleData': articleData},
-    );
-    return CloudFunctionResponse<Map<String, dynamic>>(
-      success: response['success'] ?? false,
-      data: response['data'] as Map<String, dynamic>?,
-      error: response['error'],
-    );
+    try {
+      _dio.options.baseUrl = 'https://createarticle-moqfvmeufa-uc.a.run.app';
+
+      final response = await _dio.post('', data: {'articleData': articleData});
+
+      return CloudFunctionResponse<Map<String, dynamic>>(
+        success: response.data['success'] ?? false,
+        data: response.data['data'] as Map<String, dynamic>?,
+        error: response.data['error'],
+      );
+    } catch (e) {
+      logger.e('createArticle error: $e');
+      return CloudFunctionResponse<Map<String, dynamic>>(
+        success: false,
+        data: null,
+        error: e.toString(),
+      );
+    }
   }
 
   /// 게시글 수정
   Future<CloudFunctionResponse<Map<String, dynamic>>> updateArticle({
     required Map<String, dynamic> articleData,
   }) async {
-    logger.i('🔧 updateArticle 호출 - PUT 메서드 사용');
-    final response = await callCloudFunction(
-      'updateArticle',
-      data: articleData,
-      method: 'PUT',
-    );
-    return CloudFunctionResponse<Map<String, dynamic>>(
-      success: response['success'] ?? false,
-      data: response['data'] as Map<String, dynamic>?,
-      error: response['error'],
-    );
+    try {
+      logger.i('🔧 updateArticle 호출 - PUT 메서드 사용');
+      _dio.options.baseUrl = 'https://updatearticle-moqfvmeufa-du.a.run.app';
+
+      final response = await _dio.put('', data: articleData);
+
+      return CloudFunctionResponse<Map<String, dynamic>>(
+        success: response.data['success'] ?? false,
+        data: response.data['data'] as Map<String, dynamic>?,
+        error: response.data['error'],
+      );
+    } catch (e) {
+      logger.e('updateArticle error: $e');
+      return CloudFunctionResponse<Map<String, dynamic>>(
+        success: false,
+        data: null,
+        error: e.toString(),
+      );
+    }
   }
 
   /// 댓글 작성
@@ -314,8 +223,9 @@ class HttpService {
     required Map<String, dynamic> commentData,
   }) async {
     try {
+      _dio.options.baseUrl = 'https://createcomment-moqfvmeufa-du.a.run.app';
       final response = await _dio.post(
-        '/createComment',
+        '',
         data: {'articleId': articleId, 'commentData': commentData},
       );
       return CloudFunctionResponse(success: true, data: response.data);
@@ -327,10 +237,8 @@ class HttpService {
   /// 소원 생성
   Future<CloudFunctionResponse> createWish({required String comment}) async {
     try {
-      final response = await _dio.post(
-        '/createWish',
-        data: {'comment': comment},
-      );
+      _dio.options.baseUrl = 'https://createwish-moqfvmeufa-uc.a.run.app';
+      final response = await _dio.post('', data: {'comment': comment});
       return CloudFunctionResponse(success: true, data: response.data);
     } catch (e) {
       return CloudFunctionResponse(success: false, error: e.toString());
@@ -340,7 +248,8 @@ class HttpService {
   /// 소원 목록 조회
   Future<CloudFunctionResponse> getWish() async {
     try {
-      final response = await _dio.get('/getWish');
+      _dio.options.baseUrl = 'https://getwish-moqfvmeufa-uc.a.run.app';
+      final response = await _dio.get('');
       return CloudFunctionResponse(success: true, data: response.data);
     } catch (e) {
       return CloudFunctionResponse(success: false, error: e.toString());
@@ -350,7 +259,8 @@ class HttpService {
   /// 게시글 삭제
   Future<CloudFunctionResponse> deleteArticle({required String id}) async {
     try {
-      final response = await _dio.delete('/deleteArticle', data: {'id': id});
+      _dio.options.baseUrl = 'https://deletearticle-moqfvmeufa-du.a.run.app';
+      final response = await _dio.delete('', data: {'id': id});
       return CloudFunctionResponse(success: true, data: response.data);
     } catch (e) {
       return CloudFunctionResponse(success: false, error: e.toString());
@@ -363,8 +273,9 @@ class HttpService {
     required String commentId,
   }) async {
     try {
+      _dio.options.baseUrl = 'https://deletecomment-moqfvmeufa-du.a.run.app';
       final response = await _dio.delete(
-        '/deleteComment',
+        '',
         data: {'articleId': articleId, 'commentId': commentId},
       );
       return CloudFunctionResponse(success: true, data: response.data);
@@ -381,8 +292,10 @@ class HttpService {
     required int price,
   }) async {
     try {
+      _dio.options.baseUrl =
+          'https://createavatarpurchase-moqfvmeufa-uc.a.run.app';
       final response = await _dio.post(
-        '/createAvatarPurchase',
+        '',
         data: {
           'avatarId': avatarId,
           'avatarUrl': avatarUrl,
@@ -575,8 +488,12 @@ class HttpService {
     String orderDirection = 'desc',
   }) async {
     try {
+      // 직접 올바른 URL 설정
+      _dio.options.baseUrl =
+          'https://gettrackarticlelist-moqfvmeufa-du.a.run.app';
+
       final response = await _dio.post(
-        '/getTrackArticleList',
+        '',
         data: {
           'lastDocumentId': lastDocumentId,
           'limit': limit,
@@ -618,8 +535,10 @@ class HttpService {
     bool incrementView = true,
   }) async {
     try {
+      _dio.options.baseUrl =
+          'https://gettrackarticledetail-moqfvmeufa-du.a.run.app';
       final response = await _dio.post(
-        '/getTrackArticleDetail',
+        '',
         data: {'id': id, 'incrementView': incrementView},
       );
 
@@ -658,6 +577,8 @@ class HttpService {
     String? description,
   }) async {
     try {
+      _dio.options.baseUrl =
+          'https://updatetrackarticle-moqfvmeufa-du.a.run.app';
       final Map<String, dynamic> data = {'id': id};
 
       if (title != null) data['title'] = title;
@@ -665,7 +586,7 @@ class HttpService {
         data['tracks'] = tracks.map((track) => track.toJson()).toList();
       if (description != null) data['description'] = description;
 
-      final response = await _dio.post('/updateTrackArticle', data: data);
+      final response = await _dio.post('', data: data);
 
       if (response.data['success'] == true) {
         return CloudFunctionResponse(
@@ -697,7 +618,9 @@ class HttpService {
   /// 플레이리스트 삭제
   Future<CloudFunctionResponse> deleteTrackArticle({required String id}) async {
     try {
-      final response = await _dio.post('/deleteTrackArticle', data: {'id': id});
+      _dio.options.baseUrl =
+          'https://deletetrackarticle-moqfvmeufa-du.a.run.app';
+      final response = await _dio.post('', data: {'id': id});
 
       if (response.data['success'] == true) {
         return CloudFunctionResponse(
@@ -729,10 +652,8 @@ class HttpService {
   /// 게시글 좋아요 토글
   Future<CloudFunctionResponse> toggleLike({required String articleId}) async {
     try {
-      final response = await _dio.post(
-        '/toggleLike',
-        data: {'articleId': articleId},
-      );
+      _dio.options.baseUrl = 'https://togglelike-moqfvmeufa-du.a.run.app';
+      final response = await _dio.post('', data: {'articleId': articleId});
 
       if (response.data['success'] == true) {
         return CloudFunctionResponse(
@@ -764,10 +685,9 @@ class HttpService {
     required String id,
   }) async {
     try {
-      final response = await _dio.post(
-        '/toggleTrackArticleLike',
-        data: {'id': id},
-      );
+      _dio.options.baseUrl =
+          'https://toggletrackarticlelike-moqfvmeufa-du.a.run.app';
+      final response = await _dio.post('', data: {'id': id});
 
       if (response.data['success'] == true) {
         return CloudFunctionResponse(
@@ -807,8 +727,9 @@ class HttpService {
     Map<String, dynamic>? metadata, // 추가 메타데이터
   }) async {
     try {
+      _dio.options.baseUrl = 'https://updatepoints-moqfvmeufa-du.a.run.app';
       final response = await _dio.post(
-        '/updatePoints',
+        '',
         data: {
           'pointsChange': pointsChange,
           'actionType': actionType,
@@ -861,8 +782,9 @@ class HttpService {
     String? description,
   }) async {
     try {
+      _dio.options.baseUrl = 'https://unlocktitle-moqfvmeufa-uc.a.run.app';
       final response = await _dio.post(
-        '/unlockTitle',
+        '',
         data: {
           'titleId': titleId,
           'titleName': titleName,
@@ -899,10 +821,8 @@ class HttpService {
     String? titleId, // null이면 칭호 해제
   }) async {
     try {
-      final response = await _dio.post(
-        '/setSelectedTitle',
-        data: {'titleId': titleId},
-      );
+      _dio.options.baseUrl = 'https://setselectedtitle-moqfvmeufa-uc.a.run.app';
+      final response = await _dio.post('', data: {'titleId': titleId});
 
       if (response.data['success'] == true) {
         return CloudFunctionResponse(
@@ -923,6 +843,121 @@ class HttpService {
           success: false,
           error:
               errorData['error'] ?? errorData['message'] ?? '대표 칭호 설정에 실패했습니다.',
+        );
+      }
+      return CloudFunctionResponse(success: false, error: e.toString());
+    }
+  }
+
+  // ===== 아트워크 관련 기능 =====
+
+  /// 아트워크 구입
+  Future<CloudFunctionResponse> purchaseArtwork({
+    required String artworkId,
+  }) async {
+    try {
+      _dio.options.baseUrl =
+          'https://createartworkpurchase-moqfvmeufa-uc.a.run.app';
+      final response = await _dio.post('', data: {'artworkId': artworkId});
+
+      if (response.data['success'] == true) {
+        return CloudFunctionResponse(
+          success: true,
+          data: response.data['data'],
+        );
+      } else {
+        return CloudFunctionResponse(
+          success: false,
+          error: response.data['error'] ?? response.data['message'],
+        );
+      }
+    } catch (e) {
+      logger.e('purchaseArtwork error: $e');
+      if (e is DioException && e.response != null) {
+        final errorData = e.response!.data;
+        return CloudFunctionResponse(
+          success: false,
+          error:
+              errorData['error'] ?? errorData['message'] ?? '아트워크 구입에 실패했습니다.',
+        );
+      }
+      return CloudFunctionResponse(success: false, error: e.toString());
+    }
+  }
+
+  /// 랜덤 아트워크 구입
+  Future<CloudFunctionResponse> purchaseRandomArtwork() async {
+    try {
+      _dio.options.baseUrl =
+          'https://createrandomartworkpurchase-moqfvmeufa-uc.a.run.app';
+      final response = await _dio.post('');
+
+      if (response.data['success'] == true) {
+        return CloudFunctionResponse(
+          success: true,
+          data: response.data['data'],
+        );
+      } else {
+        return CloudFunctionResponse(
+          success: false,
+          error: response.data['error'] ?? response.data['message'],
+        );
+      }
+    } catch (e) {
+      logger.e('purchaseRandomArtwork error: $e');
+      if (e is DioException && e.response != null) {
+        final errorData = e.response!.data;
+        return CloudFunctionResponse(
+          success: false,
+          error:
+              errorData['error'] ??
+              errorData['message'] ??
+              '랜덤 아트워크 구입에 실패했습니다.',
+        );
+      }
+      return CloudFunctionResponse(success: false, error: e.toString());
+    }
+  }
+
+  // ===== 경마 관련 기능 =====
+
+  /// 경마 베팅
+  Future<CloudFunctionResponse> placeBet({
+    required String raceId,
+    required String horseId,
+    required String betType,
+    required int amount,
+  }) async {
+    try {
+      _dio.options.baseUrl = 'https://placebet-moqfvmeufa-uc.a.run.app';
+      final response = await _dio.post(
+        '',
+        data: {
+          'raceId': raceId,
+          'horseId': horseId,
+          'betType': betType,
+          'amount': amount,
+        },
+      );
+
+      if (response.data['success'] == true) {
+        return CloudFunctionResponse(
+          success: true,
+          data: response.data['data'],
+        );
+      } else {
+        return CloudFunctionResponse(
+          success: false,
+          error: response.data['error'] ?? response.data['message'],
+        );
+      }
+    } catch (e) {
+      logger.e('placeBet error: $e');
+      if (e is DioException && e.response != null) {
+        final errorData = e.response!.data;
+        return CloudFunctionResponse(
+          success: false,
+          error: errorData['error'] ?? errorData['message'] ?? '베팅에 실패했습니다.',
         );
       }
       return CloudFunctionResponse(success: false, error: e.toString());

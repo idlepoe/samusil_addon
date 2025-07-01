@@ -14,7 +14,6 @@ export interface SetSelectedTitleRequest {
  */
 export const setSelectedTitle = onRequest({
   cors: true,
-  region: 'asia-northeast3',
 }, async (req, res) => {
   try {
     if (req.method === 'OPTIONS') {

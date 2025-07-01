@@ -14,25 +14,20 @@ int _toInt(dynamic value) => value is int ? value : 0;
 
 DateTime _timestampFromJson(dynamic timestamp) {
   final logger = Logger();
-  logger.d('타임스탬프 변환 시도: $timestamp (타입: ${timestamp.runtimeType})');
 
   if (timestamp is Timestamp) {
     final result = timestamp.toDate();
-    logger.d('Timestamp 변환 결과: $result');
     return result;
   } else if (timestamp is String) {
     try {
       final result = DateTime.parse(timestamp);
-      logger.d('String 변환 결과: $result');
       return result;
     } catch (e) {
       // ISO 8601 파싱 실패 시 다른 형식 시도
       try {
         final result = DateFormat('yyyy-MM-dd HH:mm:ss').parse(timestamp);
-        logger.d('DateFormat 변환 결과: $result');
         return result;
       } catch (e2) {
-        logger.w('String 타임스탬프 변환 실패: $timestamp');
         // 모든 파싱 실패 시 Unix epoch 시간으로 설정 (1970-01-01)
         return DateTime.fromMillisecondsSinceEpoch(0);
       }

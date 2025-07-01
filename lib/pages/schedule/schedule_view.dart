@@ -19,7 +19,7 @@ class ScheduleView extends GetView<ScheduleController> {
         iconTheme: const IconThemeData(color: Color(0xFF191F28)),
         title: Obx(
           () => Text(
-            controller.currentMonthName,
+            "일정관리",
             style: const TextStyle(
               color: Color(0xFF191F28),
               fontSize: 18,

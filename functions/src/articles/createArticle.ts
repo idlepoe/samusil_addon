@@ -6,7 +6,6 @@ import { awardPointsForArticle } from '../utils/pointService';
 
 export const createArticle = onRequest({ 
   cors: true,
-  region: 'asia-northeast3'
 }, async (req, res) => {
   try {
     // OPTIONS 요청 처리

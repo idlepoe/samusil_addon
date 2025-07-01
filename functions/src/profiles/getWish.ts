@@ -4,7 +4,6 @@ import { verifyAuth } from '../utils/auth';
 
 export const getWish = onRequest({ 
   cors: true,
-  region: 'asia-northeast3'
 }, async (req, res) => {
   try {
     // OPTIONS 요청 처리

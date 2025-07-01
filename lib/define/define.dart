@@ -44,7 +44,50 @@ class Define {
   static const String BOARD_ENTERTAINMENT_NEWS = "entertainment_news";
   static const String BOARD_REPORT = "report_suggestion";
 
-  // Cloud Functions 설정
+  // Cloud Functions URL 설정 (Cloud Run Functions 형식)
+  // 각 함수별로 완전한 URL 정의
   static const String CLOUD_FUNCTIONS_BASE_URL =
-      'https://asia-northeast3-samusil-addon.cloudfunctions.net';
+      'https://moqfvmeufa-du.a.run.app';
+
+  // 함수별 URL 매핑
+  static const Map<String, String> FUNCTION_URLS = {
+    // us-central1 리전 함수들
+    'manualSeoulMuseumSync':
+        'https://manualseoulmuseumsync-moqfvmeufa-uc.a.run.app',
+    'getWish': 'https://getwish-moqfvmeufa-uc.a.run.app',
+    'createWish': 'https://createwish-moqfvmeufa-uc.a.run.app',
+    'createAvatarPurchase':
+        'https://createavatarpurchase-moqfvmeufa-uc.a.run.app',
+    'getArticleList': 'https://getarticlelist-moqfvmeufa-uc.a.run.app',
+    'createArtworkPurchase':
+        'https://createartworkpurchase-moqfvmeufa-uc.a.run.app',
+    'createArticle': 'https://createarticle-moqfvmeufa-uc.a.run.app',
+    'unlockTitle': 'https://unlocktitle-moqfvmeufa-uc.a.run.app',
+    'getArticleDetail': 'https://getarticledetail-moqfvmeufa-uc.a.run.app',
+    'createRandomArtworkPurchase':
+        'https://createrandomartworkpurchase-moqfvmeufa-uc.a.run.app',
+    'setSelectedTitle': 'https://setselectedtitle-moqfvmeufa-uc.a.run.app',
+    'placeBet': 'https://placebet-moqfvmeufa-uc.a.run.app',
+
+    // asia-northeast3 리전 함수들
+    'deleteComment': 'https://deletecomment-moqfvmeufa-du.a.run.app',
+    'toggleLike': 'https://togglelike-moqfvmeufa-du.a.run.app',
+    'deleteArticle': 'https://deletearticle-moqfvmeufa-du.a.run.app',
+    'getTrackArticleDetail':
+        'https://gettrackarticledetail-moqfvmeufa-du.a.run.app',
+    'getTrackArticleList':
+        'https://gettrackarticlelist-moqfvmeufa-du.a.run.app',
+    'updateArticle': 'https://updatearticle-moqfvmeufa-du.a.run.app',
+    'deleteTrackArticle': 'https://deletetrackarticle-moqfvmeufa-du.a.run.app',
+    'toggleTrackArticleLike':
+        'https://toggletrackarticlelike-moqfvmeufa-du.a.run.app',
+    'updatePoints': 'https://updatepoints-moqfvmeufa-du.a.run.app',
+    'updateTrackArticle': 'https://updatetrackarticle-moqfvmeufa-du.a.run.app',
+    'manualNewsCollection':
+        'https://manualnewscollection-moqfvmeufa-du.a.run.app',
+    'createComment': 'https://createcomment-moqfvmeufa-du.a.run.app',
+    'manualEntertainmentNewsCollection':
+        'https://manualentertainmentnewscollection-moqfvmeufa-du.a.run.app',
+    'createTrackArticle': 'https://createtrackarticle-moqfvmeufa-du.a.run.app',
+  };
 }

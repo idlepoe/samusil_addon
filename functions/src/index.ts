@@ -1,6 +1,3 @@
-import { setGlobalOptions } from 'firebase-functions/v2';
-setGlobalOptions({ region: 'asia-northeast3', maxInstances: 10 });
-
 import * as admin from 'firebase-admin';
 
 // Firebase Admin 초기화
@@ -30,8 +27,12 @@ export { toggleTrackArticleLike } from './trackArticles/toggleTrackArticleLike';
 export { createWish } from './profiles/createWish';
 export { getWish } from './profiles/getWish';
 export { createAvatarPurchase } from './profiles/createAvatarPurchase';
+export { createArtworkPurchase } from './profiles/createArtworkPurchase';
+export { createRandomArtworkPurchase } from './profiles/createRandomArtworkPurchase';
 export { unlockTitle } from './profiles/unlockTitle';
 export { setSelectedTitle } from './profiles/setSelectedTitle';
+export { scheduledSeoulMuseumSync } from './profiles/scheduledSeoulMuseumSync';
+export { manualSeoulMuseumSync } from './profiles/manualSeoulMuseumSync';
 
 // News
 export { scheduledGameNewsCollection, scheduledEntertainmentNewsCollection } from './news/scheduledNewsCollection';

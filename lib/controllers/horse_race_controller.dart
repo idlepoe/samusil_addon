@@ -9,6 +9,7 @@ import '../components/appSnackbar.dart';
 import '../models/horse_race.dart';
 
 import '../utils/app.dart';
+import '../utils/http_service.dart';
 import '../define/define.dart';
 import 'profile_controller.dart';
 
@@ -142,17 +143,14 @@ class HorseRaceController extends GetxController {
 
     isBetting.value = true;
     try {
-      final HttpsCallable callable = FirebaseFunctions.instanceFor(
-        region: 'asia-northeast3',
-      ).httpsCallable('placeBet');
-      final response = await callable.call(<String, dynamic>{
-        'raceId': currentRace.value!.id,
-        'horseId': selectedHorseId.value,
-        'betType': selectedBetType.value,
-        'amount': selectedBetAmount.value,
-      });
+      final response = await HttpService().placeBet(
+        raceId: currentRace.value!.id,
+        horseId: selectedHorseId.value,
+        betType: selectedBetType.value,
+        amount: selectedBetAmount.value,
+      );
 
-      if (response.data['success']) {
+      if (response.success) {
         AppSnackbar.success('베팅이 완료되었습니다!');
         hasPlacedBet.value = true;
         // 선택된 말 초기화
@@ -160,7 +158,7 @@ class HorseRaceController extends GetxController {
         // 프로필 컨트롤러의 포인트 업데이트
         await ProfileController.to.refreshProfile();
       } else {
-        AppSnackbar.error(response.data['message'] ?? '베팅 중 오류 발생');
+        AppSnackbar.error(response.error ?? '베팅 중 오류 발생');
       }
     } catch (e) {
       logger.e('베팅 함수 호출 오류: $e');

@@ -1,7 +1,7 @@
 name: office_lounge
 description: "OfficeLounge - 사무실에서 즐기는 BGM, 점심 추천, 자유 게시판이 있는 오피스 커뮤니티 앱"
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
-version: 1.0.3+4
+version: 1.0.5+6
 environment:
   sdk: ^3.7.2
 dependencies:
@@ -52,6 +52,7 @@ dependencies:
   flutter_linkify: ^6.0.0
   table_calendar: ^3.1.2
   timezone: ^0.9.4
+  flutter_staggered_grid_view: ^0.7.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -4,7 +4,6 @@ import { FIRESTORE_COLLECTION_ARTICLE } from '../utils/constants';
 
 export const getArticleDetail = onRequest({ 
   cors: true,
-  region: 'asia-northeast3'
 }, async (req, res) => {
   try {
     const { key } = req.query;

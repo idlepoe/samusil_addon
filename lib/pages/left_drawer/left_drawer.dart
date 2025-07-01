@@ -225,6 +225,30 @@ class _LeftDrawerState extends State<LeftDrawer> {
                 Get.toNamed('/favorite-playlist');
               },
             ),
+            Define.APP_DIVIDER,
+
+            // 포인트 상점 섹션
+            Padding(
+              padding: const EdgeInsets.only(left: 16, top: 8),
+              child: Text(
+                "포인트 상점",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            // 서울시립미술관 아트워크
+            ListTile(
+              title: const Text("서울시립미술관 아트워크"),
+              subtitle: const Text("포인트를 사용해서 작품을 구입하세요"),
+              leading: const Icon(Icons.museum, color: Color(0xFF8B4513)),
+              onTap: () {
+                Navigator.pop(context);
+                Get.toNamed('/artwork');
+              },
+            ),
           ],
         ),
       ),

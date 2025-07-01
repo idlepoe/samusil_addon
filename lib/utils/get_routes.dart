@@ -55,6 +55,8 @@ import '../pages/sutda/sutda_game_view.dart';
 import '../pages/sutda/sutda_game_binding.dart';
 import '../pages/online_sutda/online_sutda_view.dart';
 import '../pages/online_sutda/online_sutda_binding.dart';
+import '../pages/artwork/artwork_view.dart';
+import '../pages/artwork/artwork_binding.dart';
 
 class GetRoutes {
   static final routes = [
@@ -192,6 +194,11 @@ class GetRoutes {
       name: '/online-sutda',
       page: () => const OnlineSutdaView(),
       binding: OnlineSutdaBinding(),
+    ),
+    GetPage(
+      name: '/artwork',
+      page: () => const ArtworkView(),
+      binding: ArtworkBinding(),
     ),
   ];
 }

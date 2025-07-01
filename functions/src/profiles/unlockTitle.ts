@@ -17,7 +17,6 @@ export interface UnlockTitleRequest {
  */
 export const unlockTitle = onRequest({
   cors: true,
-  region: 'asia-northeast3',
 }, async (req, res) => {
   try {
     if (req.method === 'OPTIONS') {
