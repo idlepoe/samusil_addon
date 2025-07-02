@@ -32,6 +32,9 @@ class OfficeMusicListController extends GetxController {
         hasMore.value = true;
       }
 
+      // HttpService 초기화 확인
+      HttpService().initialize();
+
       final response = await HttpService().getTrackArticleList(
         lastDocumentId: lastDocumentId,
         limit: 20,

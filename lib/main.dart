@@ -25,27 +25,54 @@ import 'package:office_lounge/utils/schedule_service.dart';
 import 'define/define.dart';
 import 'firebase_options.dart';
 
-// 전역 logger 인스턴스
-final logger = Logger();
+// 전역 logger 인스턴스 - 릴리즈에서도 로그 출력
+final logger = Logger(
+  filter: ProductionFilter(), // 릴리즈에서도 로그 출력
+  printer: PrettyPrinter(
+    methodCount: 2,
+    errorMethodCount: 8,
+    lineLength: 120,
+    colors: true,
+    printEmojis: true,
+    printTime: true,
+  ),
+  output: ConsoleOutput(),
+);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // 로케일 데이터 초기화
-  await initializeDateFormatting('ko_KR', null);
+  // 앱 시작 로그
+  logger.i('앱 시작 - OfficeLounge');
 
-  // 로컬 알림 서비스 초기화
-  await NotificationService().initializeFCM();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    logger.i('Firebase 초기화 완료');
 
-  // 일정관리 서비스 초기화
-  await ScheduleService.initialize();
+    // 로케일 데이터 초기화
+    await initializeDateFormatting('ko_KR', null);
+    logger.i('로케일 데이터 초기화 완료');
 
-  // HttpService 초기화 (baseUrl은 나중에 설정)
-  HttpService().initialize();
+    // 로컬 알림 서비스 초기화
+    await NotificationService().initializeFCM();
+    logger.i('알림 서비스 초기화 완료');
 
-  // Cloud Functions baseUrl 설정
-  App.setCloudFunctionsBaseUrl(Define.CLOUD_FUNCTIONS_BASE_URL);
+    // 일정관리 서비스 초기화
+    await ScheduleService.initialize();
+    logger.i('일정관리 서비스 초기화 완료');
+
+    // HttpService 초기화 (baseUrl은 나중에 설정)
+    HttpService().initialize();
+    logger.i('HttpService 초기화 완료');
+
+    // Cloud Functions baseUrl 설정
+    App.setCloudFunctionsBaseUrl(Define.CLOUD_FUNCTIONS_BASE_URL);
+    logger.i('Cloud Functions URL 설정 완료: ${Define.CLOUD_FUNCTIONS_BASE_URL}');
+  } catch (e) {
+    logger.e('앱 초기화 중 오류 발생: $e');
+  }
 
   runApp(const MyApp());
 }

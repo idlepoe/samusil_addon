@@ -15,11 +15,14 @@ class HttpService {
   factory HttpService() => _instance;
   HttpService._internal();
 
-  late Dio _dio;
+  Dio? _dio;
   String _baseUrl = '';
+  bool _isInitialized = false;
 
   /// Dio 인스턴스 초기화
   void initialize({String? baseUrl}) {
+    if (_isInitialized) return;
+
     _dio = Dio(
       BaseOptions(
         baseUrl: baseUrl ?? '',
@@ -33,7 +36,7 @@ class HttpService {
     );
 
     // 요청 인터셉터
-    _dio.interceptors.add(
+    _dio!.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           // logger.i("🚀 [REQUEST] ${options.method} ${options.uri}");
@@ -106,6 +109,16 @@ class HttpService {
         },
       ),
     );
+
+    _isInitialized = true;
+  }
+
+  /// Dio 인스턴스가 초기화되었는지 확인하고, 필요시 초기화
+  Dio _getDio() {
+    if (!_isInitialized || _dio == null) {
+      initialize();
+    }
+    return _dio!;
   }
 
   /// 로그인 페이지로 리다이렉트
@@ -121,7 +134,7 @@ class HttpService {
   /// baseUrl 설정
   void setBaseUrl(String baseUrl) {
     _baseUrl = baseUrl;
-    _dio.options.baseUrl = baseUrl;
+    _getDio().options.baseUrl = baseUrl;
   }
 
   // ===== Cloud Function 전용 메서드들 =====
@@ -131,8 +144,9 @@ class HttpService {
     required Map<String, dynamic> params,
   }) async {
     try {
-      _dio.options.baseUrl = 'https://getarticlelist-moqfvmeufa-uc.a.run.app';
-      final response = await _dio.get('', queryParameters: params);
+      _getDio().options.baseUrl =
+          'https://getarticlelist-moqfvmeufa-uc.a.run.app';
+      final response = await _getDio().get('', queryParameters: params);
 
       List<Map<String, dynamic>>? dataList;
       if (response.data['data'] != null && response.data['data'] is List) {
@@ -160,8 +174,9 @@ class HttpService {
   /// 게시글 상세 조회
   Future<CloudFunctionResponse> getArticle({required String id}) async {
     try {
-      _dio.options.baseUrl = 'https://getarticledetail-moqfvmeufa-uc.a.run.app';
-      final response = await _dio.get('', queryParameters: {'key': id});
+      _getDio().options.baseUrl =
+          'https://getarticledetail-moqfvmeufa-uc.a.run.app';
+      final response = await _getDio().get('', queryParameters: {'key': id});
       return CloudFunctionResponse(success: true, data: response.data);
     } catch (e) {
       return CloudFunctionResponse(success: false, error: e.toString());
@@ -173,9 +188,13 @@ class HttpService {
     required Map<String, dynamic> articleData,
   }) async {
     try {
-      _dio.options.baseUrl = 'https://createarticle-moqfvmeufa-uc.a.run.app';
+      _getDio().options.baseUrl =
+          'https://createarticle-moqfvmeufa-uc.a.run.app';
 
-      final response = await _dio.post('', data: {'articleData': articleData});
+      final response = await _getDio().post(
+        '',
+        data: {'articleData': articleData},
+      );
 
       return CloudFunctionResponse<Map<String, dynamic>>(
         success: response.data['success'] ?? false,
@@ -198,9 +217,10 @@ class HttpService {
   }) async {
     try {
       logger.i('🔧 updateArticle 호출 - PUT 메서드 사용');
-      _dio.options.baseUrl = 'https://updatearticle-moqfvmeufa-du.a.run.app';
+      _getDio().options.baseUrl =
+          'https://updatearticle-moqfvmeufa-du.a.run.app';
 
-      final response = await _dio.put('', data: articleData);
+      final response = await _getDio().put('', data: articleData);
 
       return CloudFunctionResponse<Map<String, dynamic>>(
         success: response.data['success'] ?? false,
@@ -223,8 +243,9 @@ class HttpService {
     required Map<String, dynamic> commentData,
   }) async {
     try {
-      _dio.options.baseUrl = 'https://createcomment-moqfvmeufa-du.a.run.app';
-      final response = await _dio.post(
+      _getDio().options.baseUrl =
+          'https://createcomment-moqfvmeufa-du.a.run.app';
+      final response = await _getDio().post(
         '',
         data: {'articleId': articleId, 'commentData': commentData},
       );
@@ -237,8 +258,8 @@ class HttpService {
   /// 소원 생성
   Future<CloudFunctionResponse> createWish({required String comment}) async {
     try {
-      _dio.options.baseUrl = 'https://createwish-moqfvmeufa-uc.a.run.app';
-      final response = await _dio.post('', data: {'comment': comment});
+      _getDio().options.baseUrl = 'https://createwish-moqfvmeufa-uc.a.run.app';
+      final response = await _getDio().post('', data: {'comment': comment});
       return CloudFunctionResponse(success: true, data: response.data);
     } catch (e) {
       return CloudFunctionResponse(success: false, error: e.toString());
@@ -248,8 +269,8 @@ class HttpService {
   /// 소원 목록 조회
   Future<CloudFunctionResponse> getWish() async {
     try {
-      _dio.options.baseUrl = 'https://getwish-moqfvmeufa-uc.a.run.app';
-      final response = await _dio.get('');
+      _getDio().options.baseUrl = 'https://getwish-moqfvmeufa-uc.a.run.app';
+      final response = await _getDio().get('');
       return CloudFunctionResponse(success: true, data: response.data);
     } catch (e) {
       return CloudFunctionResponse(success: false, error: e.toString());
@@ -259,8 +280,9 @@ class HttpService {
   /// 게시글 삭제
   Future<CloudFunctionResponse> deleteArticle({required String id}) async {
     try {
-      _dio.options.baseUrl = 'https://deletearticle-moqfvmeufa-du.a.run.app';
-      final response = await _dio.delete('', data: {'id': id});
+      _getDio().options.baseUrl =
+          'https://deletearticle-moqfvmeufa-du.a.run.app';
+      final response = await _getDio().delete('', data: {'id': id});
       return CloudFunctionResponse(success: true, data: response.data);
     } catch (e) {
       return CloudFunctionResponse(success: false, error: e.toString());
@@ -273,8 +295,9 @@ class HttpService {
     required String commentId,
   }) async {
     try {
-      _dio.options.baseUrl = 'https://deletecomment-moqfvmeufa-du.a.run.app';
-      final response = await _dio.delete(
+      _getDio().options.baseUrl =
+          'https://deletecomment-moqfvmeufa-du.a.run.app';
+      final response = await _getDio().delete(
         '',
         data: {'articleId': articleId, 'commentId': commentId},
       );
@@ -292,9 +315,9 @@ class HttpService {
     required int price,
   }) async {
     try {
-      _dio.options.baseUrl =
+      _getDio().options.baseUrl =
           'https://createavatarpurchase-moqfvmeufa-uc.a.run.app';
-      final response = await _dio.post(
+      final response = await _getDio().post(
         '',
         data: {
           'avatarId': avatarId,
@@ -443,7 +466,7 @@ class HttpService {
     String? description,
   }) async {
     try {
-      final response = await _dio.post(
+      final response = await _getDio().post(
         '/createTrackArticle',
         data: {
           'title': title,
@@ -489,10 +512,10 @@ class HttpService {
   }) async {
     try {
       // 직접 올바른 URL 설정
-      _dio.options.baseUrl =
+      _getDio().options.baseUrl =
           'https://gettrackarticlelist-moqfvmeufa-du.a.run.app';
 
-      final response = await _dio.post(
+      final response = await _getDio().post(
         '',
         data: {
           'lastDocumentId': lastDocumentId,
@@ -535,9 +558,9 @@ class HttpService {
     bool incrementView = true,
   }) async {
     try {
-      _dio.options.baseUrl =
+      _getDio().options.baseUrl =
           'https://gettrackarticledetail-moqfvmeufa-du.a.run.app';
-      final response = await _dio.post(
+      final response = await _getDio().post(
         '',
         data: {'id': id, 'incrementView': incrementView},
       );
@@ -577,7 +600,7 @@ class HttpService {
     String? description,
   }) async {
     try {
-      _dio.options.baseUrl =
+      _getDio().options.baseUrl =
           'https://updatetrackarticle-moqfvmeufa-du.a.run.app';
       final Map<String, dynamic> data = {'id': id};
 
@@ -586,7 +609,7 @@ class HttpService {
         data['tracks'] = tracks.map((track) => track.toJson()).toList();
       if (description != null) data['description'] = description;
 
-      final response = await _dio.post('', data: data);
+      final response = await _getDio().post('', data: data);
 
       if (response.data['success'] == true) {
         return CloudFunctionResponse(
@@ -618,9 +641,9 @@ class HttpService {
   /// 플레이리스트 삭제
   Future<CloudFunctionResponse> deleteTrackArticle({required String id}) async {
     try {
-      _dio.options.baseUrl =
+      _getDio().options.baseUrl =
           'https://deletetrackarticle-moqfvmeufa-du.a.run.app';
-      final response = await _dio.post('', data: {'id': id});
+      final response = await _getDio().post('', data: {'id': id});
 
       if (response.data['success'] == true) {
         return CloudFunctionResponse(
@@ -652,8 +675,8 @@ class HttpService {
   /// 게시글 좋아요 토글
   Future<CloudFunctionResponse> toggleLike({required String articleId}) async {
     try {
-      _dio.options.baseUrl = 'https://togglelike-moqfvmeufa-du.a.run.app';
-      final response = await _dio.post('', data: {'articleId': articleId});
+      _getDio().options.baseUrl = 'https://togglelike-moqfvmeufa-du.a.run.app';
+      final response = await _getDio().post('', data: {'articleId': articleId});
 
       if (response.data['success'] == true) {
         return CloudFunctionResponse(
@@ -685,9 +708,9 @@ class HttpService {
     required String id,
   }) async {
     try {
-      _dio.options.baseUrl =
+      _getDio().options.baseUrl =
           'https://toggletrackarticlelike-moqfvmeufa-du.a.run.app';
-      final response = await _dio.post('', data: {'id': id});
+      final response = await _getDio().post('', data: {'id': id});
 
       if (response.data['success'] == true) {
         return CloudFunctionResponse(
@@ -727,8 +750,9 @@ class HttpService {
     Map<String, dynamic>? metadata, // 추가 메타데이터
   }) async {
     try {
-      _dio.options.baseUrl = 'https://updatepoints-moqfvmeufa-du.a.run.app';
-      final response = await _dio.post(
+      _getDio().options.baseUrl =
+          'https://updatepoints-moqfvmeufa-du.a.run.app';
+      final response = await _getDio().post(
         '',
         data: {
           'pointsChange': pointsChange,
@@ -782,8 +806,8 @@ class HttpService {
     String? description,
   }) async {
     try {
-      _dio.options.baseUrl = 'https://unlocktitle-moqfvmeufa-uc.a.run.app';
-      final response = await _dio.post(
+      _getDio().options.baseUrl = 'https://unlocktitle-moqfvmeufa-uc.a.run.app';
+      final response = await _getDio().post(
         '',
         data: {
           'titleId': titleId,
@@ -821,8 +845,9 @@ class HttpService {
     String? titleId, // null이면 칭호 해제
   }) async {
     try {
-      _dio.options.baseUrl = 'https://setselectedtitle-moqfvmeufa-uc.a.run.app';
-      final response = await _dio.post('', data: {'titleId': titleId});
+      _getDio().options.baseUrl =
+          'https://setselectedtitle-moqfvmeufa-uc.a.run.app';
+      final response = await _getDio().post('', data: {'titleId': titleId});
 
       if (response.data['success'] == true) {
         return CloudFunctionResponse(
@@ -856,9 +881,9 @@ class HttpService {
     required String artworkId,
   }) async {
     try {
-      _dio.options.baseUrl =
+      _getDio().options.baseUrl =
           'https://createartworkpurchase-moqfvmeufa-uc.a.run.app';
-      final response = await _dio.post('', data: {'artworkId': artworkId});
+      final response = await _getDio().post('', data: {'artworkId': artworkId});
 
       if (response.data['success'] == true) {
         return CloudFunctionResponse(
@@ -888,9 +913,9 @@ class HttpService {
   /// 랜덤 아트워크 구입
   Future<CloudFunctionResponse> purchaseRandomArtwork() async {
     try {
-      _dio.options.baseUrl =
+      _getDio().options.baseUrl =
           'https://createrandomartworkpurchase-moqfvmeufa-uc.a.run.app';
-      final response = await _dio.post('');
+      final response = await _getDio().post('');
 
       if (response.data['success'] == true) {
         return CloudFunctionResponse(
@@ -929,8 +954,8 @@ class HttpService {
     required int amount,
   }) async {
     try {
-      _dio.options.baseUrl = 'https://placebet-moqfvmeufa-uc.a.run.app';
-      final response = await _dio.post(
+      _getDio().options.baseUrl = 'https://placebet-moqfvmeufa-uc.a.run.app';
+      final response = await _getDio().post(
         '',
         data: {
           'raceId': raceId,

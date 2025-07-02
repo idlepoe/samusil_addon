@@ -391,6 +391,9 @@ class DashBoardController extends GetxController {
     try {
       logger.i("Starting loadMusicSalon...");
 
+      // HttpService 초기화 확인
+      HttpService().initialize();
+
       final response = await HttpService().getTrackArticleList(
         limit: 3,
         orderBy: 'created_at',
